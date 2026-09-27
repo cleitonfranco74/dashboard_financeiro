@@ -131,7 +131,19 @@ h2{font-size:16px;margin:0;font-weight:650;letter-spacing:-.01em}
 .textbtn:hover{text-decoration:underline}
 
 /* ledger */
-.addform{display:grid;grid-template-columns:130px minmax(140px,1.6fr) 120px minmax(120px,1fr) 130px auto;gap:8px;align-items:end}
+.addform{display:grid;grid-template-columns:130px minmax(160px,1.6fr) minmax(130px,1fr) 130px auto;gap:8px;align-items:end}
+.kindbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.kindbar > span{font-size:13px;font-weight:600;color:var(--ink-2)}
+.kinds{display:inline-flex;gap:6px;flex-wrap:wrap}
+.kinds button{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);font-weight:600;color:var(--ink-2)}
+.kinds button i{width:10px;height:10px;border-radius:3px}
+.kinds button:hover{color:var(--ink);border-color:var(--axis)}
+.kinds button[aria-pressed="true"][data-kind="receita"]{border-color:var(--rec);background:color-mix(in srgb,var(--rec) 12%,var(--surface));color:var(--ink)}
+.kinds button[aria-pressed="true"][data-kind="despesa"]{border-color:var(--desp);background:color-mix(in srgb,var(--desp) 12%,var(--surface));color:var(--ink)}
+.addform.is-receita .primary{background:var(--rec)}
+.addform.is-despesa .primary{background:var(--desp)}
+.quick{border:0;background:none;padding:2px 0;font-size:12.5px;font-weight:600;color:var(--accent);cursor:pointer;white-space:nowrap}
+.quick:hover{text-decoration:underline}
 @media (max-width:900px){.addform{grid-template-columns:1fr 1fr}.addform .f-desc{grid-column:1/-1}.addform .primary{grid-column:1/-1}}
 .field{display:flex;flex-direction:column;gap:4px;min-width:0}
 .field label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
@@ -196,12 +208,12 @@ tfoot td{font-weight:600;border-bottom:0}
     <div class="kpi">
       <div class="lbl"><i class="sw" style="background:var(--rec)"></i>Receitas</div>
       <div class="val" id="kRec">—</div>
-      <div class="foot"><span class="delta" id="dRec"></span></div>
+      <div class="foot"><span class="delta" id="dRec"></span><button type="button" class="quick" data-quick="receita">+ Lançar receita</button></div>
     </div>
     <div class="kpi">
       <div class="lbl"><i class="sw" style="background:var(--desp)"></i>Despesas</div>
       <div class="val" id="kDesp">—</div>
-      <div class="foot"><span class="delta" id="dDesp"></span></div>
+      <div class="foot"><span class="delta" id="dDesp"></span><button type="button" class="quick" data-quick="despesa">+ Lançar despesa</button></div>
     </div>
     <div class="kpi">
       <div class="lbl">Resultado do mês</div>
@@ -251,15 +263,22 @@ tfoot td{font-weight:600;border-bottom:0}
 
   <section class="panel">
     <div class="phead">
-      <div><h2>Lançamentos</h2><div class="sub" id="ledgerSub"></div></div>
+      <div><h2>Lançar receitas e despesas</h2><div class="sub" id="ledgerSub"></div></div>
     </div>
-    <form class="addform" id="addForm" autocomplete="off">
+    <div class="kindbar" id="lancar">
+      <span id="kindLbl">O que você quer lançar?</span>
+      <div class="kinds" role="group" aria-labelledby="kindLbl">
+        <button type="button" data-kind="receita" aria-pressed="false"><i style="background:var(--rec)"></i>Receita <small style="font-weight:500;color:var(--muted)">salário, vendas, rendimentos</small></button>
+        <button type="button" data-kind="despesa" aria-pressed="true"><i style="background:var(--desp)"></i>Despesa <small style="font-weight:500;color:var(--muted)">contas, compras, gastos</small></button>
+      </div>
+    </div>
+    <form class="addform is-despesa" id="addForm" autocomplete="off">
       <div class="field"><label for="fDate">Data</label><input id="fDate" type="date" required></div>
       <div class="field f-desc"><label for="fDesc">Descrição</label><input id="fDesc" type="text" placeholder="Ex.: Supermercado" maxlength="80" required></div>
-      <div class="field"><label for="fKind">Tipo</label><select id="fKind"><option value="despesa">Despesa</option><option value="receita">Receita</option></select></div>
+      <input type="hidden" id="fKind" value="despesa">
       <div class="field"><label for="fCat">Categoria</label><select id="fCat"></select></div>
       <div class="field"><label for="fAmt">Valor (R$)</label><input id="fAmt" type="text" inputmode="decimal" placeholder="0,00" required></div>
-      <button class="primary" type="submit">Adicionar</button>
+      <button class="primary" type="submit" id="fSubmit">Adicionar despesa</button>
     </form>
     <div class="filters">
       <input id="q" type="search" placeholder="Buscar descrição…" aria-label="Buscar descrição">
@@ -595,7 +614,19 @@ function dbError(e){
   else toast("Não foi possível salvar agora. Tente de novo em instantes.");
 }
 
-$("#fKind").addEventListener("change", fillCatSelect);
+function setKind(k, focar){
+  $("#fKind").value = k;
+  document.querySelectorAll(".kinds button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.kind===k));
+  const form = $("#addForm");
+  form.classList.toggle("is-receita", k==="receita");
+  form.classList.toggle("is-despesa", k==="despesa");
+  $("#fSubmit").textContent = k==="receita" ? "Adicionar receita" : "Adicionar despesa";
+  $("#fDesc").placeholder = k==="receita" ? "Ex.: Salário de setembro" : "Ex.: Supermercado";
+  fillCatSelect();
+  if (focar){ $("#lancar").scrollIntoView({behavior:"smooth", block:"center"}); setTimeout(()=>$("#fDesc").focus({preventScroll:true}), 350); }
+}
+document.querySelectorAll(".kinds button").forEach(b=>b.addEventListener("click", ()=>setKind(b.dataset.kind, false)));
+document.querySelectorAll("[data-quick]").forEach(b=>b.addEventListener("click", ()=>setKind(b.dataset.quick, true)));
 $("#addForm").addEventListener("submit", async e=>{
   e.preventDefault();
   const amount = Math.round(parseMoney($("#fAmt").value)*100)/100;
