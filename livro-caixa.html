@@ -916,7 +916,7 @@ $("#impFile").addEventListener("change", async e=>{
     else {
       const buf = await file.arrayBuffer();
       let txt = new TextDecoder("utf-8").decode(buf);
-      if (txt.includes("�")) txt = new TextDecoder("windows-1252").decode(buf);
+      if (txt.includes("\uFFFD")) txt = new TextDecoder("windows-1252").decode(buf);
       brutos = /<STMTTRN>|<OFX>/i.test(txt) ? parseOFX(txt, fatura) : parseCSV(txt, fatura);
     }
   } catch(err){
