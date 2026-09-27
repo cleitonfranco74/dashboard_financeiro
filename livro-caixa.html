@@ -179,6 +179,11 @@ h2{font-size:16px;margin:0;font-weight:650;letter-spacing:-.01em}
 .imp-opts input[type=file]{height:38px;padding:6px;border:1px dashed var(--axis);border-radius:10px;background:var(--surface);width:100%;font-size:13px}
 .imp-warn{font-size:12.5px;color:var(--ink-2);background:color-mix(in srgb,var(--warn) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--warn) 45%,var(--line));border-radius:10px;padding:8px 12px}
 .imp-status{font-size:13px;color:var(--ink-2)}
+.imp-senha{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.imp-senha label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.imp-senha input{height:38px;width:180px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:0 10px}
+.imp-diag summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--accent)}
+.imp-diag pre{margin:8px 0 0;max-height:240px;overflow:auto;font-family:var(--mono);font-size:11.5px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;white-space:pre-wrap}
 .imp-wrap{overflow-x:auto;max-height:420px;overflow-y:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
 .imp-tab{width:100%;border-collapse:collapse;min-width:620px;font-size:13px}
 .imp-tab th{position:sticky;top:0;background:var(--surface);z-index:1}
@@ -341,15 +346,17 @@ tfoot td{font-weight:600;border-bottom:0}
     </div>
     <div class="imp" id="impBox" hidden>
       <div class="imp-head"><b>Importar fatura do cartão de crédito</b>
-        <span class="sub">No aplicativo ou site do banco, baixe a fatura em <b>OFX</b> (mais confiável) ou <b>CSV</b>. PDF também funciona na maioria das faturas, mas confira a prévia. O arquivo é lido só no seu navegador.</span></div>
+        <span class="sub">No aplicativo ou site do banco, baixe a fatura em <b>OFX</b> (mais confiável), <b>CSV</b> ou <b>Excel</b>. PDF também funciona, inclusive com senha, mas confira a prévia. O arquivo é lido só no seu navegador.</span></div>
       <div class="imp-opts">
-        <div class="field"><label for="impFile">Arquivo da fatura</label><input id="impFile" type="file" accept=".ofx,.qfx,.csv,.txt,.pdf"></div>
+        <div class="field"><label for="impFile">Arquivo da fatura</label><input id="impFile" type="file"></div>
         <div class="field"><label for="impMes">Mês da fatura</label><input id="impMes" type="month"></div>
         <div class="field"><label for="impData">Data dos lançamentos</label><select id="impData"><option value="compra">Data de cada compra</option><option value="venc">Vencimento da fatura</option></select></div>
         <div class="field"><label for="impVenc">Vencimento</label><input id="impVenc" type="date"></div>
       </div>
       <div class="imp-warn">Importe as compras da fatura <b>ou</b> lance o pagamento da fatura como uma despesa, nunca os dois. Senão os mesmos gastos contam duas vezes.</div>
       <div class="imp-status" id="impStatus"></div>
+      <div class="imp-senha" id="impSenhaBox" hidden><label for="impSenha">Senha do PDF</label><input id="impSenha" type="password" autocomplete="off" inputmode="numeric"><button class="primary" type="button" id="impSenhaOk">Abrir fatura</button></div>
+      <details class="imp-diag" id="impDiag" hidden><summary>Ver o que foi lido do arquivo</summary><pre id="impLidas"></pre></details>
       <div class="imp-wrap" id="impWrap" hidden></div>
       <div class="imp-foot" id="impFoot" hidden><span id="impTotal"></span><span style="display:flex;gap:10px;align-items:center"><button class="textbtn" type="button" id="impCancel">Cancelar</button><button class="primary" type="button" id="impGo">Importar</button></span></div>
     </div>
@@ -803,29 +810,45 @@ const REGRAS = [
   ["Outros", /mercado ?livre|mercado ?pago|shopee|shein|aliexpress|temu/],
   ["Mercado", /supermerc|mercad|atacad|assai|carrefour|hortifrut|sacolao|padaria|panific|acougue|pao de acucar|extra hiper|big bompreco|comper|fort atacad|zaffari|savegnago|feira/],
   ["Transporte", /posto|combust|shell|ipiranga|petrobras|br mania|uber(?!.*eats)|\b99\b|99app|99pop|cabify|estacion|pedagio|sem parar|veloe|conectcar|metro|onibus|passagem|gol linhas|latam|azul linhas|localiza|movida|unidas|auto pecas|oficina|lava jato/],
-  ["Contas", /vivo|claro|tim |\btim\b|oi fibra|\boi\b|net servicos|internet|energisa|cemig|enel|light|copel|celesc|sabesp|saneam|agua|condomin|seguro|porto seguro|tokio|mapfre|anuidade|tarifa|iof|juros|encargo|multa/],
+  ["Contas", /vivo|claro|\btim\b|oi fibra|\boi\b|net servicos|internet|energisa|cemig|enel|light|copel|celesc|sabesp|saneam|agua|condomin|seguro|porto seguro|tokio|mapfre|anuidade|tarifa|iof|juros|encargo|multa/],
   ["Saúde", /farmac|drogar|droga|raia|pacheco|pague menos|panvel|nissei|hospital|clinic|laborat|odonto|dentist|unimed|hapvida|amil|bradesco saude|sulamerica|medic|otica|academia|smart fit|bio ritmo/],
-  ["Lazer", /ifood|rappi|uber eats|restaurant|churrasc|pizz|burger|lanch|mcdonald|bk |bob'?s|subway|outback|coco bambu|bar |boteco|cervej|cinema|cinemark|ingresso|netflix|spotify|disney|prime video|amazon prime|hbo|max\.com|globoplay|deezer|youtube|steam|playstation|xbox|nintendo|viagem|hotel|airbnb|booking|decolar/],
+  ["Lazer", /ifood|rappi|uber eats|restaurant|churrasc|pizz|burger|lanch|mcdonald|\bbk\b|bob'?s|subway|outback|coco bambu|\bbar\b|boteco|cervej|cinema|cinemark|ingresso|netflix|spotify|disney|prime video|amazon prime|hbo|max\.com|globoplay|deezer|youtube|steam|playstation|xbox|nintendo|viagem|hotel|airbnb|booking|decolar/],
   ["Educação", /escola|colegio|curso|faculd|universid|udemy|alura|coursera|livrar|livro|saraiva|cultura|papelaria|kalunga|material escolar|ingles|idioma/],
   ["Moradia", /aluguel|imobili|leroy|telhanorte|c&c|madeira|tok ?stok|mobly|casas bahia|magazine luiza|magalu|camicado|eletro/],
 ];
+const limpaDesc = d => String(d||"").replace(/\s+/g," ").replace(/\s+(US\$|USD|U\$|EUR|€)\s*[\d.,]*$/i,"").trim();
 function guessCat(desc){ const d = semAcento(desc); for (const [c,re] of REGRAS) if (re.test(d)) return c; return "Outros"; }
-const IGNORAR = /pagamento|pgto|pag fatura|saldo anterior|saldo em|total d|total a pagar|limite|vencimento|fatura anterior|credito rotativo|valor minimo|pagamento minimo/;
+const IGNORAR = /pagamento|pgto|pag fatura|saldo anterior|saldo em|saldo atual|total d|total a pagar|total geral|subtotal|limite|vencimento|fatura anterior|credito rotativo|valor minimo|pagamento minimo/;
 const MESES = {jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,nov:11,dez:12};
 
 function toIso(d, m, y, fatura){
-  let yy = y ? (y.length===2 ? 2000+ +y : +y) : null;
+  if (!(d>=1 && d<=31 && m>=1 && m<=12)) return null;
+  let yy = y ? (String(y).length===2 ? 2000 + +y : +y) : null;
   if (!yy){ const [fy, fm] = fatura.split("-").map(Number); yy = m > fm ? fy-1 : fy; }
   return `${yy}-${pad(m)}-${pad(d)}`;
 }
-function parseValor(s){
-  s = String(s).trim(); let neg = /^-|-$|\(.*\)|\dC$/.test(s.replace(/\s/g,""));
-  s = s.replace(/[R$\s()+CD-]/g,"");
+function lerData(x, fatura){
+  if (x instanceof Date && !isNaN(x)) return `${x.getFullYear()}-${pad(x.getMonth()+1)}-${pad(x.getDate())}`;
+  const s = String(x||"").trim(); let m;
+  if ((m = s.match(/^(\d{4})-(\d{2})-(\d{2})/))) return `${m[1]}-${m[2]}-${m[3]}`;
+  if ((m = s.match(/^(\d{1,2})[\/.-](\d{1,2})(?:[\/.-](\d{2,4}))?(?:\s|$)/))) return toIso(+m[1], +m[2], m[3], fatura);
+  if ((m = s.match(/^(\d{1,2})\s*(?:de\s+)?(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\w*\.?(?:\s+(?:de\s+)?(\d{2,4}))?$/i))) return toIso(+m[1], MESES[m[2].toLowerCase()], m[3], fatura);
+  return null;
+}
+function parseValor(x){
+  if (typeof x === "number") return x;
+  let s = String(x||"").trim(); if (!s) return NaN;
+  const neg = /^-|-$|\(.*\)|\dC$/.test(s.replace(/\s/g,""));
+  s = s.replace(/[R$\s()+CD-]/g,"").replace(/[a-z]/gi,"");
+  if (!/\d/.test(s)) return NaN;
   if (/,\d{1,2}$/.test(s)) s = s.replace(/\./g,"").replace(",",".");
   else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g,"");
+  else if (/^\d{1,3}(,\d{3})+(\.\d{1,2})?$/.test(s)) s = s.replace(/,/g,"");
   const v = Number(s); return isFinite(v) ? (neg ? -v : v) : NaN;
 }
-function parseOFX(txt, fatura){
+const pareceValor = x => typeof x==="number" || /^-?\s*\(?\s*(R\$)?\s*-?\s*\d{1,3}([.,]\d{3})*[.,]\d{2}\s*\)?\s*-?\s*[CD]?$/i.test(String(x||"").trim());
+
+function parseOFX(txt){
   const out = [];
   for (const bloco of txt.split(/<STMTTRN>/i).slice(1)){
     const tag = t => { const m = bloco.match(new RegExp("<"+t+">([^<\\r\\n]*)","i")); return m ? m[1].trim() : ""; };
@@ -840,94 +863,139 @@ function splitCSV(line, sep){
   for (const ch of line){ if (ch==='"') q=!q; else if (ch===sep && !q){ out.push(cur); cur=""; } else cur+=ch; }
   out.push(cur); return out.map(x=>x.trim());
 }
-function parseCSV(txt, fatura){
-  const linhas = txt.replace(/^﻿/,"").split(/\r?\n/).filter(l=>l.trim());
-  if (!linhas.length) return [];
-  const sep = (linhas[0].match(/;/g)||[]).length >= (linhas[0].match(/,/g)||[]).length ? ";" : ",";
-  const head = splitCSV(linhas[0], sep).map(semAcento);
-  const idx = re => head.findIndex(h=>re.test(h));
-  let iD = idx(/^data|date|dt/), iS = idx(/descri|lancamento|estabelec|title|historico|detalhe|nome/), iV = idx(/valor|amount|value|quantia/);
-  const temCab = iD>=0 && iV>=0;
-  if (!temCab){ iD=0; iS=1; iV=2; }
+/* Tabela genérica (CSV ou planilha): acha o cabeçalho nas primeiras linhas; sem cabeçalho, deduz as colunas linha a linha. */
+function parseRows(rows, fatura){
+  let h = -1, iD, iS, iV;
+  for (let r=0; r<Math.min(rows.length, 25); r++){
+    const cab = rows[r].map(c=>semAcento(c));
+    const f = re => cab.findIndex(x=>re.test(x));
+    const d = f(/^data|date|^dt\b|dt\.? ?compra/), v = f(/valor|amount|value|quantia|r\$/);
+    if (d>=0 && v>=0){ h=r; iD=d; iV=v; iS=f(/descri|lancamento|estabelec|title|historico|detalhe|nome|loja|comercio/); break; }
+  }
   const out = [];
-  for (const l of linhas.slice(temCab?1:0)){
-    const c = splitCSV(l, sep), ds = c[iD]||"", v = parseValor(c[iV]||"");
-    let date = null, m;
-    if ((m = ds.match(/^(\d{4})-(\d{2})-(\d{2})/))) date = `${m[1]}-${m[2]}-${m[3]}`;
-    else if ((m = ds.match(/^(\d{2})\/(\d{2})(?:\/(\d{2,4}))?/))) date = toIso(+m[1], +m[2], m[3], fatura);
-    if (!date || !isFinite(v)) continue;
-    out.push({date, desc:(c[iS]||"").replace(/\s+/g," "), v});
+  for (const row of rows.slice(h+1)){
+    let date, desc, v;
+    if (h>=0){ date = lerData(row[iD], fatura); v = parseValor(row[iV]); desc = iS>=0 ? row[iS] : row.filter((c,i)=>i!==iD && i!==iV).join(" "); }
+    else {
+      const di = row.findIndex(c=>lerData(c, fatura)); if (di<0) continue;
+      let vi = -1; for (let i=row.length-1; i>di; i--) if (pareceValor(row[i])){ vi=i; break; }
+      if (vi<0) continue;
+      date = lerData(row[di], fatura); v = parseValor(row[vi]);
+      desc = row.slice(di+1, vi).filter(c=>String(c).trim() && !pareceValor(c)).join(" ");
+    }
+    if (!date || !isFinite(v) || !v) continue;
+    out.push({date, desc:limpaDesc(desc) || "Compra no cartão", v});
   }
   return out;
 }
-function loadPdfJs(){
-  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
-  return new Promise((res, rej)=>{
-    const s = document.createElement("script");
-    s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
-    s.onload = async () => {
-      const W = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-      try {   // worker a partir de uma cópia local (blob): evita bloqueio de worker entre domínios
-        const code = await (await fetch(W)).text();
-        pdfjsLib.GlobalWorkerOptions.workerPort = new Worker(URL.createObjectURL(new Blob([code], {type:"text/javascript"})));
-      } catch { pdfjsLib.GlobalWorkerOptions.workerSrc = W; }
-      res(pdfjsLib);
-    };
-    s.onerror = () => rej(new Error("pdfjs"));
-    document.head.appendChild(s);
-  });
+function parseCSV(txt, fatura){
+  const linhas = txt.replace(/^﻿/,"").split(/\r?\n/).filter(l=>l.trim());
+  if (!linhas.length) return [];
+  const amostra = linhas.slice(0,10).join("\n"), cont = c => (amostra.match(new RegExp("\\"+c,"g"))||[]).length;
+  const sep = [";","\t",","].sort((a,b)=>cont(b)-cont(a))[0];
+  return parseRows(linhas.map(l=>splitCSV(l, sep)), fatura);
 }
-async function parsePDF(buf, fatura){
+function carregarScript(src, global){
+  if (window[global]) return Promise.resolve(window[global]);
+  return new Promise((res, rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=()=>res(window[global]); s.onerror=()=>rej(new Error("script")); document.head.appendChild(s); });
+}
+async function parseXLSX(buf, fatura, linhasLidas){
+  const X = await carregarScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js", "XLSX");
+  const wb = X.read(buf, {type:"array", cellDates:true});
+  let out = [];
+  for (const nome of wb.SheetNames){
+    const rows = X.utils.sheet_to_json(wb.Sheets[nome], {header:1, raw:true, defval:""});
+    rows.slice(0,40).forEach(r=>linhasLidas.push(r.map(c=>c instanceof Date ? c.toISOString().slice(0,10) : c).join(" | ")));
+    out = out.concat(parseRows(rows, fatura));
+  }
+  return out;
+}
+let pdfLib = null;
+async function loadPdfJs(){
+  if (pdfLib) return pdfLib;
+  const lib = await carregarScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js", "pdfjsLib");
+  const W = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  try {   // worker a partir de uma cópia local (blob): evita bloqueio de worker entre domínios
+    const code = await (await fetch(W)).text();
+    lib.GlobalWorkerOptions.workerPort = new Worker(URL.createObjectURL(new Blob([code], {type:"text/javascript"})));
+  } catch { lib.GlobalWorkerOptions.workerSrc = W; }
+  return (pdfLib = lib);
+}
+async function parsePDF(buf, fatura, senha, linhasLidas){
   const lib = await loadPdfJs();
-  const pdf = await Promise.race([lib.getDocument({data:buf}).promise, new Promise((_,rej)=>setTimeout(()=>rej(new Error("tempo")), 25000))]), linhas = [];
+  const tarefa = lib.getDocument({data:new Uint8Array(buf.slice(0)), password:senha||undefined});
+  const pdf = await Promise.race([tarefa.promise, new Promise((_,rej)=>setTimeout(()=>rej(new Error("tempo")), 30000))]);
+  const linhas = [];
   for (let p=1; p<=pdf.numPages; p++){
     const c = await (await pdf.getPage(p)).getTextContent(), rows = new Map();
     for (const it of c.items){ if (!it.str.trim()) continue; const y = Math.round(it.transform[5]/3); if (!rows.has(y)) rows.set(y, []); rows.get(y).push({x:it.transform[4], s:it.str}); }
     [...rows.entries()].sort((a,b)=>b[0]-a[0]).forEach(([,its])=>linhas.push(its.sort((a,b)=>a.x-b.x).map(i=>i.s).join(" ").replace(/\s+/g," ").trim()));
   }
+  linhas.slice(0,60).forEach(l=>linhasLidas.push(l));
+  if (!linhas.length) throw Object.assign(new Error("sem texto"), {semTexto:true});
   const out = [], VAL = "(-?\\s*(?:R\\$)?\\s*-?\\d{1,3}(?:\\.\\d{3})*,\\d{2}\\s*-?)";
-  const reNum = new RegExp("^(\\d{2})\\/(\\d{2})(?:\\/(\\d{2,4}))?\\s+(.+?)\\s+" + VAL + "$");
-  const reMes = new RegExp("^(\\d{2})\\s+(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\\w*\\.?\\s+(.+?)\\s+" + VAL + "$", "i");
+  const DATA = "(\\d{1,2}[\\/.-]\\d{1,2}(?:[\\/.-]\\d{2,4})?|\\d{1,2}\\s*(?:de\\s+)?(?:jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\\w*\\.?)";
+  const re = new RegExp("^" + DATA + "\\s+(.+?)\\s+" + VAL + "(?:\\s+" + VAL + ")?$", "i");
   for (const l of linhas){
-    let m, date, desc, val;
-    if ((m = l.match(reNum))){ date = toIso(+m[1], +m[2], m[3], fatura); desc = m[4]; val = m[5]; }
-    else if ((m = l.match(reMes))){ date = toIso(+m[1], MESES[m[2].toLowerCase()], null, fatura); desc = m[3]; val = m[4]; }
-    else continue;
-    const v = parseValor(val); if (!isFinite(v)) continue;
-    out.push({date, desc:desc.replace(/\s+/g," ").trim(), v});
+    const m = l.match(re); if (!m) continue;
+    const date = lerData(m[1], fatura); if (!date) continue;
+    const v = parseValor(m[4] || m[3]);   // com duas colunas de valor (US$ e R$), usa a última
+    if (!isFinite(v) || !v) continue;
+    out.push({date, desc:limpaDesc(m[2]), v});
   }
   return out;
 }
 
-let impRows = [];
+let impRows = [], impArquivo = null, impLidas = [];
 const chaveTx = (date, desc, v) => `${date}|${Math.round(v*100)}|${semAcento(desc).replace(/[^a-z0-9]/g,"").slice(0,18)}`;
-function impReset(){ impRows=[]; $("#impWrap").hidden=true; $("#impFoot").hidden=true; $("#impStatus").textContent=""; $("#impFile").value=""; }
+function impReset(){ impRows=[]; impArquivo=null; impLidas=[]; $("#impWrap").hidden=true; $("#impFoot").hidden=true; $("#impSenhaBox").hidden=true; $("#impDiag").hidden=true; $("#impStatus").textContent=""; $("#impFile").value=""; }
+function impDiagnostico(){
+  const d = $("#impDiag");
+  if (!impLidas.length){ d.hidden = true; return; }
+  d.hidden = false;
+  $("#impLidas").textContent = impLidas.slice(0,60).join("\n");
+}
 $("#impBtn").addEventListener("click", ()=>{
   const box = $("#impBox"); box.hidden = !box.hidden;
   if (!box.hidden){ $("#impMes").value = view.month; $("#impVenc").value = `${view.month}-10`; impReset(); box.scrollIntoView({block:"nearest", behavior:"smooth"}); }
 });
-$("#impFile").addEventListener("change", async e=>{
-  const file = e.target.files[0]; if (!file) return;
-  const fatura = $("#impMes").value || view.month, nome = file.name.toLowerCase();
-  $("#impStatus").textContent = "Lendo o arquivo…";
+async function impProcessar(senha){
+  const file = impArquivo; if (!file) return;
+  const fatura = /^\d{4}-\d{2}$/.test($("#impMes").value) ? $("#impMes").value : view.month;
+  const nome = file.name.toLowerCase(), buf = await file.arrayBuffer();
+  const ehPDF = nome.endsWith(".pdf") || new Uint8Array(buf.slice(0,5)).join(",")==="37,80,68,70,45";
+  const ehXLS = /\.xlsx?$|\.ods$/.test(nome) || new Uint8Array(buf.slice(0,2)).join(",")==="80,75" || new Uint8Array(buf.slice(0,4)).join(",")==="208,207,17,224";
+  $("#impStatus").textContent = "Lendo o arquivo…"; $("#impSenhaBox").hidden = true; impLidas = []; $("#impDiag").hidden = true;
+  $("#impWrap").hidden = true; $("#impFoot").hidden = true;
   let brutos = [];
   try {
-    if (nome.endsWith(".pdf")) brutos = await parsePDF(await file.arrayBuffer(), fatura);
+    if (ehPDF) brutos = await parsePDF(buf, fatura, senha, impLidas);
+    else if (ehXLS) brutos = await parseXLSX(buf, fatura, impLidas);
     else {
-      const buf = await file.arrayBuffer();
       let txt = new TextDecoder("utf-8").decode(buf);
       if (txt.includes("\uFFFD")) txt = new TextDecoder("windows-1252").decode(buf);
-      brutos = /<STMTTRN>|<OFX>/i.test(txt) ? parseOFX(txt, fatura) : parseCSV(txt, fatura);
+      txt.split(/\r?\n/).slice(0,60).forEach(l=>impLidas.push(l));
+      brutos = /<STMTTRN>|<OFX>/i.test(txt) ? parseOFX(txt) : parseCSV(txt, fatura);
     }
   } catch(err){
     console.error("Importação da fatura:", err); window.__impErr = String(err && (err.stack || err.message) || err);
-    $("#impStatus").textContent = nome.endsWith(".pdf") ? "Não foi possível ler este PDF. Baixe a fatura em OFX ou CSV no aplicativo do banco e tente de novo." : "Não foi possível ler o arquivo. Confira se é OFX, CSV ou PDF de fatura.";
-    return;
+    if (err && err.name === "PasswordException"){
+      $("#impSenhaBox").hidden = false; $("#impSenha").value = ""; $("#impSenha").focus();
+      $("#impStatus").textContent = senha ? "Senha incorreta. Confira e tente de novo." : "Esta fatura em PDF é protegida por senha. Em geral a senha é parte do CPF do titular (os primeiros 3 a 6 dígitos); o e-mail do banco que enviou a fatura costuma informar a regra.";
+      return;
+    }
+    $("#impStatus").textContent = err && err.semTexto ? "Este PDF não tem texto, é uma imagem digitalizada. Baixe a fatura em OFX, CSV ou Excel no aplicativo do banco."
+      : ehXLS ? "Não foi possível abrir a planilha. Salve como CSV no Excel e tente de novo."
+      : ehPDF ? "Não foi possível ler este PDF. Baixe a fatura em OFX, CSV ou Excel no aplicativo do banco e tente de novo."
+      : "Não foi possível ler o arquivo. Use a fatura em OFX, CSV, Excel ou PDF.";
+    impDiagnostico(); return;
   }
-  if (!brutos.length){ $("#impStatus").textContent = "Nenhuma compra encontrada no arquivo. Se for PDF, tente a versão OFX ou CSV da fatura."; return; }
-  // Convenção de sinal: a maioria das linhas são compras. Se vierem negativas, inverte.
-  const neg = brutos.filter(r=>r.v<0).length;
-  if (neg > brutos.length/2) brutos.forEach(r=>r.v=-r.v);
+  if (!brutos.length){
+    $("#impStatus").textContent = "Nenhuma compra foi reconhecida neste arquivo. Abra “Ver o que foi lido do arquivo” abaixo: se for o arquivo certo, copie algumas linhas (sem dados pessoais) e envie para ajustar o leitor ao formato do seu banco.";
+    impDiagnostico(); return;
+  }
+  // A maioria das linhas são compras: se vierem negativas, a convenção do banco é invertida.
+  if (brutos.filter(r=>r.v<0).length > brutos.length/2) brutos.forEach(r=>r.v=-r.v);
   const {tx, example} = dataset();
   const existentes = new Set((example?[]:tx).map(t=>chaveTx(t.date, t.desc, t.amount)));
   const venc = $("#impVenc").value || `${fatura}-10`;
@@ -939,8 +1007,13 @@ $("#impFile").addEventListener("change", async e=>{
     return {date, desc:r.desc, v:Math.abs(r.v), cat:guessCat(r.desc), ok:!why, why};
   });
   $("#impStatus").textContent = `${impRows.length} ${impRows.length===1?"linha encontrada":"linhas encontradas"}${ignor?` (${ignor} de pagamento ou totais ignoradas)`:""}. Confira as categorias antes de importar.`;
+  impDiagnostico();
   drawImp();
-});
+}
+$("#impFile").addEventListener("change", e=>{ impArquivo = e.target.files[0] || null; if (impArquivo) impProcessar(); });
+$("#impSenhaOk").addEventListener("click", ()=>impProcessar($("#impSenha").value));
+$("#impSenha").addEventListener("keydown", e=>{ if (e.key==="Enter"){ e.preventDefault(); impProcessar($("#impSenha").value); } });
+["impData","impVenc","impMes"].forEach(id=>$("#"+id).addEventListener("change", ()=>{ if (impArquivo && !$("#impWrap").hidden) impProcessar($("#impSenha").value || undefined); }));
 function drawImp(){
   const opts = c => CATS.despesa.map(x=>`<option ${x===c?"selected":""}>${esc(x)}</option>`).join("");
   $("#impWrap").hidden = false; $("#impFoot").hidden = false;
@@ -961,7 +1034,6 @@ $("#impWrap").addEventListener("change", e=>{
   if (sl) impRows[+sl.dataset.ic].cat = sl.value;
   impTotal();
 });
-["impData","impVenc","impMes"].forEach(id=>$("#"+id).addEventListener("change", ()=>{ if ($("#impFile").files[0]) $("#impFile").dispatchEvent(new Event("change")); }));
 $("#impCancel").addEventListener("click", ()=>{ impReset(); $("#impBox").hidden = true; });
 $("#impGo").addEventListener("click", async ()=>{
   const sel = impRows.filter(r=>r.ok); if (!sel.length) return;
