@@ -6,6 +6,7 @@
 <meta name="author" content="Prof. Dr. Cleiton Franco">
 <meta name="description" content="Livro-Caixa: painel de finanças pessoais, oito simuladores financeiros e otimizador de carteira com dados do Banco Central. Por Prof. Dr. Cleiton Franco (UNEMAT).">
 <title>Livro-Caixa · Finanças com método</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap">
@@ -14,7 +15,7 @@ html,body{margin:0}
 [hidden]{display:none!important}
 :root{
   --bg:#f2f4f1; --surface:#fcfdfb; --surface-2:#e9ece7; --ink:#121a16; --ink-2:#4b5650; --muted:#7f877f;
-  --line:#dde2da; --rule:rgba(20,92,85,.09); --axis:#c2c8bf; --accent:#145c55; --accent-ink:#ffffff; --accent-soft:#dcebe6;
+  --line:#dde2da; --rule:rgba(20,92,85,.07); --grid-strong:rgba(20,92,85,.13); --axis:#c2c8bf; --accent:#145c55; --accent-ink:#ffffff; --accent-soft:#dcebe6;
   --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --good:#0ca30c;
   --ring:rgba(18,26,22,.10); --shadow:0 1px 2px rgba(18,26,22,.05),0 10px 30px -16px rgba(18,26,22,.25);
   --sans:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -24,14 +25,14 @@ html,body{margin:0}
   :root:not([data-theme="light"]){
     color-scheme:dark;
     --bg:#0d100f; --surface:#161a18; --surface-2:#222724; --ink:#f1f3f0; --ink-2:#bec5bd; --muted:#8a918a;
-    --line:#2a302c; --rule:rgba(98,181,169,.08); --axis:#3b423d; --accent:#62b5a9; --accent-ink:#0a1917; --accent-soft:#1b322e;
+    --line:#2a302c; --rule:rgba(98,181,169,.06); --grid-strong:rgba(98,181,169,.12); --axis:#3b423d; --accent:#62b5a9; --accent-ink:#0a1917; --accent-soft:#1b322e;
     --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --ring:rgba(255,255,255,.09); --shadow:0 1px 2px rgba(0,0,0,.4);
   }
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
   --bg:#0d100f; --surface:#161a18; --surface-2:#222724; --ink:#f1f3f0; --ink-2:#bec5bd; --muted:#8a918a;
-  --line:#2a302c; --rule:rgba(98,181,169,.08); --axis:#3b423d; --accent:#62b5a9; --accent-ink:#0a1917; --accent-soft:#1b322e;
+  --line:#2a302c; --rule:rgba(98,181,169,.06); --grid-strong:rgba(98,181,169,.12); --axis:#3b423d; --accent:#62b5a9; --accent-ink:#0a1917; --accent-soft:#1b322e;
   --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --ring:rgba(255,255,255,.09); --shadow:0 1px 2px rgba(0,0,0,.4);
 }
 *{box-sizing:border-box}
@@ -51,10 +52,32 @@ a{color:inherit}
 
 /* capa */
 .hero{position:relative;border-radius:24px;padding:clamp(28px,5vw,64px) clamp(20px,4vw,56px);background:
-  repeating-linear-gradient(0deg, transparent 0 31px, var(--rule) 31px 32px), var(--surface);
+  linear-gradient(var(--grid-strong) 1px, transparent 1px) 0 0/120px 120px,
+  linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px) 0 0/120px 120px,
+  linear-gradient(var(--rule) 1px, transparent 1px) 0 0/24px 24px,
+  linear-gradient(90deg, var(--rule) 1px, transparent 1px) 0 0/24px 24px, var(--surface);
   border:1px solid var(--ring);box-shadow:var(--shadow);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:clamp(24px,4vw,56px);align-items:center;overflow:hidden}
-.hero::before{content:"";position:absolute;top:0;bottom:0;left:clamp(12px,2.4vw,34px);width:2px;background:color-mix(in srgb,var(--s2) 45%,transparent)}
 .hero > *{min-width:0}
+.hero > :not(.eqbg){position:relative;z-index:1}
+.eqbg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.eqbg span{position:absolute;white-space:nowrap;font-family:KaTeX_Main,"Cambria Math","STIX Two Math","Times New Roman",serif;font-style:italic;color:var(--accent);opacity:.13;font-size:clamp(15px,1.8vw,24px)}
+.math{font-family:KaTeX_Main,"Cambria Math","Times New Roman",serif}
+.fisher{margin:0;padding-top:12px;border-top:1px dashed var(--line);font-size:13px;color:var(--ink-2)}
+.fisher .katex{font-size:1.08em;color:var(--ink)}
+.eqs{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:14px}
+.eq{background:var(--surface);border:1px solid var(--ring);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow);min-width:0;
+  background-image:linear-gradient(var(--rule) 1px, transparent 1px),linear-gradient(90deg, var(--rule) 1px, transparent 1px);background-size:20px 20px}
+.eq.wide{grid-column:span 2}
+.eq.full{grid-column:1/-1}
+@media (max-width:1020px){.eq.wide{grid-column:1/-1}}
+@media (max-width:700px){.eq.wide,.eq.full{grid-column:auto}}
+.eq .f{overflow-x:auto;overflow-y:hidden;padding-block:8px;font-size:1.12em;color:var(--ink)}
+.eq .f .katex-display{margin:0}
+.eq h3{margin:0;font-size:16px;letter-spacing:-.01em}
+.eq p{margin:0;font-size:13.5px;color:var(--ink-2)}
+.eq .uso{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:4px}
+.eq .uso a{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:3px 9px;text-decoration:none;color:var(--ink-2);background:var(--surface)}
+.eq .uso a:hover{color:var(--accent);border-color:var(--accent)}
 @media (max-width:900px){.hero{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:480px){.ind b{font-size:18px}.ind div{padding:8px 10px}.hero{border-radius:18px}}
 .eyebrow{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
@@ -149,6 +172,14 @@ footer.autor a{color:var(--accent)}
 
   <main>
     <section class="hero" aria-labelledby="titulo">
+      <div class="eqbg" aria-hidden="true">
+        <span style="top:2.5%;left:3%;transform:rotate(-3deg)">VF = VP (1 + i)ⁿ</span>
+        <span style="top:93%;left:3%;transform:rotate(2deg)">(1 + i) = (1 + r)(1 + π)</span>
+        <span style="top:92%;left:37%;transform:rotate(-2deg)">σₚ² = wᵀ Σ w</span>
+        <span style="top:4%;left:44%;transform:rotate(2deg)">E[Rᵢ] = r<sub>f</sub> + βᵢ (E[Rₘ] − r<sub>f</sub>)</span>
+        <span style="top:93%;left:66%;transform:rotate(-3deg)">S = (E[Rₚ] − r<sub>f</sub>) / σₚ</span>
+        <span style="top:3%;left:82%;transform:rotate(-5deg)">∑ Fₜ / (1 + i)ᵗ</span>
+      </div>
       <div>
         <span class="eyebrow">Educação financeira · UNEMAT Sinop</span>
         <h1 id="titulo">Suas finanças com <em>método de economista</em>.</h1>
@@ -173,6 +204,7 @@ footer.autor a{color:var(--accent)}
           <div class="legend" style="margin-bottom:6px"><span><i style="background:var(--accent)"></i>Selic esperada</span><span><i style="background:var(--s2)"></i>IPCA esperado</span></div>
           <div class="chart" id="focus" role="img" aria-label="Trajetória esperada da Selic e do IPCA pelo Boletim Focus"></div>
         </div>
+        <p class="fisher">Juro real hoje, pela equação de Fisher: <span id="fisher" class="math">r = (1 + CDI)/(1 + IPCA) − 1</span></p>
         <p class="fonte" id="fonte">Mediana das expectativas do Boletim Focus, do Banco Central.</p>
       </aside>
     </section>
@@ -204,6 +236,24 @@ footer.autor a{color:var(--accent)}
           <ul><li>Fronteira eficiente e carteira de máximo Sharpe</li><li>Retornos por taxas de mercado e CAPM</li><li>Estabilidade dos pesos (Michaud)</li><li>Teste histórico contra CDI e Ibovespa</li></ul>
           <a class="go" href="carteira.html">Montar carteira →</a>
         </div>
+      </div>
+    </section>
+
+    <section class="blk" aria-labelledby="equacoes">
+      <div class="shead">
+        <div><span class="eyebrow">A matemática por trás</span><h2 class="sec" id="equacoes">As equações que fazem as contas</h2></div>
+        <p>Cada resultado das ferramentas sai de uma destas fórmulas clássicas de finanças, aplicadas com os dados de mercado do dia.</p>
+      </div>
+      <div class="eqs">
+        <article class="eq"><div class="f" data-tex="VF = VP\,(1+i)^{n}">VF = VP (1 + i)ⁿ</div><h3>Juros compostos</h3><p>Quanto um valor vira depois de n períodos rendendo a taxa i. A base de todas as projeções.</p><div class="uso"><a href="simuladores.html#aposentadoria">Aposentadoria</a><a href="simuladores.html#cdb">CDB</a><a href="simuladores.html#tesouro">Tesouro</a></div></article>
+        <article class="eq"><div class="f" data-tex="(1+i) = (1+r)\,(1+\pi)">(1 + i) = (1 + r)(1 + π)</div><h3>Equação de Fisher</h3><p>Separa o juro nominal i em juro real r e inflação π. Gera os valores em reais de hoje e a inflação implícita entre IPCA+ e Prefixado.</p><div class="uso"><a href="simuladores.html#tesouro">Tesouro</a><a href="simuladores.html#acoes">Ações</a></div></article>
+        <article class="eq"><div class="f" data-tex="VP = PMT \cdot \frac{1-(1+i)^{-n}}{i}">VP = PMT · [1 − (1 + i)⁻ⁿ] / i</div><h3>Valor presente de uma renda</h3><p>Quanto vale hoje uma sequência de pagamentos iguais. Define a parcela da tabela Price e o patrimônio necessário para a aposentadoria.</p><div class="uso"><a href="simuladores.html#aposentadoria">Aposentadoria</a><a href="simuladores.html#alugar">Alugar ou financiar</a></div></article>
+        <article class="eq"><div class="f" data-tex="VPL = \sum_{t=1}^{n} \frac{F_t}{(1+i)^{t}}">VPL = ∑ Fₜ / (1 + i)ᵗ</div><h3>Valor presente líquido</h3><p>Traz fluxos de datas diferentes para hoje, descontados pelo custo de oportunidade. Compara consórcio, financiamento e compra à vista.</p><div class="uso"><a href="simuladores.html#consorcio">Consórcio</a><a href="simuladores.html#dividas">Dívidas</a></div></article>
+        <article class="eq"><div class="f" data-tex="\%\text{CDI}_{\text{isento}} = \%\text{CDI}_{\text{CDB}}\,(1 - t)">%CDI isento = %CDI do CDB · (1 − t)</div><h3>Equivalência tributária</h3><p>A taxa que uma LCI ou LCA isenta precisa pagar para empatar com um CDB tributado, conforme a alíquota regressiva do prazo.</p><div class="uso"><a href="simuladores.html#cdb">CDB</a><a href="simuladores.html#previdencia">PGBL ou VGBL</a></div></article>
+        <article class="eq"><div class="f" data-tex="E[R_i] = r_f + \beta_i\,\big(E[R_m] - r_f\big)">E[Rᵢ] = r_f + βᵢ (E[Rₘ] − r_f)</div><h3>CAPM</h3><p>O retorno esperado de uma ação é o juro sem risco mais o prêmio de mercado proporcional ao seu beta. Só o risco que não se diversifica é remunerado.</p><div class="uso"><a href="carteira.html">Carteira</a></div></article>
+        <article class="eq wide"><div class="f" data-tex="\max_{w}\; w^{\top}\mu - \frac{\lambda}{2}\, w^{\top}\Sigma\, w \quad \text{s.a.}\quad \mathbf{1}^{\top}w = 1,\;\; 0 \le w_i \le \bar{w}_i">max w'μ − (λ/2) w'Σw  s.a. ∑wᵢ = 1, 0 ≤ wᵢ ≤ w̄ᵢ</div><h3>Otimização de Markowitz</h3><p>Escolhe os pesos w que dão o maior retorno esperado μ para cada nível de risco, medido pela matriz de covariâncias Σ. Variando λ, surge a fronteira eficiente.</p><div class="uso"><a href="carteira.html">Carteira</a></div></article>
+        <article class="eq"><div class="f" data-tex="S = \frac{E[R_p] - r_f}{\sigma_p}">S = (E[Rₚ] − r_f) / σₚ</div><h3>Índice de Sharpe</h3><p>Retorno acima do juro sem risco por unidade de volatilidade. A carteira tangente é a que maximiza S.</p><div class="uso"><a href="carteira.html">Carteira</a></div></article>
+        <article class="eq full"><div class="f" data-tex="\hat{\Sigma} = \delta\,F + (1-\delta)\,S, \qquad \delta^{*} = \min\!\left(1,\ \frac{\hat{b}^{2}}{\hat{d}^{2}}\right)">Σ̂ = δF + (1 − δ)S</div><h3>Encolhimento de Ledoit-Wolf</h3><p>Combina a covariância amostral S com um alvo estável F na intensidade δ que minimiza o erro de estimação. Evita carteiras extremas causadas por ruído nos dados.</p><div class="uso"><a href="carteira.html">Carteira</a></div></article>
       </div>
     </section>
 
@@ -239,6 +289,7 @@ footer.autor a{color:var(--accent)}
   </footer>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="assets/mercado.js"></script>
 <script>
 (() => {
@@ -247,6 +298,9 @@ const nf = (v,d=2) => v.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumF
 
 const SIMS = [["aposentadoria","Aposentadoria"],["tesouro","Tesouro Direto"],["dividas","Quitar dívidas"],["alugar","Alugar ou financiar"],["consorcio","Consórcio"],["cdb","CDB"],["acoes","Ações"],["previdencia","PGBL ou VGBL"]];
 $(".sims").innerHTML = SIMS.map(([id,n])=>`<a href="simuladores.html#${id}">${n}</a>`).join("");
+
+const tex = (el, t, display) => { try { if (window.katex) katex.render(t, el, {displayMode:display, throwOnError:false}); } catch {} };
+document.querySelectorAll("[data-tex]").forEach(el=>tex(el, el.dataset.tex, true));
 
 function drawFocus(m){
   const el = $("#focus");
@@ -280,6 +334,11 @@ Mercado.carregar().then(m=>{
   st.lastChild.textContent = m.aoVivo ? "ao vivo" : m.referencia ? "valores de referência" : "dados do dia";
   $("#fonte").textContent = `Mediana das expectativas do Boletim Focus de ${Mercado.dataBR(m.focus.data)}. A Selic parte de ${nf(m.indicadores.selic.valor)}% e o mercado espera ${nf(m.focus.selic[Object.keys(m.focus.selic).sort()[Math.min(3,Object.keys(m.focus.selic).length-1)]])}% em ${Object.keys(m.focus.selic).sort()[Math.min(3,Object.keys(m.focus.selic).length-1)]}.`;
   if (m.atualizado) $("#atual").textContent = `Indicadores lidos ${m.aoVivo?"ao vivo":"do arquivo diário"}. Preços e taxas do Tesouro atualizados em ${Mercado.dataBR(m.atualizado)}.`;
+  const cdi = m.indicadores.cdi.valor/100, ip = m.indicadores.ipca12.valor/100, real = (1+cdi)/(1+ip)-1;
+  const dec = (v,d) => v.toFixed(d).replace(".","{,}");
+  const fe = $("#fisher");
+  fe.textContent = `r = (1 + ${nf(cdi*100)}%) / (1 + ${nf(ip*100)}%) − 1 = ${nf(real*100)}%`;
+  tex(fe, `r = \\frac{${dec(1+cdi,4)}}{${dec(1+ip,4)}} - 1 = \\mathbf{${dec(real*100,2)}\\%}`, false);
   drawFocus(m);
   let t; new ResizeObserver(()=>{ clearTimeout(t); t=setTimeout(()=>drawFocus(m),80); }).observe($("#focus"));
 });
