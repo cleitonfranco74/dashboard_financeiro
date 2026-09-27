@@ -76,6 +76,19 @@ h1 .m{text-transform:capitalize}
 .meter i{display:block;height:100%;background:var(--accent);border-radius:3px}
 
 /* panels */
+.reserva{gap:10px}
+.rv-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:10px 16px}
+.rv-in{display:flex;align-items:center;gap:8px}
+.rv-in label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.rv-in input{height:36px;width:150px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:0 10px;text-align:right}
+.rv-in input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.rv-bar{position:relative;height:12px;border-radius:6px;background:var(--surface-2);overflow:hidden}
+.rv-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--accent)}
+.rv-bar span{position:absolute;top:0;bottom:0;width:2px;background:var(--surface)}
+.rv-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;font-size:13px;color:var(--ink-2);align-items:center}
+.rv-scale{display:grid;grid-template-columns:repeat(4,auto);gap:0 28px;font-size:11px;color:var(--muted)}
+.rv-next{font-size:13px;color:var(--ink-2)}
+.rv-next a{color:var(--accent);font-weight:600}
 .grid2{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:16px;align-items:start}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}}
 .panel{background:var(--surface);border-radius:16px;border:1px solid var(--ring);box-shadow:var(--shadow);padding:18px 20px;display:flex;flex-direction:column;gap:14px;min-width:0}
@@ -166,6 +179,7 @@ tfoot td{font-weight:600;border-bottom:0}
       <button class="ghost" id="todayM">Mês atual</button>
       <button class="iconbtn" id="nextM" aria-label="Próximo mês"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="m6 3 5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <a class="ghost" href="simuladores.html" style="display:inline-flex;align-items:center;text-decoration:none">Simuladores</a>
+      <a class="ghost" href="carteira.html" style="display:inline-flex;align-items:center;text-decoration:none">Carteira</a>
       <button class="ghost" id="exportBtn">Exportar CSV</button>
     </div>
   </header>
@@ -195,6 +209,16 @@ tfoot td{font-weight:600;border-bottom:0}
       <div class="val" id="kTaxa">—</div>
       <div class="foot"><div class="meter" aria-hidden="true"><i id="mTaxa" style="width:0"></i></div><span class="delta" id="dTaxa">meta 20%</span></div>
     </div>
+  </section>
+
+  <section class="panel reserva" aria-label="Reserva de emergência">
+    <div class="rv-head">
+      <div><h2>Reserva de emergência</h2><div class="sub" id="rvSub">Quanto tempo você se mantém sem renda</div></div>
+      <div class="rv-in"><label for="rvVal">Tenho guardado</label><input id="rvVal" class="num" inputmode="decimal" placeholder="0,00"></div>
+    </div>
+    <div class="rv-bar" aria-hidden="true"><i id="rvFill"></i><span style="left:25%"></span><span style="left:50%"></span></div>
+    <div class="rv-foot"><span id="rvTxt"></span><span class="rv-scale"><span>0</span><span>3 meses</span><span>6 meses</span><span>12+</span></span></div>
+    <div class="rv-next" id="rvNext"></div>
   </section>
 
   <div class="grid2">
@@ -366,6 +390,7 @@ function render(){
   dT.innerHTML = taxa===null ? "meta 20%" : `<span class="ar">${taxa>=.2?"✓":"!"}</span>meta 20%`;
 
   drawSpark(tx);
+  drawReserva(tx);
   drawFlow(tx);
   drawBudget(s);
   drawLedger(tx, example);
@@ -436,6 +461,34 @@ function drawFlow(tx){
     h.addEventListener("click", ()=>{ view.month = r.k; render(); });
   });
 }
+
+let reserva = (()=>{ try { return +localStorage.getItem("lc:reserva") || 0; } catch { return 0; } })();
+function drawReserva(tx){
+  const ks = [1,2,3].map(n=>shiftMonth(curMonth,-n));
+  const s3 = ks.map(k=>sums(tx,k));
+  const desp = s3.map(s=>s.d).filter(x=>x>0);
+  const media = desp.length ? desp.reduce((a,b)=>a+b,0)/desp.length : 0;
+  const sobra = s3.reduce((a,s)=>a+s.res,0)/3;
+  const inp = $("#rvVal");
+  if (document.activeElement!==inp) inp.value = reserva ? reserva.toLocaleString("pt-BR",{maximumFractionDigits:2}) : "";
+  const meses = media>0 ? reserva/media : 0;
+  $("#rvFill").style.width = Math.min(1, meses/12)*100 + "%";
+  $("#rvSub").textContent = media>0 ? `Despesa média dos últimos 3 meses: ${brl0.format(media)}/mês` : "Registre despesas para calcular quantos meses a reserva cobre";
+  const st = meses<3 ? "crit" : meses<6 ? "warn" : "ok";
+  const label = meses<3 ? "Abaixo do mínimo" : meses<6 ? "Razoável" : "Adequada";
+  $("#rvTxt").innerHTML = media>0 ? `<b class="num">${meses.toLocaleString("pt-BR",{maximumFractionDigits:1})} meses</b> de despesas cobertas <span class="pill ${st}">${ICON[st]}${label}</span>` : "";
+  const falta = 6*media - reserva;
+  $("#rvNext").innerHTML = !media ? "" : falta>0
+    ? `Para chegar a 6 meses faltam <b>${brl0.format(falta)}</b>${sobra>0?`. Guardando a sobra média de ${brl0.format(sobra)}/mês, você chega lá em ${Math.ceil(falta/sobra)} ${Math.ceil(falta/sobra)===1?"mês":"meses"}`:""}. Deixe a reserva no Tesouro Selic ou num CDB de liquidez diária.`
+    : `Reserva completa.${sobra>0?` A sobra média de ${brl0.format(sobra)}/mês pode ir para prazos mais longos:`:" Com a reserva pronta, o próximo passo é investir a sobra:"} <a href="carteira.html">monte sua carteira</a> ou <a href="simuladores.html#aposentadoria">simule a aposentadoria</a>.`;
+}
+$("#rvVal").addEventListener("input", e=>{
+  const v = e.target.value.trim() ? parseMoney(e.target.value) : 0;
+  if (!(v>=0)) return;
+  reserva = v;
+  try { localStorage.setItem("lc:reserva", String(v)); } catch {}
+  drawReserva(dataset().tx);
+});
 
 function drawSpark(tx){
   const svg = $("#spark"), W=96, H=34, p=4;

@@ -1,32 +1,45 @@
 # Dashboard Financeiro
 
-Painel de finanças pessoais e simuladores financeiros em português, feitos em HTML, CSS e JavaScript puros. Não precisam de servidor nem de instalação.
+Painel de finanças pessoais, simuladores e otimizador de carteira em português, feitos em HTML, CSS e JavaScript puros. Os dados de mercado se atualizam sozinhos.
+
+**Site:** https://cleitonfranco74.github.io/dashboard_financeiro/
 
 ## Páginas
 
 ### Livro-Caixa (`index.html`)
-Painel de controle do orçamento pessoal:
-- resumo do mês: receitas, despesas, resultado e taxa de poupança, com comparação ao mês anterior;
-- fluxo de caixa dos últimos 6 meses;
-- orçamento por categoria, com limites editáveis e alerta de estouro;
-- livro de lançamentos com busca, filtros e exportação para CSV.
-
-Os lançamentos ficam salvos no `localStorage` do navegador. Enquanto nada é registrado, a página mostra dados de exemplo.
+- Resumo do mês: receitas, despesas, resultado e taxa de poupança.
+- **Reserva de emergência:** quantos meses de despesas você cobre e em quanto tempo completa 6 meses.
+- Fluxo de caixa dos últimos 6 meses, orçamento por categoria e livro de lançamentos com exportação para CSV.
+- Dados salvos no `localStorage` do navegador.
 
 ### Simuladores (`simuladores.html`)
-| Simulador | O que responde |
-|---|---|
-| Aposentadoria | Patrimônio projetado, capital necessário e aporte mensal para a renda desejada |
-| Tesouro Direto | Tesouro Selic, Prefixado e IPCA+ contra a poupança, com IR regressivo e custódia da B3 |
-| Quitar dívidas | Estratégias avalanche, bola de neve e só o mínimo: prazo e juros totais |
-| Alugar ou financiar | Patrimônio de quem financia (SAC/Price) contra quem aluga e investe |
-| Consórcio | Custo em valor presente contra financiamento e contra juntar investindo |
-| CDB | Valor líquido e taxa equivalente de LCI/LCA, Tesouro Selic e poupança |
-| Ações | 1.000 cenários de mercado com faixa de resultados e chance de vencer a renda fixa |
-| PGBL ou VGBL | PGBL, VGBL e investir por fora, com dedução de 12% e tabela regressiva |
+Aposentadoria, Tesouro Direto, quitação de dívidas, alugar ou financiar, consórcio, CDB, ações e PGBL/VGBL.
+- **Dados ao vivo:** Selic, CDI, IPCA 12 meses e Focus, direto das APIs do Banco Central. As taxas de Prefixado e IPCA+ vêm do título do Tesouro com vencimento mais próximo do prazo.
+- **Cenário Focus:** a Selic e o IPCA seguem mês a mês a trajetória esperada pelo mercado, e não uma taxa fixa.
+- **Valores em reais de hoje:** opção de descontar a inflação esperada.
+- **Taxas de equilíbrio:** Selic média que empata Prefixado × Selic e inflação implícita que empata IPCA+ × Prefixado.
+- **Ações:** cenários sorteados de blocos de 12 meses da história real do BOVA11.
+- **Sobra do Livro-Caixa:** a sobra média entra como aporte com um clique.
 
-## Como usar
-Abra `index.html` no navegador ou publique pelo GitHub Pages (Settings → Pages → branch `main`, pasta `/ (root)`).
+### Carteira eficiente (`carteira.html`)
+Otimização de Markowitz com Tesouro Selic/CDI, Prefixado, IPCA+, BOVA11, IVVB11 e ações (ITUB4, PETR4, VALE3, WEGE3, BBAS3).
+- **Retornos esperados:** pelas taxas de mercado de hoje e pelo CAPM (CDI esperado + beta × prêmio de risco), ou pela média histórica, para comparação.
+- **Covariâncias:** com encolhimento Ledoit-Wolf.
+- **Otimização:** fronteira eficiente, linha de mercado de capitais e carteira de máximo Sharpe.
+- **Perfil de risco:** por volatilidade máxima aceita.
+- **Estabilidade dos pesos:** reamostragem de Michaud.
+- **Teste histórico:** com rebalanceamento, comparado ao CDI e ao BOVA11, mais o mapa de correlações.
+
+## Dados de mercado
+`data/mercado.json` é atualizado todo dia útil às 19h (Brasília) pela GitHub Action `.github/workflows/mercado.yml`, que roda `scripts/atualizar_mercado.py`. Fontes:
+- **BCB SGS:** Selic (432), CDI (4389 e 4391), IPCA (433 e 13522).
+- **Boletim Focus:** expectativas anuais de Selic e IPCA.
+- **Tesouro Transparente:** preços e taxas do Tesouro Direto.
+- **Yahoo Finance (yfinance):** preços mensais ajustados das ações e ETFs.
+
+Para atualizar à mão: aba **Actions** → *Atualizar dados de mercado* → *Run workflow*.
+
+Para editar a lista de ações, altere `ACOES` em `scripts/atualizar_mercado.py` e `ATIVOS` em `carteira.html`.
 
 ## Aviso
-As taxas padrão (Selic, CDI, IPCA etc.) são apenas exemplos e devem ser atualizadas. As regras tributárias refletem a legislação conhecida na data de criação. Os resultados são estimativas educacionais e não recomendação de investimento.
+Ferramenta educacional. Estimativas não são recomendação de investimento. As regras tributárias refletem a legislação conhecida na data de criação.

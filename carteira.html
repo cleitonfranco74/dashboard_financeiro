@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Carteira Eficiente Livro-Caixa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap">
+<style>
+html,body{margin:0}
+[hidden]{display:none!important}
+:root{
+  --bg:#f2f4f1; --surface:#fcfdfb; --surface-2:#e9ece7; --ink:#121a16; --ink-2:#4b5650; --muted:#7f877f;
+  --line:#dde2da; --axis:#c2c8bf; --accent:#145c55; --accent-ink:#ffffff; --accent-soft:#dcebe6;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --neg:#2a78d6; --pos:#e34948; --mid:#f0efec;
+  --good:#0ca30c; --good-text:#006300; --warn:#fab219; --crit:#d03b3b; --crit-text:#b42f2f;
+  --ring:rgba(18,26,22,.10); --shadow:0 1px 2px rgba(18,26,22,.05),0 6px 20px -12px rgba(18,26,22,.18);
+  --sans:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Spline Sans Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0d100f; --surface:#161a18; --surface-2:#222724; --ink:#f1f3f0; --ink-2:#bec5bd; --muted:#8a918a;
+    --line:#2a302c; --axis:#3b423d; --accent:#62b5a9; --accent-ink:#0a1917; --accent-soft:#1b322e;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --neg:#3987e5; --pos:#e66767; --mid:#383835;
+    --good-text:#2fbf4a; --crit-text:#ec6b6b; --ring:rgba(255,255,255,.09); --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0d100f; --surface:#161a18; --surface-2:#222724; --ink:#f1f3f0; --ink-2:#bec5bd; --muted:#8a918a;
+  --line:#2a302c; --axis:#3b423d; --accent:#62b5a9; --accent-ink:#0a1917; --accent-soft:#1b322e;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --neg:#3987e5; --pos:#e66767; --mid:#383835;
+  --good-text:#2fbf4a; --crit-text:#ec6b6b; --ring:rgba(255,255,255,.09); --shadow:0 1px 2px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45;padding-inline:16px;padding-block:20px 56px}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+header.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:10px 20px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:28px;line-height:1.1;margin:4px 0 0;font-weight:700;letter-spacing:-.02em;text-wrap:balance}
+nav.links{display:flex;gap:8px;flex-wrap:wrap}
+nav.links a{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);padding:7px 13px;border-radius:999px;font-weight:500;font-size:13px;text-decoration:none}
+nav.links a:hover{color:var(--ink);background:var(--surface-2)}
+.mkt{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:10px 14px;font-size:12.5px;color:var(--ink-2)}
+.mkt b{font-weight:600;color:var(--ink)}
+.mkt .st{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:12px;flex-basis:100%}
+.mkt .st i{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.mkt .st.on i{background:var(--good)} .mkt .st.off i{background:var(--warn)}
+
+.layout{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:960px){.layout{grid-template-columns:1fr}}
+.panel{background:var(--surface);border-radius:16px;border:1px solid var(--ring);box-shadow:var(--shadow);padding:18px 20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.controls{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media (max-width:960px){.controls{position:static}}
+h2{font-size:18px;margin:0;font-weight:700;letter-spacing:-.015em}
+h3{font-size:15px;margin:0;font-weight:650}
+.lede{color:var(--ink-2);margin:0;font-size:13.5px;max-width:64ch}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field.wide{grid-column:1/-1}
+.field label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.inp{display:flex;align-items:center;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:0 10px;gap:6px;min-width:0}
+.inp:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.inp input{border:0;background:none;outline:none;width:100%;min-width:0;font-family:var(--mono);font-size:13.5px}
+.inp span{color:var(--muted);font-size:12px;white-space:nowrap}
+.field select{height:38px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:0 8px;width:100%}
+.field small{font-size:11.5px;color:var(--muted);line-height:1.3}
+.sect{grid-column:1/-1;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);padding-top:6px;border-top:1px solid var(--line)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:5px 11px;font-size:12.5px;color:var(--ink-2);font-weight:500}
+.chips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.rangeval{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+
+.results{display:flex;flex-direction:column;gap:16px;min-width:0}
+.verdict{background:var(--accent-soft);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+.verdict .tag{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.verdict p{margin:0;font-size:16.5px;line-height:1.45;font-weight:500;max-width:72ch;text-wrap:pretty}
+.verdict p + p{font-size:14px;font-weight:400;color:var(--ink-2)}
+.verdict.err{background:color-mix(in srgb,var(--crit) 12%,var(--surface))}
+.verdict.err .tag{color:var(--crit-text)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.kpi{background:var(--surface);border-radius:14px;padding:14px 16px;border:1px solid var(--ring);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px;min-width:0}
+.kpi .lbl{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2)}
+.kpi .val{font-family:var(--mono);font-size:21px;font-weight:500;letter-spacing:-.03em;line-height:1.2;overflow-wrap:anywhere}
+.kpi .hint{font-size:12px;color:var(--muted)}
+.phead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 14px}
+.sub{font-size:12.5px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+.legend i.dot{width:10px;height:10px;border-radius:50%}
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;overflow:visible}
+.chart text{font-family:var(--sans);font-size:11.5px;fill:var(--muted)}
+.chart .tn{font-family:var(--mono);font-size:10.5px}
+.chart .lab{fill:var(--ink-2);font-size:11px;font-weight:600}
+.tip{position:absolute;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12.5px;box-shadow:0 8px 24px -8px rgba(0,0,0,.25);min-width:180px;z-index:5}
+.tip .t{font-weight:600;margin-bottom:6px}
+.tip .r{display:flex;justify-content:space-between;gap:16px;align-items:center}
+.tip .r span:first-child{display:flex;align-items:center;gap:6px;color:var(--ink-2)}
+.tip .r i{width:8px;height:8px;border-radius:2px}
+
+.weights{display:flex;flex-direction:column;gap:9px}
+.wrow{display:grid;grid-template-columns:minmax(120px,190px) 1fr 64px 92px;gap:10px;align-items:center;font-size:13px}
+.wrow .nm{display:flex;align-items:center;gap:7px;min-width:0}
+.wrow .nm i{width:9px;height:9px;border-radius:2px;flex:none}
+.wrow .nm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wrow .track{position:relative;height:14px;background:var(--surface-2);border-radius:4px}
+.wrow .fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.wrow .rng{position:absolute;top:50%;height:2px;background:var(--ink);opacity:.55;transform:translateY(-50%)}
+.wrow .rng::before,.wrow .rng::after{content:"";position:absolute;top:-4px;width:2px;height:10px;background:var(--ink)}
+.wrow .rng::before{left:0} .wrow .rng::after{right:0}
+.wrow .p,.wrow .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12.5px;text-align:right}
+.wrow .v{color:var(--muted)}
+.wrow.zero{opacity:.5}
+@media (max-width:560px){.wrow{grid-template-columns:1fr 56px 84px}.wrow .track{grid-column:1/-1;grid-row:2}}
+.classbar{display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px;background:var(--surface)}
+.classbar i{display:block;height:100%}
+
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.n,th.n{text-align:right;white-space:nowrap}
+td .sw{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:7px;vertical-align:middle}
+.prem{min-width:720px}
+.prem input[type=text]{width:84px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:0 8px;text-align:right;font-family:var(--mono);font-size:12.5px}
+.prem input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent)}
+.prem tr.off td{opacity:.45}
+.heat{border-collapse:separate;border-spacing:2px;min-width:0;width:auto}
+.heat th{padding:4px 6px;font-size:10px;text-align:center}
+.heat th.rowh{text-align:right}
+.heat td{width:52px;height:34px;text-align:center;border:0;border-radius:4px;font-family:var(--mono);font-size:11px;padding:0}
+.bt{min-width:560px}
+.neg{color:var(--crit-text)}
+.notes{margin:0;padding-left:18px;color:var(--ink-2);font-size:12.5px;display:flex;flex-direction:column;gap:4px;max-width:84ch}
+details summary{cursor:pointer;font-weight:600;font-size:13px;color:var(--ink-2)}
+details[open] summary{margin-bottom:8px}
+.warnbox{border:1px solid color-mix(in srgb,var(--warn) 60%,var(--line));background:color-mix(in srgb,var(--warn) 10%,var(--surface));border-radius:12px;padding:10px 14px;font-size:13px;color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <span class="eyebrow">Livro-Caixa · carteira</span>
+      <h1>Monte sua carteira eficiente</h1>
+    </div>
+    <nav class="links"><a href="index.html">Livro-Caixa</a><a href="simuladores.html">Simuladores</a></nav>
+  </header>
+  <div class="mkt" id="mkt"><span class="st"><i></i>Carregando dados de mercado…</span></div>
+
+  <div class="layout">
+    <section class="panel controls" aria-label="Parâmetros">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <h2>Markowitz com os pés no chão</h2>
+        <p class="lede">Combina Tesouro, CDI e ações para obter o maior retorno esperado em cada nível de risco. Os retornos vêm das taxas de mercado de hoje, e não do passado.</p>
+      </div>
+      <div class="fields">
+        <div class="field"><label for="cVal">Valor a investir</label><div class="inp"><span>R$</span><input id="cVal" inputmode="decimal" value="100.000"></div></div>
+        <div class="field"><label for="cHor">Horizonte</label><div class="inp"><input id="cHor" inputmode="decimal" value="5"><span>anos</span></div></div>
+        <div class="sect">Seu perfil de risco</div>
+        <div class="field wide">
+          <div class="chips" id="perfis">
+            <button type="button" data-vol="0.03">Conservador</button>
+            <button type="button" data-vol="0.07">Moderado</button>
+            <button type="button" data-vol="0.13">Arrojado</button>
+            <button type="button" data-vol="sharpe">Máximo Sharpe</button>
+          </div>
+        </div>
+        <div class="field wide">
+          <label for="cVol">Risco máximo aceito (volatilidade anual)</label>
+          <input id="cVol" type="range" min="0" max="30" step="0.25" value="7">
+          <div class="rangeval"><span>0%</span><span class="num" id="cVolTxt">7%</span><span id="cVolMax">30%</span></div>
+        </div>
+        <div class="sect">Estimativas</div>
+        <div class="field wide"><label for="cRet">Retorno esperado de cada ativo</label>
+          <select id="cRet"><option value="modelo">Mercado hoje + CAPM (recomendado)</option><option value="historico">Média histórica da janela</option></select>
+          <small id="cRetHint">Renda fixa pelas taxas atuais; ações pelo CDI esperado + beta × prêmio de risco.</small></div>
+        <div class="field"><label for="cErp">Prêmio de risco Brasil</label><div class="inp"><input id="cErp" inputmode="decimal" value="5"><span>% a.a.</span></div></div>
+        <div class="field"><label for="cErpG">Prêmio global</label><div class="inp"><input id="cErpG" inputmode="decimal" value="4"><span>% a.a.</span></div></div>
+        <div class="field"><label for="cJan">Janela de dados</label><select id="cJan"><option value="3">3 anos</option><option value="5" selected>5 anos</option><option value="10">10 anos</option></select></div>
+        <div class="field"><label for="cCap">Máx. por ação</label><div class="inp"><input id="cCap" inputmode="decimal" value="20"><span>%</span></div></div>
+        <div class="field wide"><label for="cCov">Covariâncias</label><select id="cCov"><option value="lw">Com encolhimento (Ledoit-Wolf)</option><option value="amostral">Amostral pura</option></select></div>
+      </div>
+    </section>
+    <div class="results" id="results" aria-live="polite">
+      <div class="verdict"><span class="tag">Carregando</span><p>Buscando o histórico de preços e as taxas de mercado…</p></div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/mercado.js"></script>
+<script src="assets/graficos.js"></script>
+<script>
+(() => {
+const { $, esc, money, nf, pct, aToM, niceTicks, lineChart, legend } = G;
+
+const ATIVOS = [
+  {k:"CDI", nome:"Tesouro Selic / CDB (CDI)", classe:"Caixa", cor:"var(--s3)"},
+  {k:"TESOURO_PRE", nome:"Tesouro Prefixado (~4 anos)", classe:"Renda fixa", cor:"var(--s1)"},
+  {k:"TESOURO_IPCA", nome:"Tesouro IPCA+ (~10 anos)", classe:"Renda fixa", cor:"var(--s1)"},
+  {k:"BOVA11", nome:"BOVA11 (Ibovespa)", classe:"Ações Brasil", cor:"var(--s2)"},
+  {k:"ITUB4", nome:"Itaú (ITUB4)", classe:"Ações Brasil", cor:"var(--s2)", acao:true},
+  {k:"PETR4", nome:"Petrobras (PETR4)", classe:"Ações Brasil", cor:"var(--s2)", acao:true},
+  {k:"VALE3", nome:"Vale (VALE3)", classe:"Ações Brasil", cor:"var(--s2)", acao:true},
+  {k:"WEGE3", nome:"WEG (WEGE3)", classe:"Ações Brasil", cor:"var(--s2)", acao:true},
+  {k:"BBAS3", nome:"Banco do Brasil (BBAS3)", classe:"Ações Brasil", cor:"var(--s2)", acao:true},
+  {k:"IVVB11", nome:"IVVB11 (S&P 500 em reais)", classe:"Exterior", cor:"var(--s4)"},
+];
+const CLASSES = [["Caixa","var(--s3)"],["Renda fixa","var(--s1)"],["Ações Brasil","var(--s2)"],["Exterior","var(--s4)"]];
+
+/* ---------- estado (conveniência por navegador) ---------- */
+const KEY = "carteira:v1";
+let S = { inc:{}, er:{}, vol:7, perfil:"0.07" };
+try { Object.assign(S, JSON.parse(localStorage.getItem(KEY)||"{}")); } catch {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
+for (const id of ["cVal","cHor","cRet","cErp","cErpG","cJan","cCap","cCov"]) if (S[id]!=null) $("#"+id).value = S[id];
+$("#cVol").value = S.vol;
+
+const parseNum = s => { s=String(s).replace(/[R$%\s]/g,""); if(!s) return NaN; if (s.includes(",")) s=s.replace(/\./g,"").replace(",","."); else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s=s.replace(/\./g,""); return Number(s); };
+
+/* ---------- álgebra ---------- */
+function project(v, ub){                    // projeção no simplex com tetos: soma 1, 0 ≤ w ≤ ub
+  let lo = Math.min(...v) - 1, hi = Math.max(...v);
+  for (let it=0; it<60; it++){ const tau=(lo+hi)/2; let s=0; for (let i=0;i<v.length;i++) s+=Math.min(ub[i],Math.max(0,v[i]-tau)); if (s>1) lo=tau; else hi=tau; }
+  const tau=(lo+hi)/2; return v.map((x,i)=>Math.min(ub[i],Math.max(0,x-tau)));
+}
+function solve(mu, C, lam, ub, w0, iters=2500){   // max μ'w − λ/2 w'Cw por gradiente projetado
+  const n=mu.length; let L=0;
+  for (let i=0;i<n;i++){ let s=0; for (let j=0;j<n;j++) s+=Math.abs(C[i][j]); L=Math.max(L,s); }
+  const step = Math.min(1e4, 1/Math.max(lam*L,1e-9));
+  let w = w0 ? w0.slice() : project(Array(n).fill(1/n), ub);
+  for (let it=0; it<iters; it++){
+    const g = mu.map((m,i)=>{ let s=0; for (let j=0;j<n;j++) s+=C[i][j]*w[j]; return m - lam*s; });
+    const nw = project(w.map((x,i)=>x+step*g[i]), ub);
+    let d=0; for (let i=0;i<n;i++) d=Math.max(d,Math.abs(nw[i]-w[i]));
+    w = nw; if (d<1e-9) break;
+  }
+  return w;
+}
+const pRet = (w,mu) => w.reduce((a,x,i)=>a+x*mu[i],0);
+const pVol = (w,C) => { let s=0; for (let i=0;i<w.length;i++) for (let j=0;j<w.length;j++) s+=w[i]*w[j]*C[i][j]; return Math.sqrt(Math.max(0,s)); };
+function covariance(X, shrink){             // X: T×n (mensal). Retorna {C (mensal), delta}
+  const T=X.length, n=X[0].length, m=Array(n).fill(0);
+  for (const r of X) r.forEach((x,i)=>m[i]+=x/T);
+  const Y = X.map(r=>r.map((x,i)=>x-m[i]));
+  const Sm = Array.from({length:n},()=>Array(n).fill(0));
+  for (const r of Y) for (let i=0;i<n;i++) for (let j=0;j<n;j++) Sm[i][j]+=r[i]*r[j]/T;
+  let delta = 0;
+  if (shrink && n>1){                        // alvo diagonal: encolhe as covariâncias, preserva as variâncias
+    let d2=0, b2=0;
+    for (let i=0;i<n;i++) for (let j=0;j<n;j++) if (i!==j) d2+=Sm[i][j]**2;
+    for (const r of Y) for (let i=0;i<n;i++) for (let j=0;j<n;j++) if (i!==j) b2+=(r[i]*r[j]-Sm[i][j])**2;
+    b2/=T*T; delta = d2>0 ? Math.min(1, Math.min(b2,d2)/d2) : 0;
+  }
+  const C = Sm.map((row,i)=>row.map((x,j)=>(i===j ? x : (1-delta)*x)*T/(T-1)));
+  return {C, mean:m, delta};
+}
+function cholesky(A){
+  const n=A.length, L=Array.from({length:n},()=>Array(n).fill(0));
+  for (let i=0;i<n;i++) for (let j=0;j<=i;j++){
+    let s=A[i][j]; for (let k=0;k<j;k++) s-=L[i][k]*L[j][k];
+    L[i][j] = i===j ? Math.sqrt(Math.max(s,1e-12)) : s/L[j][j];
+  }
+  return L;
+}
+function rng(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed>>>15, 1|seed); t = t + Math.imul(t ^ t>>>7, 61|t) ^ t; return ((t ^ t>>>14)>>>0)/4294967296; }; }
+
+/* ---------- cálculo principal ---------- */
+let MKT = null;
+function calcular(){
+  const series = MKT.series, meses = series.meses;
+  const disp = ATIVOS.filter(a=>series.retornos[a.k]);
+  const inc = disp.filter(a=>S.inc[a.k]!==false);
+  const H = Math.max(1, Math.min(30, parseNum($("#cHor").value)||5)), Hm = Math.round(H*12);
+  const erp = (parseNum($("#cErp").value)||0)/100, erpG = (parseNum($("#cErpG").value)||0)/100;
+  const cap = Math.max(1, Math.min(100, parseNum($("#cCap").value)||20))/100;
+  const jan = +$("#cJan").value, modo = $("#cRet").value, shrink = $("#cCov").value==="lw";
+
+  // janela: meses em que todos os ativos disponíveis têm dado
+  const idx = []; for (let t=meses.length-1; t>=0 && idx.length<jan*12; t--) if (disp.every(a=>series.retornos[a.k][t]!=null)) idx.unshift(t);
+  if (idx.length<24) return {erro:"Há menos de 24 meses de dados em comum para os ativos. Tente outra janela."};
+  const col = k => idx.map(t=>series.retornos[k][t]);
+
+  // estatísticas históricas de todos os disponíveis
+  const risky = disp.filter(a=>a.k!=="CDI");
+  const Xall = idx.map(t=>risky.map(a=>series.retornos[a.k][t]));
+  const covAll = covariance(Xall, shrink);
+  const Ca = covAll.C.map(r=>r.map(x=>x*12));
+  const hist = {}; risky.forEach((a,i)=>{ hist[a.k] = {mu:Math.pow(1+covAll.mean[i],12)-1, vol:Math.sqrt(Ca[i][i])}; });
+  const cdiH = col("CDI"); hist.CDI = {mu:Math.pow(1+cdiH.reduce((a,b)=>a+b,0)/cdiH.length,12)-1, vol:0};
+  const bi = risky.findIndex(a=>a.k==="BOVA11");
+  const beta = {}; risky.forEach((a,i)=>{ beta[a.k] = bi>=0 ? Ca[i][bi]/Ca[bi][bi] : null; });
+
+  // retornos esperados (anuais, nominais)
+  const selicP = Mercado.selicPath(MKT, MKT.indicadores.selic.valor);
+  const rf = Mercado.mediaAnual(t=>selicP(t)-0.001, Hm);
+  const ipcaMed = Mercado.mediaAnual(Mercado.ipcaPath(MKT), Hm);
+  const pre = Mercado.titulo(MKT,"Tesouro Prefixado",4), ipcaT = Mercado.titulo(MKT,"Tesouro IPCA+",10);
+  const modelo = {}, fonte = {};
+  for (const a of disp){
+    if (a.k==="CDI"){ modelo.CDI = rf; fonte.CDI = `CDI médio esperado em ${nf(H)} anos (Focus)`; }
+    else if (a.k==="TESOURO_PRE"){ modelo[a.k] = pre ? pre.taxaCompra/100 : rf; fonte[a.k] = pre ? `taxa do Prefixado ${pre.vencimento.slice(0,4)}` : "CDI esperado"; }
+    else if (a.k==="TESOURO_IPCA"){ modelo[a.k] = ipcaT ? (1+ipcaT.taxaCompra/100)*(1+ipcaMed)-1 : rf; fonte[a.k] = ipcaT ? `IPCA+ ${nf(ipcaT.taxaCompra,2)}% (${ipcaT.vencimento.slice(0,4)}) + IPCA esperado` : "CDI esperado"; }
+    else if (a.k==="IVVB11"){ modelo[a.k] = rf+erpG; fonte[a.k] = "CDI esperado + prêmio global"; }
+    else { const b = beta[a.k] ?? 1; modelo[a.k] = rf + b*erp; fonte[a.k] = `CDI + ${nf(b,2)} × prêmio Brasil`; }
+  }
+  const esperado = {};
+  for (const a of disp){
+    const ov = parseNum(S.er[a.k]);
+    esperado[a.k] = isFinite(ov) ? ov/100 : modo==="historico" ? hist[a.k].mu : modelo[a.k];
+  }
+
+  // otimização
+  const incR = inc.filter(a=>a.k!=="CDI"), temCDI = inc.some(a=>a.k==="CDI");
+  if (!incR.length) return {erro:"Inclua pelo menos um ativo de risco (Tesouro prefixado, IPCA+ ou ações) na tabela de premissas."};
+  const ri = incR.map(a=>risky.indexOf(a));
+  const C = ri.map(i=>ri.map(j=>Ca[i][j]));
+  const muR = incR.map(a=>esperado[a.k]);
+  const ubR = incR.map(a=>a.acao ? cap : 1);
+  if (ubR.reduce((x,y)=>x+y,0) < 1 && !temCDI) return {erro:"Os limites por ação não somam 100%. Aumente o máximo por ação ou inclua outros ativos."};
+  // Fronteira só com ativos de risco
+  const lams = Array.from({length:44},(_,i)=>Math.pow(10, 3 - i*4.2/43));   // 1000 → ~0,06
+  const front = []; let w = null;
+  const ubF = ubR.reduce((x,y)=>x+y,0)>=1 ? ubR : ubR.map(()=>1);
+  for (const lam of lams){ w = solve(muR, C, lam, ubF, w); front.push({w, lam, r:pRet(w,muR), v:pVol(w,C)}); }
+  const tang = front.reduce((a,b)=>((b.r-rf)/b.v > (a.r-rf)/a.v ? b : a));
+  // Conjunto investível (com CDI como ativo sem risco)
+  const muF = temCDI ? [esperado.CDI, ...muR] : muR;
+  const CF = temCDI ? [[0,...muR.map(()=>0)], ...C.map(r=>[0,...r])] : C;
+  const ubAll = temCDI ? [1, ...ubR] : ubF;
+  const cands = []; w = null;
+  for (const lam of [3000, ...lams]){ w = solve(muF, CF, lam, ubAll, w); cands.push({w, lam, r:pRet(w,muF), v:pVol(w,CF)}); }
+  const volMax = Math.max(...cands.map(c=>c.v));
+  let alvo = S.perfil==="sharpe" ? tang.v : S.vol/100;
+  const elegiveis = cands.filter(c=>c.v <= alvo + 1e-4);
+  const port = elegiveis.length ? elegiveis.reduce((a,b)=>b.r>a.r?b:a) : cands.reduce((a,b)=>b.v<a.v?b:a);
+  const nomesF = temCDI ? [inc.find(a=>a.k==="CDI"), ...incR] : incR;
+
+  // Estabilidade: reamostragem de Michaud com o mesmo λ
+  const draw = rng(12345 + idx.length + incR.length*7), L = cholesky(ri.map(i=>ri.map(j=>covAll.C[i][j])));
+  const meanR = ri.map(i=>covAll.mean[i]);
+  const amostras = [];
+  for (let s=0; s<40; s++){
+    const X = [];
+    for (let t=0; t<idx.length; t++){
+      const z = ri.map(()=>{ let u=0; while(!u) u=draw(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*draw()); });
+      X.push(meanR.map((m,i)=>m + L[i].reduce((a,l,k)=>a+l*z[k],0)));
+    }
+    const cv = covariance(X, shrink), Cs = cv.C.map(r=>r.map(x=>x*12));
+    const muS = modo==="historico" ? incR.map((a,i)=> isFinite(parseNum(S.er[a.k])) ? esperado[a.k] : Math.pow(1+cv.mean[i],12)-1) : muR;
+    const muSF = temCDI ? [esperado.CDI, ...muS] : muS;
+    const CSF = temCDI ? [[0,...muS.map(()=>0)], ...Cs.map(r=>[0,...r])] : Cs;
+    amostras.push(solve(muSF, CSF, port.lam, ubAll, port.w, 1200));
+  }
+  const faixa = port.w.map((_,i)=>{ const xs=amostras.map(a=>a[i]); return {min:Math.min(...xs), max:Math.max(...xs), med:xs.reduce((a,b)=>a+b,0)/xs.length}; });
+
+  // Backtest com rebalanceamento mensal
+  const pesos = {}; nomesF.forEach((a,i)=>pesos[a.k]=port.w[i]);
+  const bt = (ws) => { let v=100; const out=[100]; for (const t of idx){ let r=0; for (const k in ws) r+=ws[k]*series.retornos[k][t]; v*=1+r; out.push(v); } return out; };
+  const btP = bt(pesos), btC = bt({CDI:1}), btB = series.retornos.BOVA11 ? bt({BOVA11:1}) : null;
+  const statBT = arr => {
+    const rets = arr.slice(1).map((v,i)=>v/arr[i]-1), n=rets.length;
+    const ann = Math.pow(arr[n]/100, 12/n)-1, m=rets.reduce((a,b)=>a+b,0)/n;
+    const vol = Math.sqrt(rets.reduce((a,b)=>a+(b-m)**2,0)/(n-1)*12);
+    let pk=arr[0], dd=0; for (const v of arr){ pk=Math.max(pk,v); dd=Math.min(dd,v/pk-1); }
+    return {ann, vol, dd, pior:Math.min(...rets)};
+  };
+  const cdiAnn = statBT(btC).ann;
+
+  // Correlações dos ativos de risco incluídos
+  const corr = ri.map(i=>ri.map(j=>Ca[i][j]/Math.sqrt(Ca[i][i]*Ca[j][j])));
+
+  return {disp, inc, incR, nomesF, esperado, modelo, fonte, hist, beta, rf, ipcaMed, H, cap, front, tang, cands, port, volMax, alvo, faixa, idx, meses,
+    btP, btC, btB, statBT, cdiAnn, corr, delta:covAll.delta, modo, jan};
+}
+
+/* ---------- desenho ---------- */
+const kpi = (l,v,h="") => `<div class="kpi"><div class="lbl">${l}</div><div class="val">${v}</div>${h?`<div class="hint">${h}</div>`:""}</div>`;
+function render(){
+  if (!MKT) return;
+  const out = $("#results");
+  if (!MKT.series){ out.innerHTML = `<div class="verdict err"><span class="tag">Sem dados</span><p>Não foi possível carregar o histórico de preços (data/mercado.json).</p><p>Abra a página pelo site publicado no GitHub Pages; aberto direto do disco, o navegador bloqueia a leitura do arquivo.</p></div>`; return; }
+  let R;
+  try { R = calcular(); } catch(e){ console.error(e); R = {erro:"Não foi possível otimizar com esses parâmetros."}; }
+  if (R.erro){ out.innerHTML = `<div class="verdict err"><span class="tag">Confira os parâmetros</span><p>${R.erro}</p></div>` + premissasHTML(R); bindPremissas(); return; }
+  const {port, rf, ipcaMed, H, tang, nomesF} = R;
+  const val = parseNum($("#cVal").value)||0;
+  const real = (1+port.r)/(1+ipcaMed)-1, sharpe = port.v>0 ? (port.r-rf)/port.v : null;
+  const var95 = port.r - 1.645*port.v;
+  const mlog = Math.log(1+port.r) - port.v*port.v/2, sd = port.v*Math.sqrt(H);
+  const p10 = val*Math.exp(H*mlog - 1.2816*sd), p50 = val*Math.exp(H*mlog), p90 = val*Math.exp(H*mlog + 1.2816*sd);
+  const byClass = {}; nomesF.forEach((a,i)=>byClass[a.classe]=(byClass[a.classe]||0)+port.w[i]);
+  const instavel = R.faixa.some(f=>f.max-f.min>0.25);
+  const vol = $("#cVol"); vol.max = Math.ceil(R.volMax*100); $("#cVolMax").textContent = nf(Math.ceil(R.volMax*100))+"%";
+  if (S.perfil==="sharpe"){ vol.value = (tang.v*100).toFixed(2); }
+  $("#cVolTxt").textContent = pct(R.alvo,1);
+  document.querySelectorAll("#perfis button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.vol===S.perfil));
+
+  out.innerHTML =
+    `<div class="verdict"><span class="tag">${S.perfil==="sharpe"?"Carteira de máximo Sharpe":`Risco de até ${pct(R.alvo,1)} ao ano`}</span>
+      <p>A combinação mais eficiente espera <b>${pct(port.r)}</b> ao ano, ou <b>${pct(real)}</b> acima da inflação, com volatilidade de ${pct(port.v)}. Composição: ${CLASSES.filter(([c])=>byClass[c]>0.0005).map(([c])=>`${pct(byClass[c],0)} em ${({"Caixa":"caixa (CDI)","Renda fixa":"renda fixa","Ações Brasil":"ações brasileiras","Exterior":"exterior"})[c]}`).join(", ")}.</p>
+      <p>${sharpe!=null?`Índice de Sharpe de ${nf(sharpe,2)} contra o CDI esperado de ${pct(rf)}. `:""}A carteira de máximo Sharpe tem risco de ${pct(tang.v)} e retorno de ${pct(tang.r)}.${instavel?" <b>Os pesos mudam bastante com pequenas variações nos dados</b>: trate-os como faixas, veja as barras de estabilidade.":""}</p></div>` +
+    (R.modo==="historico" ? `<div class="warnbox">Você está usando médias históricas como retorno esperado. Elas refletem o que já aconteceu (PETR4 rendeu ${pct(R.hist.PETR4?.mu||0,0)} ao ano na janela) e costumam gerar carteiras concentradas e instáveis. Use para estudo, não para decidir.</div>` : "") +
+    `<div class="kpis">${kpi("Retorno esperado", pct(port.r), `${pct(real)} real, com IPCA de ${pct(ipcaMed)}`)}${kpi("Volatilidade", pct(port.v), "desvio-padrão anual")}${kpi("Índice de Sharpe", sharpe!=null?nf(sharpe,2):"—", "retorno acima do CDI por unidade de risco")}${kpi("Ano ruim (1 em 20)", pct(var95), "VaR de 95% em 12 meses")}${kpi(`Em ${nf(H)} anos`, money(p50), `80% de chance entre ${money(p10)} e ${money(p90)}`)}</div>` +
+    `<section class="panel"><div class="phead"><div><h3>Fronteira eficiente</h3><div class="sub">Clique no gráfico para escolher outro nível de risco</div></div>${legend([["Fronteira (só ativos de risco)","var(--s1)"],["Com CDI (linha de mercado de capitais)","var(--ink-2)",true]])}</div><div class="chart" id="front"></div></section>` +
+    `<section class="panel"><div class="phead"><div><h3>Composição da carteira</h3><div class="sub">Barra: peso ótimo. Traço: faixa dos pesos em 40 reamostragens dos dados (Michaud)</div></div>${classLegend()}</div>
+      <div class="classbar" aria-hidden="true">${CLASSES.map(([c,cor])=>byClass[c]>0.0005?`<i style="width:${byClass[c]*100}%;background:${cor}"></i>`:"").join("")}</div>
+      <div class="weights">${nomesF.map((a,i)=>({a,w:port.w[i],f:R.faixa[i]})).sort((x,y)=>CLASSES.findIndex(c=>c[0]===x.a.classe)-CLASSES.findIndex(c=>c[0]===y.a.classe)||y.w-x.w).map(({a,w,f})=>`
+        <div class="wrow${w<0.0005&&f.max<0.01?" zero":""}"><span class="nm"><i style="background:${a.cor}"></i><span title="${esc(a.nome)}">${esc(a.nome)}</span></span>
+        <span class="track"><span class="fill" style="width:${w*100}%;background:${a.cor}"></span>${f.max-f.min>0.005?`<span class="rng" style="left:${f.min*100}%;width:${(f.max-f.min)*100}%"></span>`:""}</span>
+        <span class="p">${pct(w)}</span><span class="v">${money(w*val)}</span></div>`).join("")}</div></section>` +
+    `<section class="panel"><div class="phead"><div><h3>Como essa carteira teria se saído</h3><div class="sub">Últimos ${Math.round(R.idx.length/12)} anos, rebalanceando todo mês. Base 100</div></div>${legend([["Sua carteira","var(--accent)"],["CDI","var(--s3)"],["BOVA11","var(--s2)"]])}</div><div class="chart" id="bt"></div>
+      <div class="tablewrap"><table class="bt"><thead><tr><th></th><th class="n">Retorno anual</th><th class="n">Volatilidade</th><th class="n">Sharpe</th><th class="n">Maior queda</th><th class="n">Pior mês</th></tr></thead><tbody>
+      ${[["Sua carteira",R.btP,"var(--accent)"],["CDI",R.btC,"var(--s3)"],["BOVA11",R.btB,"var(--s2)"]].filter(x=>x[1]).map(([n,arr,c])=>{ const s=R.statBT(arr); return `<tr><td><span class="sw" style="background:${c}"></span>${n}</td><td class="n num">${pct(s.ann)}</td><td class="n num">${pct(s.vol)}</td><td class="n num">${s.vol>0.001?nf((s.ann-R.cdiAnn)/s.vol,2):"—"}</td><td class="n num ${s.dd<-0.1?"neg":""}">${pct(s.dd)}</td><td class="n num">${pct(s.pior)}</td></tr>`; }).join("")}
+      </tbody></table></div></section>` +
+    `<section class="panel"><div class="phead"><div><h3>Correlações</h3><div class="sub">Quanto os ativos sobem e caem juntos (${Math.round(R.idx.length/12)} anos de dados mensais). Perto de 0 é o que diversifica</div></div></div><div class="tablewrap">${heatHTML(R)}</div></section>` +
+    premissasHTML(R) +
+    `<section class="panel"><details><summary>Metodologia e limitações</summary><ul class="notes">
+      <li>Otimização de média-variância (Markowitz): maximiza retorno esperado menos λ/2 × variância, sem venda a descoberto e com teto por ação. A fronteira percorre 44 valores de λ.</li>
+      <li>O CDI (Tesouro Selic ou CDB de liquidez diária) entra como ativo sem risco. Combinado com a carteira tangente, forma a linha de mercado de capitais. Sem alavancagem.</li>
+      <li>Retornos esperados no modo recomendado: CDI médio esperado pelo Focus no horizonte; Prefixado pela taxa atual do título de ~4 anos; IPCA+ pela taxa real atual do título de ~10 anos mais o IPCA esperado; ações brasileiras pelo CAPM (CDI + beta contra o BOVA11 × prêmio Brasil); IVVB11 pelo CDI + prêmio global (paridade de juros).</li>
+      <li>Covariâncias de retornos mensais na janela escolhida${R.delta?`, com encolhimento de ${pct(R.delta,0)} das covariâncias em direção a zero (Ledoit-Wolf, alvo diagonal)`:""}. As séries do Tesouro encadeiam, mês a mês, o título de prazo mais próximo do alvo, com marcação a mercado.</li>
+      <li>Estabilidade: 40 amostras sintéticas com a mesma média e covariância, reotimizadas com o mesmo λ (reamostragem de Michaud).</li>
+      <li>O teste histórico usa pesos calculados com dados do próprio período (viés de retrospectiva). Serve para ver quedas e oscilações, não para provar desempenho.</li>
+      <li>IR não foi descontado. Com alíquota igual para todos (15% no longo prazo), a composição ótima para cada nível de risco não muda; ações vendidas dentro da isenção de R$ 20 mil/mês ficariam relativamente mais atraentes.</li>
+      <li>Ferramenta educacional. Não é recomendação de investimento.</li></ul></details></section>`;
+
+  const fr = $("#front");
+  G.charts.set(fr, {draw:()=>drawFront(fr, R)}); drawFront(fr, R);
+  const xs = R.btP.map((_,i)=>i), lab = i => i===0 ? R.meses[R.idx[0]] : R.meses[R.idx[i-1]];
+  const jan = xs.filter(i=>i>0 && lab(i).endsWith("-01"));
+  lineChart($("#bt"), {label:"Teste histórico", xs, xTicks:jan, series:[{name:"Sua carteira",color:"var(--accent)",values:R.btP},{name:"CDI",color:"var(--s3)",values:R.btC},...(R.btB?[{name:"BOVA11",color:"var(--s2)",values:R.btB}]:[])],
+    xFmt:i=>lab(i).slice(0,4), tipTitle:i=>lab(i).split("-").reverse().join("/"), yFmt:v=>nf(v), vFmt:v=>nf(v,1), zero:false});
+  bindPremissas();
+}
+const classLegend = () => `<div class="legend">${CLASSES.map(([c,cor])=>`<span><i class="dot" style="background:${cor}"></i>${c}</span>`).join("")}</div>`;
+
+function heatHTML(R){
+  const ks = R.incR, short = a => a.k.replace("TESOURO_","TES. ");
+  const cell = x => { const a=Math.abs(x), p=Math.round(a*70); const c = x>=0?"var(--pos)":"var(--neg)"; return `<td style="background:color-mix(in srgb, ${c} ${p}%, var(--mid))" title="${nf(x,2)}">${nf(x,2)}</td>`; };
+  return `<table class="heat"><thead><tr><th></th>${ks.map(a=>`<th>${esc(short(a))}</th>`).join("")}</tr></thead><tbody>${ks.map((a,i)=>`<tr><th class="rowh">${esc(short(a))}</th>${ks.map((b,j)=>i===j?`<td style="background:var(--surface-2)">1</td>`:cell(R.corr[i][j])).join("")}</tr>`).join("")}</tbody></table>`;
+}
+function premissasHTML(R){
+  const disp = R.disp || ATIVOS.filter(a=>MKT.series?.retornos[a.k]);
+  return `<section class="panel"><div class="phead"><div><h3>Premissas por ativo</h3><div class="sub">Desmarque para excluir. Digite um retorno esperado para usar a sua visão no lugar do modelo</div></div></div>
+    <div class="tablewrap"><table class="prem"><thead><tr><th>Incluir</th><th>Ativo</th><th class="n">Retorno esperado</th><th>Origem</th><th class="n">Média histórica</th><th class="n">Volatilidade</th><th class="n">Beta</th></tr></thead><tbody>
+    ${disp.map(a=>{ const on=S.inc[a.k]!==false, h=R.hist?.[a.k], mod=R.modo==="historico"?h?.mu:R.modelo?.[a.k];
+      return `<tr class="${on?"":"off"}"><td><input type="checkbox" id="inc-${a.k}" data-inc="${a.k}" ${on?"checked":""} aria-label="Incluir ${esc(a.nome)}"></td>
+      <td><span class="sw" style="background:${a.cor}"></span>${esc(a.nome)}</td>
+      <td class="n"><input type="text" inputmode="decimal" id="er-${a.k}" data-er="${a.k}" value="${esc(S.er[a.k]??"")}" placeholder="${mod!=null?nf(mod*100,1):""}" aria-label="Retorno esperado de ${esc(a.nome)} em % ao ano"> %</td>
+      <td class="sub">${isFinite(parseNum(S.er[a.k]))?"sua visão":R.modo==="historico"?"média histórica":esc(R.fonte?.[a.k]||"")}</td>
+      <td class="n num">${h?pct(h.mu):"—"}</td><td class="n num">${h?pct(h.vol):"—"}</td><td class="n num">${R.beta?.[a.k]!=null?nf(R.beta[a.k],2):"—"}</td></tr>`; }).join("")}
+    </tbody></table></div></section>`;
+}
+function bindPremissas(){
+  document.querySelectorAll("[data-inc]").forEach(el=>el.addEventListener("change",()=>{ S.inc[el.dataset.inc]=el.checked; save(); render(); }));
+  let t; document.querySelectorAll("[data-er]").forEach(el=>el.addEventListener("input",()=>{ S.er[el.dataset.er]=el.value.trim()||undefined; save(); clearTimeout(t); t=setTimeout(render,500); }));
+}
+
+function drawFront(el, R){
+  const W = Math.max(300, el.clientWidth||700), Hh = 340, m = {t:16,r:24,b:38,l:52};
+  const pts = [...R.front.map(p=>({v:p.v,r:p.r})), ...R.incR.map(a=>({v:R.hist[a.k].vol, r:R.esperado[a.k]})), {v:0,r:R.rf}];
+  const xmax = Math.max(...pts.map(p=>p.v))*1.08;
+  const yt = niceTicks(Math.min(...pts.map(p=>p.r)), Math.max(...pts.map(p=>p.r)), 5), xt = niceTicks(0, xmax, 6);
+  const X = v => m.l + v/xt[xt.length-1]*(W-m.l-m.r), Y = r => m.t + (yt[yt.length-1]-r)/(yt[yt.length-1]-yt[0])*(Hh-m.t-m.b);
+  let g = "";
+  for (const t of yt) g += `<line x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--line)"/><text class="tn" x="${m.l-8}" y="${Y(t)+3.5}" text-anchor="end">${nf(t*100,1)}%</text>`;
+  for (const t of xt) g += `<text class="tn" x="${X(t)}" y="${Hh-18}" text-anchor="middle">${nf(t*100,0)}%</text>`;
+  g += `<text x="${(m.l+W-m.r)/2}" y="${Hh-2}" text-anchor="middle">Risco (volatilidade anual)</text>`;
+  g += `<text x="12" y="${(m.t+Hh-m.b)/2}" text-anchor="middle" transform="rotate(-90 12 ${(m.t+Hh-m.b)/2})">Retorno esperado</text>`;
+  const fr = [...R.front].sort((a,b)=>a.v-b.v);
+  g += `<path d="${fr.map((p,i)=>(i?"L":"M")+X(p.v).toFixed(1)+","+Y(p.r).toFixed(1)).join("")}" fill="none" stroke="var(--s1)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  if (R.inc.some(a=>a.k==="CDI")) g += `<line x1="${X(0)}" y1="${Y(R.rf)}" x2="${X(R.tang.v)}" y2="${Y(R.tang.r)}" stroke="var(--ink-2)" stroke-width="1.5" stroke-dasharray="6 5"/>`;
+  g += `<circle cx="${X(0)}" cy="${Y(R.rf)}" r="5" fill="var(--s3)" stroke="var(--surface)" stroke-width="2"/><text class="lab" x="${X(0)+8}" y="${Y(R.rf)-8}">CDI</text>`;
+  const labs = [];
+  for (const a of R.incR){
+    const x=X(R.hist[a.k].vol), y=Y(R.esperado[a.k]);
+    g += `<circle cx="${x}" cy="${y}" r="5" fill="${a.cor}" stroke="var(--surface)" stroke-width="2"/>`;
+    let ly = y+4; while (labs.some(l=>Math.abs(l.y-ly)<12 && Math.abs(l.x-x)<60)) ly += 12;
+    labs.push({x,y:ly}); g += `<text class="lab" x="${x+8}" y="${ly}">${esc(a.k.replace("TESOURO_","Tes. "))}</text>`;
+  }
+  g += `<rect x="${X(R.tang.v)-5}" y="${Y(R.tang.r)-5}" width="10" height="10" transform="rotate(45 ${X(R.tang.v)} ${Y(R.tang.r)})" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><text class="lab" x="${X(R.tang.v)-10}" y="${Y(R.tang.r)+20}" text-anchor="end">Máx. Sharpe</text>`;
+  g += `<circle cx="${X(R.port.v)}" cy="${Y(R.port.r)}" r="8" fill="var(--accent)" stroke="var(--surface)" stroke-width="3"/><text class="lab" x="${X(R.port.v)-10}" y="${Y(R.port.r)-13}" text-anchor="end" style="fill:var(--accent)">Sua carteira</text>`;
+  g += `<rect class="ov" x="${m.l}" y="${m.t}" width="${W-m.l-m.r}" height="${Hh-m.t-m.b}" fill="transparent" style="cursor:crosshair"/>`;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${Hh}" height="${Hh}" role="img" aria-label="Fronteira eficiente: retorno esperado por nível de risco">${g}</svg><div class="tip" hidden></div>`;
+  const svg=$("svg",el), tip=$(".tip",el), ov=$(".ov",el);
+  const alvos = [{n:"CDI (sem risco)",v:0,r:R.rf}, ...R.incR.map(a=>({n:a.nome,v:R.hist[a.k].vol,r:R.esperado[a.k]})), {n:"Carteira de máximo Sharpe",v:R.tang.v,r:R.tang.r}, {n:"Sua carteira",v:R.port.v,r:R.port.r}];
+  const toSvg = e => { const b=svg.getBoundingClientRect(); return {x:(e.clientX-b.left)*W/b.width, y:(e.clientY-b.top)*Hh/b.height, b}; };
+  ov.addEventListener("mousemove", e=>{
+    const p = toSvg(e); let best=null, bd=26;
+    for (const a of alvos){ const d=Math.hypot(X(a.v)-p.x, Y(a.r)-p.y); if (d<bd){bd=d;best=a;} }
+    const vx = (p.x-m.l)/(W-m.l-m.r)*xt[xt.length-1];
+    tip.hidden=false;
+    tip.innerHTML = best ? `<div class="t">${esc(best.n)}</div><div class="r"><span>Retorno esperado</span><span class="num">${pct(best.r)}</span></div><div class="r"><span>Volatilidade</span><span class="num">${pct(best.v)}</span></div>`
+      : `<div class="t">Clique para usar risco de ${pct(Math.max(0,vx))}</div>`;
+    const lx = p.x/W*p.b.width; let x=lx+14; if (x+tip.offsetWidth>p.b.width) x=lx-tip.offsetWidth-14;
+    tip.style.left=Math.max(0,x)+"px"; tip.style.top=Math.max(0,p.y/Hh*p.b.height-40)+"px";
+  });
+  ov.addEventListener("mouseleave", ()=>{ tip.hidden=true; });
+  ov.addEventListener("click", e=>{ const p=toSvg(e); const vx=(p.x-m.l)/(W-m.l-m.r)*xt[xt.length-1]; S.perfil="custom"; S.vol=Math.max(0,Math.round(vx*400)/4); $("#cVol").value=S.vol; save(); render(); });
+}
+
+/* ---------- controles ---------- */
+let t;
+const agenda = () => { clearTimeout(t); t=setTimeout(render,250); };
+for (const id of ["cVal","cHor","cErp","cErpG","cCap"]) $("#"+id).addEventListener("input", e=>{ S[id]=e.target.value; save(); agenda(); });
+for (const id of ["cRet","cJan","cCov"]) $("#"+id).addEventListener("change", e=>{ S[id]=e.target.value; save(); render(); });
+$("#cVol").addEventListener("input", e=>{ S.vol=+e.target.value; S.perfil="custom"; save(); agenda(); });
+$("#perfis").addEventListener("click", e=>{ const b=e.target.closest("button"); if (!b) return; S.perfil=b.dataset.vol; if (b.dataset.vol!=="sharpe"){ S.vol=+b.dataset.vol*100; $("#cVol").value=S.vol; } save(); render(); });
+
+Mercado.carregar().then(m=>{
+  MKT = m;
+  const i = m.indicadores;
+  $("#mkt").innerHTML = `<span class="st ${m.series?"on":"off"}"><i></i>${m.series?`Preços e taxas de ${Mercado.dataBR(m.atualizado)} · indicadores ${m.aoVivo?"ao vivo do Banco Central":"do arquivo"}`:"Histórico de preços indisponível"}</span>
+    <span><b>Selic</b> <span class="num">${nf(i.selic.valor,2)}%</span></span><span><b>CDI</b> <span class="num">${nf(i.cdi.valor,2)}%</span></span><span><b>IPCA 12m</b> <span class="num">${nf(i.ipca12.valor,2)}%</span></span>
+    ${m.tesouro?`<span><b>Prefixado ~4a</b> <span class="num">${nf(Mercado.titulo(m,"Tesouro Prefixado",4)?.taxaCompra??0,2)}%</span></span><span><b>IPCA+ ~10a</b> <span class="num">IPCA + ${nf(Mercado.titulo(m,"Tesouro IPCA+",10)?.taxaCompra??0,2)}%</span></span>`:""}`;
+  render();
+});
+})();
+</script>
+</body>
+</html>
