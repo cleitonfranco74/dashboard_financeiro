@@ -4,6 +4,8 @@ Painel de finanças pessoais, simuladores e otimizador de carteira em português
 
 **Site:** https://cleitonfranco74.github.io/dashboard_financeiro/
 
+**Autor:** Prof. Dr. Cleiton Franco, Doutor em Economia e Professor Adjunto da UNEMAT (Universidade do Estado de Mato Grosso), Câmpus de Sinop.
+
 ## Páginas
 
 ### Livro-Caixa (`index.html`)
