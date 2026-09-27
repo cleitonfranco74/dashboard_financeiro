@@ -1,0 +1,907 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simuladores Livro-Caixa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap">
+<style>
+html,body{margin:0}
+[hidden]{display:none!important}
+:root{
+  --bg:#f2f4f1; --surface:#fcfdfb; --surface-2:#e9ece7; --ink:#121a16; --ink-2:#4b5650; --muted:#7f877f;
+  --line:#dde2da; --axis:#c2c8bf; --accent:#145c55; --accent-ink:#ffffff; --accent-soft:#dcebe6;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --good:#0ca30c; --good-text:#006300; --warn:#fab219; --crit:#d03b3b; --crit-text:#b42f2f;
+  --ring:rgba(18,26,22,.10); --shadow:0 1px 2px rgba(18,26,22,.05),0 6px 20px -12px rgba(18,26,22,.18);
+  --sans:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Spline Sans Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0d100f; --surface:#161a18; --surface-2:#222724; --ink:#f1f3f0; --ink-2:#bec5bd; --muted:#8a918a;
+    --line:#2a302c; --axis:#3b423d; --accent:#62b5a9; --accent-ink:#0a1917; --accent-soft:#1b322e;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+    --good-text:#2fbf4a; --crit-text:#ec6b6b; --ring:rgba(255,255,255,.09); --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0d100f; --surface:#161a18; --surface-2:#222724; --ink:#f1f3f0; --ink-2:#bec5bd; --muted:#8a918a;
+  --line:#2a302c; --axis:#3b423d; --accent:#62b5a9; --accent-ink:#0a1917; --accent-soft:#1b322e;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --good-text:#2fbf4a; --crit-text:#ec6b6b; --ring:rgba(255,255,255,.09); --shadow:0 1px 2px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45;padding-inline:16px;padding-block:20px 56px}
+.wrap{max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+
+header.top{display:flex;flex-direction:column;gap:4px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:28px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.02em;text-wrap:balance}
+
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);padding-block:8px;margin-block:-8px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
+nav.tabs button{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);padding:8px 14px;border-radius:999px;font-weight:500;font-size:13.5px;white-space:nowrap}
+nav.tabs button:hover{color:var(--ink);background:var(--surface-2)}
+nav.tabs button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+
+.sim{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:920px){.sim{grid-template-columns:1fr}}
+.panel{background:var(--surface);border-radius:16px;border:1px solid var(--ring);box-shadow:var(--shadow);padding:18px 20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.inputs{position:sticky;top:calc(env(safe-area-inset-top,0px) + 60px)}
+@media (max-width:920px){.inputs{position:static}}
+h2{font-size:19px;margin:0;font-weight:700;letter-spacing:-.015em;text-wrap:balance}
+h3{font-size:15px;margin:0;font-weight:650}
+.lede{color:var(--ink-2);margin:0;font-size:13.5px;max-width:62ch}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field.wide{grid-column:1/-1}
+.field label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.inp{display:flex;align-items:center;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:0 10px;gap:6px;min-width:0}
+.inp:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.inp input{border:0;background:none;outline:none;width:100%;min-width:0;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13.5px}
+.inp span{color:var(--muted);font-size:12px;white-space:nowrap}
+.inp.bad{border-color:var(--crit)}
+.field select{height:38px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:0 8px;width:100%}
+.field small{font-size:11.5px;color:var(--muted);line-height:1.3}
+.sect{grid-column:1/-1;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);padding-top:6px;border-top:1px solid var(--line)}
+.rowbtns{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.textbtn{background:none;border:0;padding:4px 2px;color:var(--accent);font-weight:600;font-size:13px}
+.textbtn:hover{text-decoration:underline}
+
+.results{display:flex;flex-direction:column;gap:16px;min-width:0}
+.verdict{background:var(--accent-soft);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+.verdict .tag{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.verdict p{margin:0;font-size:16.5px;line-height:1.45;font-weight:500;max-width:70ch;text-wrap:pretty}
+.verdict p + p{font-size:14px;font-weight:400;color:var(--ink-2)}
+.verdict.err{background:color-mix(in srgb,var(--crit) 12%,var(--surface))}
+.verdict.err .tag{color:var(--crit-text)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.kpi{background:var(--surface);border-radius:14px;padding:14px 16px;border:1px solid var(--ring);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px;min-width:0}
+.kpi .lbl{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);display:flex;gap:7px;align-items:center}
+.kpi .lbl i{width:8px;height:8px;border-radius:2px;flex:none}
+.kpi .val{font-family:var(--mono);font-size:21px;font-weight:500;letter-spacing:-.03em;line-height:1.2;overflow-wrap:anywhere}
+.kpi .hint{font-size:12px;color:var(--muted)}
+.kpi.win{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:999px;background:var(--accent);color:var(--accent-ink)}
+
+.phead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 14px}
+.sub{font-size:12.5px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;overflow:visible}
+.chart text{font-family:var(--sans);font-size:11.5px;fill:var(--muted)}
+.chart .tn{font-family:var(--mono);font-size:10.5px}
+.tip{position:absolute;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12.5px;box-shadow:0 8px 24px -8px rgba(0,0,0,.25);min-width:190px;z-index:5}
+.tip .t{font-weight:600;margin-bottom:6px}
+.tip .r{display:flex;justify-content:space-between;gap:16px;align-items:center}
+.tip .r span:first-child{display:flex;align-items:center;gap:6px;color:var(--ink-2)}
+.tip .r i{width:8px;height:8px;border-radius:2px}
+
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:520px;font-size:13px}
+th{text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.n,th.n{text-align:right;white-space:nowrap}
+tr.best td{background:color-mix(in srgb,var(--accent-soft) 60%,transparent)}
+td .sw{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:7px;vertical-align:middle}
+.neg{color:var(--crit-text)}
+
+.bars{display:flex;flex-direction:column;gap:10px}
+.bar{display:grid;grid-template-columns:minmax(90px,150px) 1fr auto;gap:10px;align-items:center;font-size:13px}
+.bar .track{height:14px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+.bar .track i{display:block;height:100%;border-radius:0 4px 4px 0}
+.bar .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12.5px;text-align:right;min-width:92px}
+@media (max-width:480px){.bar{grid-template-columns:1fr auto}.bar .track{grid-column:1/-1;grid-row:2}}
+
+.notes{margin:0;padding-left:18px;color:var(--ink-2);font-size:12.5px;display:flex;flex-direction:column;gap:4px;max-width:80ch}
+details.prem summary{cursor:pointer;font-weight:600;font-size:13px;color:var(--ink-2)}
+details.prem[open] summary{margin-bottom:8px}
+
+.debts{grid-column:1/-1;display:flex;flex-direction:column;gap:8px}
+.debt{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.debt .name{grid-column:1/-1;display:flex;gap:6px;align-items:center}
+.debt .name input{flex:1;height:32px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:0 8px;font-weight:600;min-width:0}
+.debt .inp{height:34px;background:var(--surface)}
+.debt label{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.debt .rm{border:0;background:none;color:var(--muted);font-size:12px;padding:4px 6px;border-radius:6px}
+.debt .rm:hover{color:var(--crit-text);background:var(--surface-2)}
+.addbtn{height:36px;border:1px dashed var(--axis);border-radius:10px;background:none;color:var(--accent);font-weight:600}
+.addbtn:hover{background:var(--accent-soft)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">Livro-Caixa · simuladores</span>
+    <h1>Simule antes de decidir</h1>
+    <a href="index.html" style="color:var(--accent);font-weight:600;text-decoration:none;font-size:13.5px">← Voltar ao Livro-Caixa</a>
+  </header>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Simuladores"></nav>
+  <main id="main"></main>
+</div>
+
+<script>
+(() => {
+/* ================= helpers ================= */
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const brl = new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
+const brl0 = new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
+const money = v => (v<0?"−":"") + brl0.format(Math.abs(v));
+const money2 = v => (v<0?"−":"") + brl.format(Math.abs(v));
+const pct = (v,d=2) => (v*100).toLocaleString("pt-BR",{minimumFractionDigits:0,maximumFractionDigits:d}) + "%";
+const nf = (v,d=0) => v.toLocaleString("pt-BR",{maximumFractionDigits:d});
+const aToM = r => Math.pow(1+r,1/12)-1;
+const mToA = r => Math.pow(1+r,12)-1;
+function parseNum(s){
+  s = String(s).replace(/[R$%\s]/g,"");
+  if (!s) return NaN;
+  if (s.includes(",")) s = s.replace(/\./g,"").replace(",",".");
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g,"");
+  return Number(s);
+}
+const fmtIn = v => typeof v==="number" ? v.toLocaleString("pt-BR",{maximumFractionDigits:4}) : v;
+function yrs(m){ const a=Math.floor(m/12), r=m%12; return (a?`${a} ${a===1?"ano":"anos"}`:"") + (a&&r?" e ":"") + (r||!a?`${r} ${r===1?"mês":"meses"}`:""); }
+const irRF = m => m<=6 ? .225 : m<=12 ? .20 : m<=24 ? .175 : .15;       // renda fixa, prazo em meses
+const irPrev = y => y<=2 ? .35 : y<=4 ? .30 : y<=6 ? .25 : y<=8 ? .20 : y<=10 ? .15 : .10; // previdência regressiva
+function poupM(selicA, trM){ return selicA>0.085 ? 0.005+trM : aToM(0.7*selicA)+trM; }
+function irr(flows){
+  const npv = r => { let s=0; for (let i=0;i<flows.length;i++) s += flows[i]/Math.pow(1+r,i); return s; };
+  let lo=-0.99, hi=1, flo=npv(lo), fhi=npv(hi);
+  if (!isFinite(flo)||!isFinite(fhi)||flo*fhi>0) return null;
+  for (let i=0;i<120;i++){ const mid=(lo+hi)/2, f=npv(mid); if (f*flo>0){lo=mid;flo=f;} else hi=mid; }
+  return (lo+hi)/2;
+}
+/* Investimento com aportes mensais; cada aporte tem sua própria idade para o IR regressivo. */
+function simInvest({p0=0, pmt=0, months, rate, fee, tax}){
+  const cs=[]; let feeTot=0;
+  const netNow = t => { let s=0; for (const c of cs){ const g=c.v-c.a; s += c.v - (g>0 ? g*tax(t-c.t) : 0); } return s; };
+  if (p0>0) cs.push({a:p0,v:p0,t:0});
+  if (pmt>0) cs.push({a:pmt,v:pmt,t:0});
+  const series=[netNow(0)];
+  for (let t=1;t<=months;t++){
+    const r = rate(t); let tot=0;
+    for (const c of cs){ c.v *= 1+r; tot += c.v; }
+    const f = fee ? fee(tot) : 0;
+    if (f>0 && tot>0){ const k=1-f/tot; for (const c of cs) c.v *= k; feeTot += f; }
+    series.push(netNow(t));
+    if (pmt>0 && t<months) cs.push({a:pmt,v:pmt,t});
+  }
+  const gross = cs.reduce((a,c)=>a+c.v,0), invested = cs.reduce((a,c)=>a+c.a,0), net = series[months];
+  const flows = Array(months+1).fill(0); flows[0] = -(p0+pmt); for (let t=1;t<months;t++) flows[t] = -pmt; flows[months] += net;
+  const im = irr(flows);
+  return {series, gross, invested, fee:feeTot, tax:gross-net, net, irrA: im===null?null:mToA(im)};
+}
+
+/* ================= charts ================= */
+function niceTicks(min, max, n=5){
+  if (max===min){ max = min + 1; }
+  const raw=(max-min)/n, mag=Math.pow(10,Math.floor(Math.log10(raw))), nr=raw/mag;
+  const step=(nr<=1?1:nr<=2?2:nr<=2.5?2.5:nr<=5?5:10)*mag;
+  const lo=Math.floor(min/step)*step, hi=Math.ceil(max/step)*step, out=[];
+  for (let v=lo; v<=hi+step/2; v+=step) out.push(Math.round(v*1e6)/1e6);
+  return out;
+}
+function compact(v){
+  const a=Math.abs(v), s=v<0?"−":"";
+  if (a>=1e6) return s+nf(a/1e6,a>=1e7?0:1)+" mi";
+  if (a>=1e3) return s+nf(a/1e3,a>=1e4?0:1)+" mil";
+  return s+nf(a);
+}
+const charts = new Map();
+function lineChart(el, spec){ charts.set(el, spec); drawLine(el, spec); }
+function drawLine(el, spec){
+  const {xs, series, xFmt, tipTitle, height=270, yFmt=compact, dashed=[]} = spec;
+  const W = Math.max(280, el.clientWidth||640), H = height, m={t:14,r:14,b:30,l:58};
+  const all = series.flatMap(s=>s.values.filter(v=>v!=null&&isFinite(v)));
+  const ticks = niceTicks(Math.min(0,...all), Math.max(1,...all), 5);
+  const y0=ticks[0], y1=ticks[ticks.length-1];
+  const x0=xs[0], x1=xs[xs.length-1]||1;
+  const X = v => m.l + (v-x0)/((x1-x0)||1)*(W-m.l-m.r);
+  const Y = v => m.t + (y1-v)/((y1-y0)||1)*(H-m.t-m.b);
+  let g="";
+  if (spec.band){
+    const {lo, hi, color} = spec.band;
+    const top = xs.map((x,i)=>`${X(x).toFixed(1)},${Y(hi[i]).toFixed(1)}`), bot = xs.map((x,i)=>`${X(x).toFixed(1)},${Y(lo[i]).toFixed(1)}`).reverse();
+    g += `<polygon points="${top.concat(bot).join(" ")}" fill="${color}" opacity=".13"/>`;
+  }
+  for (const t of ticks){
+    g += `<line x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(${t===0?"--axis":"--line"})"/>`;
+    g += `<text class="tn" x="${m.l-8}" y="${Y(t)+3.5}" text-anchor="end">${yFmt(t)}</text>`;
+  }
+  const xt = niceTicks(x0, x1, Math.max(3, Math.min(8, Math.floor((W-m.l)/80)))).filter(v=>v>=x0&&v<=x1);
+  for (const t of xt) g += `<text x="${X(t)}" y="${H-9}" text-anchor="middle">${xFmt(t)}</text>`;
+  series.forEach((s,si)=>{
+    let d="", pen=false;
+    s.values.forEach((v,i)=>{ if (v==null||!isFinite(v)){pen=false;return;} d += (pen?"L":"M")+X(xs[i]).toFixed(1)+","+Y(v).toFixed(1); pen=true; });
+    const dash = dashed.includes(si) ? ` stroke-dasharray="6 5"` : "";
+    g += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"${dash}/>`;
+    let li=s.values.length-1; while (li>=0 && (s.values[li]==null||!isFinite(s.values[li]))) li--;
+    if (li>=0 && !dashed.includes(si)) g += `<circle cx="${X(xs[li])}" cy="${Y(s.values[li])}" r="4" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`;
+  });
+  g += `<g class="hov" style="display:none"><line class="cx" y1="${m.t}" y2="${H-m.b}" stroke="var(--axis)"/>${series.map(s=>`<circle r="4.5" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`).join("")}</g>`;
+  g += `<rect class="ov" x="${m.l}" y="0" width="${W-m.l-m.r}" height="${H}" fill="transparent"/>`;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${esc(spec.label||"Gráfico")}">${g}</svg><div class="tip" hidden></div>`;
+  const svg=$("svg",el), tip=$(".tip",el), hov=$(".hov",el), dots=hov.querySelectorAll("circle");
+  const move = e => {
+    const b = svg.getBoundingClientRect(), px = (e.clientX-b.left)*(W/b.width);
+    const xv = x0 + (px-m.l)/(W-m.l-m.r)*(x1-x0);
+    let i=0, best=Infinity; xs.forEach((x,k)=>{ const d=Math.abs(x-xv); if (d<best){best=d;i=k;} });
+    hov.style.display=""; const cx=X(xs[i]); $(".cx",hov).setAttribute("x1",cx); $(".cx",hov).setAttribute("x2",cx);
+    series.forEach((s,k)=>{ const v=s.values[i]; if (v==null||!isFinite(v)){dots[k].style.display="none";return;} dots[k].style.display=""; dots[k].setAttribute("cx",cx); dots[k].setAttribute("cy",Y(v)); });
+    tip.hidden=false;
+    tip.innerHTML = `<div class="t">${esc(tipTitle(xs[i]))}</div>` + series.map(s=>`<div class="r"><span><i style="background:${s.color}"></i>${esc(s.name)}</span><span class="num">${s.values[i]==null||!isFinite(s.values[i])?"—":money(s.values[i])}</span></div>`).join("");
+    const lx = (cx/W)*b.width; let x = lx+14; if (x+tip.offsetWidth > b.width) x = lx-tip.offsetWidth-14;
+    tip.style.left = Math.max(0,x)+"px"; tip.style.top = "8px";
+  };
+  const ov=$(".ov",el);
+  ov.addEventListener("mousemove", move);
+  ov.addEventListener("touchstart", e=>move(e.touches[0]), {passive:true});
+  ov.addEventListener("touchmove", e=>move(e.touches[0]), {passive:true});
+  ov.addEventListener("mouseleave", ()=>{ tip.hidden=true; hov.style.display="none"; });
+}
+let rsT; new ResizeObserver(()=>{ clearTimeout(rsT); rsT=setTimeout(()=>{ for (const [el,spec] of charts) if (el.isConnected) drawLine(el,spec); else charts.delete(el); },80); }).observe(document.body);
+
+const legend = items => `<div class="legend">${items.map(([n,c,d])=>`<span><i style="background:${d?`repeating-linear-gradient(90deg,${c} 0 4px,transparent 4px 7px)`:c}"></i>${esc(n)}</span>`).join("")}</div>`;
+const kpi = (lbl, val, hint="", color="", win=false) => `<div class="kpi${win?" win":""}"><div class="lbl">${color?`<i style="background:${color}"></i>`:""}${lbl}${win?` <span class="badge">melhor</span>`:""}</div><div class="val">${val}</div>${hint?`<div class="hint">${hint}</div>`:""}</div>`;
+const verdict = (tag, main, extra="", err=false) => `<div class="verdict${err?" err":""}"><span class="tag">${tag}</span><p>${main}</p>${extra?`<p>${extra}</p>`:""}</div>`;
+const chartPanel = (title, sub, leg, id) => `<section class="panel"><div class="phead"><div><h3>${title}</h3><div class="sub">${sub}</div></div>${leg}</div><div class="chart" id="${id}"></div></section>`;
+const notes = list => `<section class="panel"><details class="prem"><summary>Premissas e regras usadas</summary><ul class="notes">${list.map(n=>`<li>${n}</li>`).join("")}</ul></details></section>`;
+const C = {s1:"var(--s1)", s2:"var(--s2)", s3:"var(--s3)", s4:"var(--s4)", ink:"var(--ink-2)"};
+const monthX = n => v => n>36 ? `${nf(v/12,1)}a` : `m${nf(v)}`;
+
+/* ================= simuladores ================= */
+const SIMS = [];
+
+/* ---------- 1. Aposentadoria ---------- */
+SIMS.push({
+  id:"aposentadoria", nav:"Aposentadoria",
+  title:"Quanto preciso juntar para me aposentar?",
+  lede:"Tudo em valores de hoje: use retornos reais (acima da inflação) e a renda que você gostaria de ter com o poder de compra atual.",
+  fields:[
+    {k:"idade",label:"Idade atual",def:35,suf:"anos"},
+    {k:"idadeApos",label:"Aposentar aos",def:65,suf:"anos"},
+    {k:"ate",label:"Planejar até",def:90,suf:"anos"},
+    {k:"patrimonio",label:"Já investido",def:50000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:1500,pre:"R$",wide:true},
+    {sect:"Renda na aposentadoria"},
+    {k:"renda",label:"Renda desejada",def:8000,pre:"R$",suf:"/mês"},
+    {k:"inss",label:"INSS estimado",def:3000,pre:"R$",suf:"/mês"},
+    {sect:"Rentabilidade real"},
+    {k:"retAcc",label:"Até aposentar",def:5,suf:"% a.a.",hint:"acima da inflação"},
+    {k:"retApos",label:"Depois",def:4,suf:"% a.a.",hint:"carteira mais conservadora"},
+  ],
+  run(v){
+    if (!(v.idadeApos>v.idade)) return {error:"A idade de aposentadoria precisa ser maior que a idade atual."};
+    if (!(v.ate>v.idadeApos)) return {error:"“Planejar até” precisa ser maior que a idade de aposentadoria."};
+    const r1=aToM(v.retAcc/100), r2=aToM(v.retApos/100);
+    const n1=Math.round((v.idadeApos-v.idade)*12), n2=Math.round((v.ate-v.idadeApos)*12);
+    const g1=Math.pow(1+r1,n1);
+    const fv = v.patrimonio*g1 + (r1? v.aporte*(g1-1)/r1 : v.aporte*n1);
+    const need = Math.max(0, v.renda - v.inss);
+    const ann = r2 ? (1-Math.pow(1+r2,-n2))/r2 : n2;
+    const capNeed = need*ann;
+    const capPerp = r2 ? need/r2 : Infinity;
+    const pmtReq = Math.max(0, (capNeed - v.patrimonio*g1) * (r1 ? r1/(g1-1) : 1/n1));
+    const rendaPossivel = fv/ann + v.inss;
+    const path = pmt => { const out=[]; let b=v.patrimonio, esg=null;
+      for (let t=0;t<=n1+n2;t++){
+        if (t%12===0) out.push(Math.max(0,b));
+        if (t===n1+n2) break;
+        if (t<n1){ b = b*(1+r1)+pmt; } else { b = b*(1+r2)-need; if (b<0 && esg===null) esg = v.idade + (t+1)/12; }
+      } return {out, esg}; };
+    const A = path(v.aporte), B = path(pmtReq);
+    const xs = A.out.map((_,i)=>v.idade+i);
+    const ok = fv >= capNeed - 1;
+    const main = ok
+      ? `Seu plano cobre a renda desejada. Aos ${v.idadeApos} você terá cerca de <b>${money(fv)}</b>, o bastante para ${money(v.renda)}/mês (com o INSS) até os ${v.ate}.`
+      : `Faltam <b>${money(capNeed-fv)}</b>. Para ter ${money(v.renda)}/mês até os ${v.ate}, aporte <b>${money(pmtReq)}/mês</b> em vez de ${money(v.aporte)}.`;
+    const extra = ok
+      ? `Com o que vai acumular, dá para retirar até ${money(rendaPossivel)}/mês. Para viver só dos rendimentos, sem consumir o principal, seriam necessários ${money(capPerp)}.`
+      : `Mantendo o aporte atual, a renda possível é de ${money(rendaPossivel)}/mês (com o INSS)${A.esg?`; na renda desejada, o dinheiro acaba por volta dos ${Math.floor(A.esg)} anos`:""}.`;
+    return {
+      html: verdict(ok?"Plano no caminho":"Plano abaixo da meta", main, extra) +
+        `<div class="kpis">${kpi(`Patrimônio aos ${v.idadeApos}`, money(fv), "em valores de hoje", C.s1)}${kpi("Necessário", money(capNeed), `para ${money(need)}/mês além do INSS`)}${kpi("Aporte necessário", money(pmtReq)+"/mês", `hoje: ${money(v.aporte)}/mês`, C.s2)}${kpi("Renda possível", money(rendaPossivel)+"/mês","incluindo o INSS")}</div>` +
+        chartPanel("Patrimônio ao longo da vida", "Acumulação até a aposentadoria e consumo depois, em valores de hoje", legend([["Seu plano",C.s1],["Plano necessário",C.s2]]), "ch") +
+        notes(["Retornos reais (descontada a inflação), então todos os valores estão no poder de compra de hoje.",
+          "Aportes mensais no fim de cada mês; na aposentadoria, retirada mensal igual à renda desejada menos o INSS.",
+          "Impostos não calculados à parte: informe a rentabilidade já líquida de IR e taxas.",
+          `“Necessário” consome o patrimônio até os ${v.ate} anos. Viver só de renda exigiria ${money(capPerp)}.`]),
+      after(){ lineChart($("#ch"),{label:"Patrimônio por idade", xs, series:[{name:"Seu plano",color:C.s1,values:A.out},{name:"Plano necessário",color:C.s2,values:B.out}], xFmt:v=>`${nf(v)}`, tipTitle:x=>`${nf(x)} anos`}); }
+    };
+  }
+});
+
+/* ---------- 2. Tesouro Direto ---------- */
+SIMS.push({
+  id:"tesouro", nav:"Tesouro Direto",
+  title:"Qual título do Tesouro rende mais no seu prazo?",
+  lede:"Compara Tesouro Selic, Prefixado e IPCA+ levados até o vencimento, já descontados IR regressivo e taxa de custódia da B3, contra a poupança.",
+  fields:[
+    {k:"inicial",label:"Investimento inicial",def:10000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:500,pre:"R$"},
+    {k:"anos",label:"Prazo",def:5,suf:"anos",wide:true},
+    {sect:"Taxas e projeções"},
+    {k:"selic",label:"Selic média",def:14.25,suf:"% a.a."},
+    {k:"pre",label:"Taxa do Prefixado",def:13.5,suf:"% a.a."},
+    {k:"ipca",label:"IPCA projetado",def:4.5,suf:"% a.a."},
+    {k:"real",label:"IPCA+ (taxa real)",def:7.5,suf:"% a.a."},
+    {k:"custodia",label:"Custódia B3",def:0.2,suf:"% a.a."},
+    {k:"tr",label:"TR",def:0.15,suf:"% a.m.",hint:"usada na poupança"},
+  ],
+  run(v){
+    const months = Math.round(v.anos*12);
+    if (!(months>=1 && months<=600)) return {error:"Informe um prazo entre 1 mês e 50 anos."};
+    if (!(v.inicial+v.aporte>0)) return {error:"Informe um investimento inicial ou um aporte mensal."};
+    const cust = v.custodia/100/12;
+    const base = {p0:v.inicial, pmt:v.aporte, months, tax:irRF};
+    const res = [
+      {name:"Tesouro Selic", color:C.s1, ...simInvest({...base, rate:()=>aToM(v.selic/100), fee:b=>Math.max(0,b-10000)*cust})},
+      {name:"Tesouro Prefixado", color:C.s2, ...simInvest({...base, rate:()=>aToM(v.pre/100), fee:b=>b*cust})},
+      {name:"Tesouro IPCA+", color:C.s3, ...simInvest({...base, rate:()=>(1+aToM(v.ipca/100))*(1+aToM(v.real/100))-1, fee:b=>b*cust})},
+      {name:"Poupança", color:C.s4, ...simInvest({...base, rate:()=>poupM(v.selic/100, v.tr/100), tax:()=>0})},
+    ];
+    const best = res.reduce((a,b)=>b.net>a.net?b:a);
+    const poup = res[3], infl = Math.pow(1+v.ipca/100, v.anos);
+    const xs = Array.from({length:months+1},(_,i)=>i);
+    return {
+      html: verdict("Resultado", `Em ${yrs(months)}, o <b>${best.name}</b> entrega mais: <b>${money(best.net)}</b> líquidos, ${money(best.net-poup.net)} a mais que a poupança.`,
+          `Rentabilidade líquida de ${best.irrA!=null?pct(best.irrA):"—"} ao ano${best.irrA!=null?`, ou ${pct(Math.pow(1+best.irrA,1)/(1+v.ipca/100)-1)} acima do IPCA projetado`:""}. Total investido: ${money(best.invested)}.`) +
+        `<div class="kpis">${res.map(r=>kpi(r.name, money(r.net), r.irrA!=null?`${pct(r.irrA)} a.a. líquido`:"", r.color, r===best)).join("")}</div>` +
+        chartPanel("Valor líquido se resgatado em cada mês", "Já descontados IR e custódia", legend(res.map(r=>[r.name,r.color])), "ch") +
+        `<section class="panel"><h3>Detalhamento no vencimento</h3><div class="tablewrap"><table><thead><tr><th>Título</th><th class="n">Investido</th><th class="n">Bruto</th><th class="n">Custódia</th><th class="n">IR</th><th class="n">Líquido</th><th class="n">Poder de compra hoje</th></tr></thead><tbody>
+        ${res.map(r=>`<tr class="${r===best?"best":""}"><td><span class="sw" style="background:${r.color}"></span>${r.name}</td><td class="n num">${money(r.invested)}</td><td class="n num">${money(r.gross+r.fee)}</td><td class="n num">${money(r.fee)}</td><td class="n num">${money(r.tax)}</td><td class="n num"><b>${money(r.net)}</b></td><td class="n num">${money(r.net/infl)}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
+        notes(["IR regressivo sobre o rendimento de cada aporte: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima disso. Poupança é isenta.",
+          "Custódia da B3 de 0,20% a.a. sobre o saldo; no Tesouro Selic, cobrada só sobre o que passa de R$ 10 mil.",
+          "Prefixado e IPCA+ assumem que você leva o título até o vencimento. Vender antes expõe à marcação a mercado, que pode dar lucro ou prejuízo.",
+          "Poupança: 0,5% a.m. + TR quando a Selic está acima de 8,5% a.a.; caso contrário, 70% da Selic + TR.",
+          "Selic e IPCA são projeções médias para o período. Mude os campos para testar cenários."]),
+      after(){ lineChart($("#ch"),{label:"Valor líquido por mês", xs, series:res.map(r=>({name:r.name,color:r.color,values:r.series})), xFmt:monthX(months), tipTitle:x=>`Mês ${x} · ${yrs(x)}`}); }
+    };
+  }
+});
+
+/* ---------- 3. Quitação de dívidas ---------- */
+const DEF_DEBTS = [
+  {nome:"Cartão de crédito", saldo:4000, juros:12, min:400},
+  {nome:"Cheque especial", saldo:2500, juros:7.5, min:150},
+  {nome:"Empréstimo pessoal", saldo:8000, juros:4, min:450},
+  {nome:"Financiamento do carro", saldo:25000, juros:1.8, min:900},
+];
+function payoff(debts, budget, strategy){
+  const ds = debts.map((d,i)=>({...d, i, b:d.saldo, r:d.juros/100, done:null}));
+  const hist=[ds.reduce((a,d)=>a+d.b,0)]; let interest=0, m=0;
+  while (ds.some(d=>d.b>0.005) && m<600){
+    m++;
+    for (const d of ds) if (d.b>0){ const j=d.b*d.r; d.b+=j; interest+=j; }
+    let cash = strategy==="minimo" ? Infinity : budget;
+    for (const d of ds) if (d.b>0){ const p=Math.min(d.min, d.b, cash); d.b-=p; cash-=p; }
+    if (strategy!=="minimo"){
+      const order = ds.filter(d=>d.b>0.005).sort(strategy==="avalanche" ? (a,b)=>b.r-a.r||a.b-b.b : (a,b)=>a.b-b.b||b.r-a.r);
+      for (const d of order){ if (cash<=0) break; const p=Math.min(cash,d.b); d.b-=p; cash-=p; }
+    }
+    for (const d of ds) if (d.b<=0.005 && d.done===null){ d.b=0; d.done=m; }
+    hist.push(ds.reduce((a,d)=>a+d.b,0));
+  }
+  const ok = ds.every(d=>d.done!==null);
+  return {months: ok?m:null, interest, hist, ds};
+}
+SIMS.push({
+  id:"dividas", nav:"Quitar dívidas",
+  title:"Qual a forma mais rápida de sair das dívidas?",
+  lede:"Liste suas dívidas e quanto consegue pagar por mês no total. O simulador compara a estratégia avalanche (juros mais altos primeiro) com a bola de neve (menor saldo primeiro).",
+  fields:[
+    {k:"orcamento",label:"Quanto posso pagar por mês, no total",def:2600,pre:"R$",wide:true,hint:"Inclui as parcelas mínimas. O que sobrar vai para a dívida prioritária."},
+    {debts:true},
+  ],
+  run(v, state){
+    const debts = (state.debts||[]).map(d=>({nome:d.nome||"Dívida", saldo:parseNum(d.saldo), juros:parseNum(d.juros), min:parseNum(d.min)}));
+    if (!debts.length) return {error:"Adicione pelo menos uma dívida."};
+    const bad = debts.find(d=>!(d.saldo>0) || !(d.juros>=0) || !(d.min>0));
+    if (bad) return {error:`Confira os valores de “${esc(bad.nome)}”: saldo e parcela mínima precisam ser maiores que zero.`};
+    const sumMin = debts.reduce((a,d)=>a+d.min,0);
+    if (v.orcamento < sumMin) return {error:`O orçamento de ${money(v.orcamento)} não cobre as parcelas mínimas, que somam ${money(sumMin)}. Aumente o valor mensal ou renegocie os mínimos.`};
+    const A = payoff(debts, v.orcamento, "avalanche"), S = payoff(debts, v.orcamento, "bola"), M = payoff(debts, v.orcamento, "minimo");
+    if (!A.months) return {error:`Com ${money(v.orcamento)} por mês os juros crescem mais rápido que os pagamentos, e a dívida não termina em 50 anos. Aumente o valor mensal ou busque renegociar as taxas mais altas.`};
+    const len = Math.min(600, Math.max(A.months, S.months||0, M.months||0, 12));
+    const cut = Math.min(len, Math.max(A.months, S.months||A.months)*2, 360);
+    const xs = Array.from({length:cut+1},(_,i)=>i);
+    const pad = h => xs.map(i=>i<h.length?h[i]:0);
+    const firstS = Math.min(...S.ds.map(d=>d.done||Infinity)), firstA = Math.min(...A.ds.map(d=>d.done||Infinity));
+    const diff = S.interest - A.interest;
+    const total = debts.reduce((a,d)=>a+d.saldo,0);
+    const rowsA = [...A.ds].sort((a,b)=>a.done-b.done);
+    return {
+      html: verdict("Plano de quitação",
+          `Pagando ${money(v.orcamento)} por mês você zera ${money(total)} em dívidas em <b>${yrs(A.months)}</b> pela avalanche, com <b>${money(A.interest)}</b> de juros.`,
+          `${diff>1?`A bola de neve custa ${money(diff)} a mais em juros, mas a primeira dívida some no mês ${firstS} (avalanche: mês ${firstA}). `:"As duas estratégias custam praticamente o mesmo neste caso. "}${M.months?`Pagando só os mínimos, levaria ${yrs(M.months)} e ${money(M.interest)} de juros.`:"Pagando só os mínimos, a dívida nunca termina: os juros superam as parcelas."}`) +
+        `<div class="kpis">${kpi("Avalanche", yrs(A.months), `${money(A.interest)} de juros`, C.s1, A.interest<=S.interest)}${kpi("Bola de neve", S.months?yrs(S.months):"não quita", `${money(S.interest)} de juros`, C.s2, S.interest<A.interest)}${kpi("Só o mínimo", M.months?yrs(M.months):"não quita", M.months?`${money(M.interest)} de juros`:"juros maiores que as parcelas", C.s3)}</div>` +
+        chartPanel("Saldo devedor total", "Soma de todas as dívidas, mês a mês", legend([["Avalanche",C.s1],["Bola de neve",C.s2],["Só o mínimo",C.s3]]), "ch") +
+        `<section class="panel"><h3>Ordem de quitação na avalanche</h3><div class="tablewrap"><table><thead><tr><th>Dívida</th><th class="n">Saldo</th><th class="n">Juros</th><th class="n">Quitada em</th><th class="n">Bola de neve</th></tr></thead><tbody>
+        ${rowsA.map(d=>`<tr><td>${esc(d.nome)}</td><td class="n num">${money(d.saldo)}</td><td class="n num">${nf(d.juros,2)}% a.m. <span style="color:var(--muted)">(${pct(mToA(d.r),0)} a.a.)</span></td><td class="n num">mês ${d.done}</td><td class="n num">mês ${S.ds[d.i].done??"—"}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
+        notes(["Juros compostos mensais sobre o saldo. Cada mês paga os mínimos de todas as dívidas, e a sobra vai para a prioritária.",
+          "Quando uma dívida termina, a parcela dela passa a reforçar a próxima (efeito cascata).",
+          "Avalanche prioriza a maior taxa de juros e minimiza o custo total. Bola de neve prioriza o menor saldo e dá vitórias rápidas.",
+          "Rotativo do cartão: desde 2024 os juros e encargos totais ficam limitados a 100% do valor original da dívida. Trocar rotativo e cheque especial por um empréstimo mais barato costuma ser o primeiro passo."]),
+      after(){ lineChart($("#ch"),{label:"Saldo devedor", xs, series:[{name:"Avalanche",color:C.s1,values:pad(A.hist)},{name:"Bola de neve",color:C.s2,values:pad(S.hist)},{name:"Só o mínimo",color:C.s3,values:xs.map(i=>i<M.hist.length?M.hist[i]:(M.months?0:null))}], xFmt:monthX(cut), tipTitle:x=>`Mês ${x}`}); }
+    };
+  }
+});
+
+/* ---------- 4. Alugar ou financiar ---------- */
+SIMS.push({
+  id:"alugar", nav:"Alugar ou financiar",
+  title:"Compensa mais alugar ou financiar o imóvel?",
+  lede:"Compara o patrimônio de quem financia com o de quem aluga e investe a entrada e a diferença das parcelas. Os dois gastam o mesmo por mês; quem gasta menos investe a sobra.",
+  fields:[
+    {k:"valor",label:"Valor do imóvel",def:600000,pre:"R$",wide:true},
+    {sect:"Financiamento"},
+    {k:"entrada",label:"Entrada",def:20,suf:"%"},
+    {k:"custos",label:"ITBI e cartório",def:4,suf:"%"},
+    {k:"taxa",label:"Juros do financiamento",def:11.5,suf:"% a.a."},
+    {k:"prazo",label:"Prazo",def:30,suf:"anos"},
+    {k:"sistema",label:"Amortização",def:"SAC",opts:[["SAC","SAC"],["Price","Price"]]},
+    {k:"extras",label:"Seguros e taxas",def:150,pre:"R$",suf:"/mês"},
+    {sect:"Aluguel e mercado"},
+    {k:"aluguel",label:"Aluguel",def:2800,pre:"R$",suf:"/mês"},
+    {k:"reaj",label:"Reajuste do aluguel",def:4.5,suf:"% a.a."},
+    {k:"valoriz",label:"Valorização do imóvel",def:5,suf:"% a.a."},
+    {k:"invest",label:"Rendimento líquido",def:11,suf:"% a.a.",hint:"já sem IR"},
+    {k:"horiz",label:"Comparar em",def:30,suf:"anos",wide:true},
+  ],
+  run(v){
+    const n = Math.round(v.prazo*12), H = Math.round(v.horiz*12);
+    if (!(n>=12 && n<=420)) return {error:"Informe um prazo de financiamento entre 1 e 35 anos."};
+    if (!(H>=12 && H<=600)) return {error:"Informe um horizonte de comparação entre 1 e 50 anos."};
+    if (!(v.entrada>=0 && v.entrada<100)) return {error:"A entrada precisa ficar entre 0% e 99%."};
+    const fin = v.valor*(1-v.entrada/100), r=aToM(v.taxa/100), iv=aToM(v.invest/100), vm=aToM(v.valoriz/100);
+    const price = r ? fin*r/(1-Math.pow(1+r,-n)) : fin/n;
+    let saldo=fin, buyInv=0, rentInv=v.valor*(v.entrada/100+v.custos/100), rent=v.aluguel, jurosTot=0, first=null, cross=null;
+    const yB=[v.valor-fin-v.valor*v.custos/100], yR=[rentInv], xs=[0];
+    let prevAhead = yB[0]>=yR[0];
+    for (let m=1;m<=H;m++){
+      let parc=0;
+      if (m<=n && saldo>0.01){
+        const j=saldo*r; const am = v.sistema==="SAC" ? fin/n : price-j;
+        parc = am+j+v.extras; saldo=Math.max(0,saldo-am); jurosTot+=j;
+      }
+      if (m===1) first=parc;
+      buyInv*=1+iv; rentInv*=1+iv;
+      const diff = parc-rent; if (diff>0) rentInv+=diff; else buyInv+=-diff;
+      if (m%12===0) rent*=1+v.reaj/100;
+      const imovel = v.valor*Math.pow(1+vm,m);
+      const pb = imovel-saldo+buyInv, pr = rentInv;
+      const ahead = pb>=pr;
+      if (cross===null && ahead && !prevAhead) cross=m;
+      prevAhead = ahead;
+      if (m%12===0 || m===H){ xs.push(m/12); yB.push(pb); yR.push(pr); }
+    }
+    const pb=yB[yB.length-1], pr=yR[yR.length-1], buyWins = pb>=pr;
+    return {
+      html: verdict(buyWins?"Financiar compensa":"Alugar compensa",
+          `Em ${yrs(H)}, quem ${buyWins?"financia":"aluga e investe"} termina com <b>${money(Math.abs(pb-pr))}</b> a mais: ${money(buyWins?pb:pr)} contra ${money(buyWins?pr:pb)}.`,
+          `A primeira parcela (${v.sistema}) é de ${money(first)}, contra ${money(v.aluguel)} de aluguel. ${cross?`O financiamento passa a ganhar a partir de ${yrs(cross)}.`:buyWins?"O financiamento fica à frente desde o início.":"No horizonte escolhido, o financiamento não alcança o aluguel."} Juros pagos ao banco: ${money(jurosTot)}.`) +
+        `<div class="kpis">${kpi("Financiando", money(pb), "imóvel − saldo devedor + investimentos", C.s1, buyWins)}${kpi("Alugando", money(pr), "investimentos acumulados", C.s2, !buyWins)}${kpi("1ª parcela", money(first), `${v.sistema}, com seguros`)}${kpi("Aluguel/valor", pct(v.aluguel/v.valor,2)+" a.m.", `aluguel de ${money(v.aluguel)}`)}</div>` +
+        chartPanel("Patrimônio de cada caminho", "Em reais nominais, ano a ano", legend([["Financiar",C.s1],["Alugar e investir",C.s2]]), "ch") +
+        notes(["Os dois cenários desembolsam o mesmo valor por mês. Se a parcela é maior que o aluguel, quem aluga investe a diferença; se é menor, quem financiou investe.",
+          "Quem aluga também investe a entrada e o que seria gasto com ITBI e cartório.",
+          "SAC: amortização constante e parcelas decrescentes. Price: parcela fixa. A TR não foi somada aos juros.",
+          "IPTU, condomínio e manutenção foram considerados iguais nos dois casos e ficaram de fora.",
+          "Use rendimento líquido de IR. Se o imóvel for vendido, também incidem corretagem e possível IR sobre ganho de capital."]),
+      after(){ lineChart($("#ch"),{label:"Patrimônio", xs, series:[{name:"Financiar",color:C.s1,values:yB},{name:"Alugar e investir",color:C.s2,values:yR}], xFmt:v=>`${nf(v)}a`, tipTitle:x=>`Ano ${nf(x,1)}`}); }
+    };
+  }
+});
+
+/* ---------- 5. Consórcio ---------- */
+SIMS.push({
+  id:"consorcio", nav:"Consórcio",
+  title:"Vale a pena entrar no consórcio?",
+  lede:"Compara três caminhos para ter o mesmo bem: consórcio, financiamento e juntar o dinheiro investindo. O custo de cada um é medido em valor presente, descontado pelo rendimento dos seus investimentos.",
+  fields:[
+    {k:"carta",label:"Valor da carta",def:100000,pre:"R$"},
+    {k:"prazo",label:"Prazo do grupo",def:80,suf:"meses"},
+    {k:"adm",label:"Taxa de administração",def:16,suf:"% total"},
+    {k:"fundo",label:"Fundo de reserva",def:2,suf:"% total"},
+    {k:"reaj",label:"Reajuste da carta",def:5,suf:"% a.a.",hint:"INCC ou IPCA"},
+    {k:"contem",label:"Contemplação prevista",def:24,suf:"º mês"},
+    {k:"lance",label:"Lance próprio",def:0,suf:"% da carta",wide:true},
+    {sect:"Alternativas"},
+    {k:"fin",label:"Juros do financiamento",def:21,suf:"% a.a."},
+    {k:"invest",label:"Rendimento líquido",def:11,suf:"% a.a."},
+  ],
+  run(v){
+    const n=Math.round(v.prazo), k=Math.round(v.contem);
+    if (!(n>=12 && n<=240)) return {error:"Informe um prazo de grupo entre 12 e 240 meses."};
+    if (!(k>=1 && k<=n)) return {error:`A contemplação precisa estar entre o 1º e o ${n}º mês.`};
+    const iv=aToM(v.invest/100), fee=1+(v.adm+v.fundo)/100, g=v.reaj/100;
+    const carta = t => v.carta*Math.pow(1+g, Math.floor((t-1)/12));
+    const bem = t => v.carta*Math.pow(1+g, t/12);
+    const disc = t => Math.pow(1+iv,-t);
+    const cons = kk => {
+      let F=1, frac=1/n, pv=0, total=0, first=0;
+      for (let t=1;t<=n;t++){
+        const p = frac*carta(t)*fee; if (t===1) first=p;
+        pv+=p*disc(t); total+=p; F-=frac;
+        if (t===kk){
+          const L = Math.min(v.lance/100*carta(t), Math.max(0,F)*carta(t)*fee);
+          if (L>0){ pv+=L*disc(t); total+=L; F-=L/(carta(t)*fee); }
+          pv -= carta(t)*disc(t);
+          frac = n>t ? Math.max(0,F)/(n-t) : 0;
+        }
+      }
+      return {pv, total, first};
+    };
+    const c = cons(k);
+    const rf = aToM(v.fin/100), pmtF = rf ? v.carta*rf/(1-Math.pow(1+rf,-n)) : v.carta/n;
+    let pvF=0; for (let t=1;t<=n;t++) pvF += pmtF*disc(t);
+    const costF = pvF - v.carta;
+    // juntar investindo a mesma parcela do consórcio
+    let bal=0, mInv=null;
+    for (let t=1;t<=600;t++){ bal=bal*(1+iv)+(1/n)*carta(Math.min(t,n))*fee; if (bal>=bem(t)){ mInv=t; break; } }
+    const curve = Array.from({length:n},(_,i)=>cons(i+1).pv);
+    let be=null; for (let i=0;i<n;i++){ if (curve[i]>costF){ be=i; break; } }
+    const consWins = c.pv < costF;
+    const xs = Array.from({length:n},(_,i)=>i+1);
+    const tag = mInv && mInv<=k ? "Melhor investir" : consWins ? "Consórcio compensa" : "Financiar sai mais barato";
+    const main = mInv && mInv<=k
+      ? `Investindo as mesmas parcelas você compra o bem à vista no <b>mês ${mInv}</b>, antes da contemplação prevista (mês ${k}), e sem pagar taxa de administração.`
+      : consWins
+        ? `Se for contemplado no mês ${k}, o consórcio custa <b>${money(c.pv)}</b> em valor presente, contra <b>${money(costF)}</b> do financiamento.`
+        : `Contemplado no mês ${k}, o consórcio custa <b>${money(c.pv)}</b> em valor presente, mais que os <b>${money(costF)}</b> do financiamento.`;
+    const extra = `${be===null?`O consórcio sai mais barato que financiar em qualquer mês de contemplação.`:be===0?`Mesmo contemplado no 1º mês, o consórcio fica mais caro que financiar.`:`O consórcio só é mais barato que financiar se a contemplação vier até o <b>mês ${be}</b>.`} Juntando o dinheiro, o bem sai no mês ${mInv??"—"}; financiando, sai hoje.`;
+    return {
+      html: verdict(tag, main, extra) +
+        `<div class="kpis">${kpi("Consórcio", money(c.pv), `bem no mês ${k} · parcela ${money(c.first)}`, C.s1, consWins && !(mInv && mInv<=k))}${kpi("Financiamento", money(costF), `bem hoje · parcela ${money(pmtF)}`, C.s2, !consWins && !(mInv && mInv<=k))}${kpi("Investir e comprar", money(0), mInv?`bem no mês ${mInv}`:"não alcança em 50 anos", C.s3, !!(mInv && mInv<=k))}${kpi("Total pago no consórcio", money(c.total), `financiamento: ${money(pmtF*n)}`)}</div>` +
+        chartPanel("Custo do consórcio conforme o mês de contemplação", "Custo em valor presente; abaixo da linha tracejada, o consórcio vence o financiamento", legend([["Consórcio",C.s1],["Financiamento",C.s2,true]]), "ch") +
+        notes(["Custo em valor presente = parcelas pagas trazidas a hoje pelo rendimento dos investimentos, menos o valor do bem recebido, também trazido a hoje. Comprar à vista hoje custa zero.",
+          `Parcela do consórcio: (carta × (1 + taxa de administração + fundo de reserva)) ÷ prazo, reajustada todo ano junto com a carta. Seguro prestamista não incluído.`,
+          "O lance próprio é pago no mês da contemplação e reduz as parcelas restantes. Lance embutido não foi simulado.",
+          "Financiamento pela tabela Price, de 100% do bem, no mesmo prazo do grupo. Na prática costuma haver entrada e outras tarifas (CET).",
+          "O fundo de reserva pode ser devolvido no encerramento do grupo; aqui ele entra como custo.",
+          "Ter o bem antes tem valor (deixar de pagar aluguel, usar o carro). Pese isso junto com os números."]),
+      after(){ lineChart($("#ch"),{label:"Custo por mês de contemplação", xs, series:[{name:"Consórcio",color:C.s1,values:curve},{name:"Financiamento",color:C.s2,values:xs.map(()=>costF)}], dashed:[1], xFmt:v=>`m${nf(v)}`, tipTitle:x=>`Contemplação no mês ${x}`}); }
+    };
+  }
+});
+
+/* ---------- 6. CDB ---------- */
+SIMS.push({
+  id:"cdb", nav:"CDB",
+  title:"Quanto rende o seu CDB, e ele vence a LCI?",
+  lede:"Calcula o CDB pelo percentual do CDI, desconta o IR do prazo e compara com LCI/LCA (isentas), Tesouro Selic e poupança.",
+  fields:[
+    {k:"valor",label:"Valor investido",def:10000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:0,pre:"R$"},
+    {k:"prazo",label:"Prazo",def:24,suf:"meses",wide:true},
+    {sect:"Taxas"},
+    {k:"cdi",label:"CDI médio",def:14.15,suf:"% a.a."},
+    {k:"pcdb",label:"CDB",def:110,suf:"% do CDI"},
+    {k:"plci",label:"LCI / LCA",def:92,suf:"% do CDI"},
+    {k:"selic",label:"Selic média",def:14.25,suf:"% a.a."},
+    {k:"tr",label:"TR",def:0.15,suf:"% a.m.",wide:true},
+  ],
+  run(v){
+    const months=Math.round(v.prazo);
+    if (!(months>=1 && months<=600)) return {error:"Informe um prazo entre 1 e 600 meses."};
+    if (!(v.valor+v.aporte>0)) return {error:"Informe um valor investido ou um aporte mensal."};
+    const base = {p0:v.valor, pmt:v.aporte, months, tax:irRF};
+    const res = [
+      {name:`CDB ${nf(v.pcdb,1)}% do CDI`, color:C.s1, ...simInvest({...base, rate:()=>aToM(v.cdi/100*v.pcdb/100)})},
+      {name:`LCI/LCA ${nf(v.plci,1)}% do CDI`, color:C.s2, ...simInvest({...base, rate:()=>aToM(v.cdi/100*v.plci/100), tax:()=>0})},
+      {name:"Tesouro Selic", color:C.s3, ...simInvest({...base, rate:()=>aToM(v.selic/100), fee:b=>Math.max(0,b-10000)*0.002/12})},
+      {name:"Poupança", color:C.s4, ...simInvest({...base, rate:()=>poupM(v.selic/100, v.tr/100), tax:()=>0})},
+    ];
+    const best = res.reduce((a,b)=>b.net>a.net?b:a), max = best.net;
+    const ir = irRF(months), cdb=res[0];
+    const lciEq = v.pcdb*(1-ir), cdbEq = v.plci/(1-ir);
+    const days = Math.round(months*30.4);
+    return {
+      html: verdict("Resultado",
+          `Em ${yrs(months)}, o CDB de ${nf(v.pcdb,1)}% do CDI vira <b>${money(cdb.net)}</b> líquidos (${money(cdb.net-cdb.invested)} de ganho após ${pct(ir,1)} de IR). ${best===cdb?"É a melhor opção da comparação.":`Mas <b>${best.name}</b> rende mais: ${money(best.net)}.`}`,
+          `Neste prazo, uma LCI/LCA precisa pagar pelo menos <b>${nf(lciEq,1)}% do CDI</b> para empatar com esse CDB. Para vencer a LCI de ${nf(v.plci,1)}%, o CDB precisa pagar ${nf(cdbEq,1)}% do CDI.`) +
+        `<div class="kpis">${kpi("Valor líquido", money(cdb.net), `investido ${money(cdb.invested)}`, C.s1)}${kpi("Imposto de renda", money(cdb.tax), `alíquota de ${pct(ir,1)} (${days} dias)`)}${kpi("Rentabilidade líquida", cdb.irrA!=null?pct(cdb.irrA)+" a.a.":"—", `bruta: ${pct(Math.pow(1+aToM(v.cdi/100*v.pcdb/100),12)-1)} a.a.`)}${kpi("Empate com LCI/LCA", nf(lciEq,1)+"% do CDI", "taxa isenta equivalente")}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>Valor líquido no fim do prazo</h3><div class="sub">Já descontados IR e custódia</div></div></div><div class="bars">${res.map(r=>`<div class="bar"><span>${esc(r.name)}${r===best?` <span class="badge">melhor</span>`:""}</span><span class="track"><i style="width:${Math.max(2,(r.net-0)/max*100)}%;background:${r.color}"></i></span><span class="v">${money(r.net)}</span></div>`).join("")}</div></section>` +
+        chartPanel("Evolução do valor líquido", "Se resgatado em cada mês", legend(res.map(r=>[r.name,r.color])), "ch") +
+        notes(["IR regressivo do CDB e do Tesouro: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima. LCI, LCA e poupança são isentas para pessoa física.",
+          "Resgates antes de 30 dias também pagam IOF regressivo, que não foi considerado.",
+          "CDB, LCI e LCA têm garantia do FGC de até R$ 250 mil por CPF e por instituição, com teto de R$ 1 milhão a cada 4 anos.",
+          "LCI e LCA têm prazo mínimo (carência) de 9 a 12 meses para novas emissões. Confira a liquidez antes de aplicar.",
+          "Tesouro Selic com custódia de 0,20% a.a. sobre o que passa de R$ 10 mil."]),
+      after(){ lineChart($("#ch"),{label:"Valor líquido", xs:Array.from({length:months+1},(_,i)=>i), series:res.map(r=>({name:r.name,color:r.color,values:r.series})), xFmt:monthX(months), tipTitle:x=>`Mês ${x} · ${yrs(x)}`}); }
+    };
+  }
+});
+
+/* ---------- 7. Ações ---------- */
+function mulberry(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed>>>15, 1|seed); t = t + Math.imul(t ^ t>>>7, 61|t) ^ t; return ((t ^ t>>>14)>>>0)/4294967296; }; }
+const ATIVOS = {
+  acoes:{nome:"Ações", ir:.15, isencao:true},
+  etf:{nome:"ETF de ações", ir:.15, isencao:false},
+  fii:{nome:"Fundos imobiliários (FII)", ir:.20, isencao:false},
+};
+SIMS.push({
+  id:"acoes", nav:"Ações",
+  title:"Quanto podem render suas aplicações em ações?",
+  lede:"Ações oscilam, então não existe um único resultado. O simulador sorteia 1.000 caminhos de mercado com a valorização e a volatilidade que você informar e mostra a faixa provável, comparada com a renda fixa.",
+  fields:[
+    {k:"tipo",label:"Tipo de ativo",def:"acoes",opts:[["acoes","Ações"],["etf","ETF de ações"],["fii","Fundos imobiliários (FII)"]],wide:true},
+    {k:"inicial",label:"Investimento inicial",def:10000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:1000,pre:"R$"},
+    {k:"anos",label:"Prazo",def:15,suf:"anos",wide:true},
+    {sect:"Premissas de mercado"},
+    {k:"valoriz",label:"Valorização média",def:8,suf:"% a.a.",hint:"alta das cotações, sem dividendos"},
+    {k:"dy",label:"Dividendos",def:6,suf:"% a.a.",hint:"dividend yield"},
+    {k:"vol",label:"Volatilidade",def:25,suf:"% a.a.",hint:"Ibovespa: cerca de 20% a 30%"},
+    {k:"custos",label:"Custos",def:0,suf:"% a.a.",hint:"taxa do ETF ou corretagem"},
+    {k:"reinv",label:"Uso dos dividendos",def:"reinveste",opts:[["reinveste","Reinvisto"],["saca","Saco e gasto"]]},
+    {k:"venda",label:"Venda no fim",def:"total",opts:[["total","Tudo de uma vez"],["aos-poucos","Aos poucos, até R$ 20 mil/mês"]]},
+    {sect:"Comparar com renda fixa"},
+    {k:"cdi",label:"CDI médio no período",def:12,suf:"% a.a."},
+    {k:"pcdi",label:"Rendimento",def:100,suf:"% do CDI"},
+  ],
+  run(v){
+    const months = Math.round(v.anos*12);
+    if (!(months>=12 && months<=600)) return {error:"Informe um prazo entre 1 e 50 anos."};
+    if (!(v.inicial+v.aporte>0)) return {error:"Informe um investimento inicial ou um aporte mensal."};
+    if (v.vol>100) return {error:"A volatilidade parece alta demais. Use algo entre 10% e 60% ao ano."};
+    const A = ATIVOS[v.tipo]||ATIVOS.acoes;
+    const isento = v.venda==="aos-poucos" && A.isencao;
+    const s = v.vol/100/Math.sqrt(12), mu = Math.log(1+v.valoriz/100)/12 - s*s/2;
+    const dyM = aToM(v.dy/100), costM = aToM(v.custos/100), reinv = v.reinv==="reinveste";
+    const N = 1000, step = months>120 ? 12 : months>48 ? 3 : 1;
+    const pts = []; for (let t=0;t<=months;t+=step) pts.push(t); if (pts[pts.length-1]!==months) pts.push(months);
+    const idx = new Map(pts.map((t,i)=>[t,i]));
+    const netAt = pts.map(()=>new Float64Array(N));
+    const finals = new Float64Array(N), divs = new Float64Array(N), invested = v.inicial + v.aporte*months;
+    const rnd = mulberry(Math.round(v.inicial+v.aporte*7+v.anos*131+v.valoriz*977+v.vol*313+v.dy*57));
+    const gauss = () => { let u=0; while(!u) u=rnd(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*rnd()); };
+    for (let p=0;p<N;p++){
+      let val = v.inicial + v.aporte, basis = val, cash = 0;
+      const net = () => { const g = val-basis; return val - (g>0 && !isento ? g*A.ir : 0) + cash; };
+      netAt[0][p] = net();
+      for (let t=1;t<=months;t++){
+        val *= Math.exp(mu + s*gauss()) * (1-costM);
+        const d = val*dyM;
+        if (reinv){ val += d; basis += d; } else cash += d;
+        divs[p] += d;
+        if (t<months){ val += v.aporte; basis += v.aporte; }
+        const i = idx.get(t); if (i!==undefined) netAt[i][p] = net();
+      }
+      finals[p] = net();
+    }
+    const q = (arr, f) => { const a = Array.from(arr).sort((x,y)=>x-y); return a[Math.min(a.length-1, Math.floor(f*a.length))]; };
+    const P10 = netAt.map(a=>q(a,.10)), P50 = netAt.map(a=>q(a,.50)), P90 = netAt.map(a=>q(a,.90));
+    const rf = simInvest({p0:v.inicial, pmt:v.aporte, months, rate:()=>aToM(v.cdi/100*v.pcdi/100), tax:irRF});
+    const rfPts = pts.map(t=>rf.series[t]);
+    const beat = Array.from(finals).filter(x=>x>rf.net).length/N;
+    const loss = Array.from(finals).filter(x=>x<invested).length/N;
+    const med = P50[P50.length-1], lo = P10[P10.length-1], hi = P90[P90.length-1];
+    const divMed = q(divs,.5);
+    const tag = beat>=.6 ? "Ações tendem a ganhar" : beat>=.4 ? "Empate técnico" : "Renda fixa tende a ganhar";
+    return {
+      html: verdict(tag,
+          `Em ${yrs(months)}, o cenário central é de <b>${money(med)}</b> líquidos, com ${money(invested)} investidos. Em 8 de cada 10 cenários, o resultado fica entre <b>${money(lo)}</b> e <b>${money(hi)}</b>.`,
+          `${A.nome} superam a renda fixa (${money(rf.net)}) em <b>${pct(beat,0)}</b> dos cenários. Em ${pct(loss,0)} deles você terminaria com menos do que investiu.${isento?" Considera venda parcelada, dentro da isenção de R$ 20 mil por mês.":""}`) +
+        `<div class="kpis">${kpi("Cenário central", money(med), "metade dos cenários fica acima", C.s1)}${kpi("Pessimista", money(lo), "só 10% dos cenários ficam abaixo", C.s2)}${kpi("Otimista", money(hi), "só 10% dos cenários ficam acima", C.s3)}${kpi("Renda fixa", money(rf.net), `${nf(v.pcdi,0)}% do CDI, após IR`, C.s4)}${kpi("Chance de vencer a renda fixa", pct(beat,0), `chance de perder dinheiro: ${pct(loss,0)}`)}${kpi("Dividendos no período", money(divMed), reinv?"reinvestidos (cenário central)":"sacados (cenário central)")}</div>` +
+        chartPanel("Faixa de resultados ao longo do tempo", "Valor líquido se vendido em cada momento. A área mostra onde caem 80% dos cenários", legend([["Otimista (90%)",C.s3],["Central",C.s1],["Pessimista (10%)",C.s2],["Renda fixa",C.s4,true]]), "ch") +
+        `<section class="panel"><h3>Como fica cada cenário no fim</h3><div class="tablewrap"><table><thead><tr><th>Cenário</th><th class="n">Valor líquido</th><th class="n">Ganho sobre o investido</th><th class="n">Retorno anual equivalente</th></tr></thead><tbody>
+        ${[["Otimista (90%)",hi,C.s3],["Central",med,C.s1],["Pessimista (10%)",lo,C.s2],["Renda fixa",rf.net,C.s4]].map(([n,val,c])=>{
+          const fl = Array(months+1).fill(0); fl[0]=-(v.inicial+v.aporte); for (let t=1;t<months;t++) fl[t]=-v.aporte; fl[months]+=val; const im=irr(fl);
+          return `<tr><td><span class="sw" style="background:${c}"></span>${n}</td><td class="n num">${money(val)}</td><td class="n num ${val<invested?"neg":""}">${money(val-invested)}</td><td class="n num">${im===null?"—":pct(mToA(im))+" a.a."}</td></tr>`; }).join("")}
+        </tbody></table></div></section>` +
+        notes(["Retornos mensais sorteados de uma distribuição log-normal com a valorização média e a volatilidade informadas. São 1.000 cenários; resultados passados não garantem resultados futuros.",
+          "Ações: IR de 15% sobre o lucro na venda. Vendas de ações à vista de até R$ 20 mil por mês são isentas (vale para swing trade em ações, não para ETFs nem FIIs).",
+          "ETF de ações: 15% sobre o lucro, sem a isenção de R$ 20 mil. FII: 20% sobre o lucro na venda; os rendimentos mensais são isentos para pessoa física, com condições.",
+          "Dividendos de ações são isentos até R$ 50 mil por mês de uma mesma empresa. Acima disso, há retenção de 10% desde 2026. JCP tem IR retido na fonte e não foi separado aqui.",
+          "Day trade (IR de 20%), compensação de prejuízos e emolumentos da B3 não foram simulados.",
+          "Renda fixa de comparação: título atrelado ao CDI com IR regressivo, sem oscilação."]),
+      after(){ lineChart($("#ch"),{label:"Faixa de resultados", xs:pts, band:{lo:P10, hi:P90, color:C.s1}, series:[{name:"Otimista (90%)",color:C.s3,values:P90},{name:"Central",color:C.s1,values:P50},{name:"Pessimista (10%)",color:C.s2,values:P10},{name:"Renda fixa",color:C.s4,values:rfPts}], dashed:[3], xFmt:monthX(months), tipTitle:x=>`Mês ${x} · ${yrs(x)}`}); }
+    };
+  }
+});
+
+/* ---------- 8. PGBL x VGBL ---------- */
+SIMS.push({
+  id:"previdencia", nav:"PGBL ou VGBL",
+  title:"PGBL, VGBL ou investir por fora?",
+  lede:"O PGBL deduz até 12% da renda bruta no IR e tributa tudo no resgate. O VGBL não deduz e tributa só o rendimento. Veja qual deixa mais dinheiro no seu bolso.",
+  fields:[
+    {k:"renda",label:"Renda bruta tributável",def:180000,pre:"R$",suf:"/ano",wide:true},
+    {k:"contrib",label:"Contribuição",def:21600,pre:"R$",suf:"/ano"},
+    {k:"anos",label:"Prazo",def:20,suf:"anos"},
+    {k:"decl",label:"Declaração do IR",def:"completa",opts:[["completa","Completa"],["simples","Simplificada"]]},
+    {k:"aliq",label:"Sua alíquota de IR",def:"27.5",opts:[["27.5","27,5%"],["22.5","22,5%"],["15","15%"],["7.5","7,5%"],["0","Isento"]]},
+    {k:"restit",label:"Restituição do PGBL",def:"reinveste",opts:[["reinveste","Reinvisto"],["gasta","Gasto"]],wide:true},
+    {sect:"Rentabilidade"},
+    {k:"ret",label:"Retorno bruto",def:10,suf:"% a.a."},
+    {k:"adm",label:"Taxa de administração",def:1,suf:"% a.a."},
+  ],
+  run(v){
+    const Y=Math.round(v.anos);
+    if (!(Y>=1 && Y<=50)) return {error:"Informe um prazo entre 1 e 50 anos."};
+    if (!(v.contrib>0)) return {error:"Informe a contribuição anual."};
+    const aliq = parseFloat(v.aliq)/100;
+    const rp = (1+v.ret/100)*(1-v.adm/100)-1;          // dentro do plano
+    const rf = (1+v.ret/100)*(1-0.002)-1;              // fora: Tesouro com custódia
+    const ded = v.decl==="completa" ? Math.min(v.contrib, 0.12*v.renda) : 0;
+    const refund = ded*aliq;
+    const at = (t, kind) => {
+      let s=0;
+      for (let y=0;y<t;y++){
+        const age=t-y;
+        if (kind==="fora"){ const val=v.contrib*Math.pow(1+rf,age); s += val-(val-v.contrib)*0.15; continue; }
+        const val=v.contrib*Math.pow(1+rp,age);
+        s += kind==="pgbl" ? val*(1-irPrev(age)) : val-(val-v.contrib)*irPrev(age);
+      }
+      if (kind==="pgbl" && refund>0){
+        for (let y=0;y<t;y++){
+          if (v.restit==="reinveste"){ const age=Math.max(0,t-(y+1)); const val=refund*Math.pow(1+rf,age); s += val-(val-refund)*0.15; }
+          else s += 0;
+        }
+      }
+      return s;
+    };
+    const xs=Array.from({length:Y+1},(_,i)=>i);
+    const P=xs.map(t=>at(t,"pgbl")), V=xs.map(t=>at(t,"vgbl")), F=xs.map(t=>at(t,"fora"));
+    const res=[{name:"PGBL",color:C.s1,net:P[Y]},{name:"VGBL",color:C.s2,net:V[Y]},{name:"Investir por fora",color:C.s3,net:F[Y]}];
+    const best=res.reduce((a,b)=>b.net>a.net?b:a);
+    const lim=0.12*v.renda, excess=Math.max(0,v.contrib-lim);
+    let rec;
+    if (v.decl!=="completa") rec = "Como você faz a declaração simplificada, o PGBL não gera dedução. Fique entre VGBL e investir por fora.";
+    else if (excess>0) rec = `O ideal é colocar até ${money(lim)} por ano no PGBL (12% da renda) e o excedente de ${money(excess)} no VGBL ou fora da previdência.`;
+    else rec = `Você pode aportar até ${money(lim)} por ano no PGBL com dedução. Hoje usa ${pct(v.contrib/lim,0)} desse limite.`;
+    return {
+      html: verdict("Resultado", `Em ${Y} anos, <b>${best.name}</b> deixa mais dinheiro líquido: <b>${money(best.net)}</b>.`,
+          `${ded>0?`O PGBL devolve ${money(refund)} por ano de IR (${v.restit==="reinveste"?"reinvestidos no cálculo":"gastos, então não entram no cálculo"}). `:""}${rec}`) +
+        `<div class="kpis">${res.map(r=>kpi(r.name, money(r.net), r.name==="PGBL"?`IR sobre tudo no resgate`:r.name==="VGBL"?"IR só sobre o rendimento":"IR de 15% sobre o ganho", r.color, r===best)).join("")}${kpi("Total aportado", money(v.contrib*Y), `${money(v.contrib)}/ano`)}</div>` +
+        chartPanel("Valor líquido se resgatado em cada ano", "Com IR da tabela regressiva de cada aporte", legend(res.map(r=>[r.name,r.color])), "ch") +
+        `<section class="panel"><h3>Tabela regressiva da previdência</h3><div class="tablewrap"><table><thead><tr><th>Tempo de cada aporte no plano</th><th class="n">Até 2 anos</th><th class="n">2–4</th><th class="n">4–6</th><th class="n">6–8</th><th class="n">8–10</th><th class="n">Acima de 10</th></tr></thead><tbody><tr><td>Alíquota de IR</td><td class="n num">35%</td><td class="n num">30%</td><td class="n num">25%</td><td class="n num">20%</td><td class="n num">15%</td><td class="n num">10%</td></tr></tbody></table></div></section>` +
+        notes(["PGBL: dedução de até 12% da renda bruta tributável, só para quem faz a declaração completa e contribui para o INSS (ou regime próprio). No resgate, o IR incide sobre o valor total.",
+          "VGBL: sem dedução; no resgate, o IR incide só sobre o rendimento.",
+          "Tabela regressiva aplicada a cada aporte pelo tempo que ficou no plano. A tabela progressiva não foi simulada.",
+          "Investir por fora: Tesouro de longo prazo, custódia de 0,20% a.a. e IR de 15% sobre o ganho, sem taxa de administração.",
+          "Restituição do PGBL reinvestida fora da previdência a partir do ano seguinte ao aporte.",
+          "Previdência não tem come-cotas, entra na sucessão sem inventário e pode ser portada entre planos sem IR.",
+          "Aportes em VGBL acima de R$ 600 mil por ano e por pessoa pagam IOF de 5% sobre o excedente."]),
+      after(){ lineChart($("#ch"),{label:"Valor líquido por ano", xs, series:res.map((r,i)=>({name:r.name,color:r.color,values:[P,V,F][i]})), xFmt:v=>`${nf(v)}a`, tipTitle:x=>`Ano ${x}`}); }
+    };
+  }
+});
+
+/* ================= shell ================= */
+const store = {
+  get(k){ try { return JSON.parse(localStorage.getItem(k)||"null"); } catch { return null; } },
+  set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+let current=null;
+
+function defaults(sim){
+  const s={}; for (const f of sim.fields) if (f.k) s[f.k]=fmtIn(f.def);
+  if (sim.fields.some(f=>f.debts)) s.debts = DEF_DEBTS.map(d=>({nome:d.nome, saldo:fmtIn(d.saldo), juros:fmtIn(d.juros), min:fmtIn(d.min)}));
+  return s;
+}
+function loadState(sim){ const s=store.get("sim:"+sim.id); const d=defaults(sim); return s ? {...d, ...s} : d; }
+
+function debtsHTML(sim, st){
+  return `<div class="debts" id="debts">${st.debts.map((d,i)=>`
+    <div class="debt" data-i="${i}">
+      <div class="name"><input id="${sim.id}-d${i}-nome" data-f="nome" value="${esc(d.nome)}" aria-label="Nome da dívida" maxlength="40"><button class="rm" type="button" data-rm="${i}">Remover</button></div>
+      <div class="field"><label for="${sim.id}-d${i}-saldo">Saldo</label><div class="inp"><span>R$</span><input id="${sim.id}-d${i}-saldo" data-f="saldo" inputmode="decimal" value="${esc(d.saldo)}"></div></div>
+      <div class="field"><label for="${sim.id}-d${i}-juros">Juros</label><div class="inp"><input id="${sim.id}-d${i}-juros" data-f="juros" inputmode="decimal" value="${esc(d.juros)}"><span>% a.m.</span></div></div>
+      <div class="field" style="grid-column:1/-1"><label for="${sim.id}-d${i}-min">Parcela mínima</label><div class="inp"><span>R$</span><input id="${sim.id}-d${i}-min" data-f="min" inputmode="decimal" value="${esc(d.min)}"><span>/mês</span></div></div>
+    </div>`).join("")}
+    <button class="addbtn" type="button" id="addDebt">+ Adicionar dívida</button></div>`;
+}
+
+function renderSim(sim){
+  current = sim;
+  const st = loadState(sim);
+  const fieldsHTML = sim.fields.map(f=>{
+    if (f.sect) return `<div class="sect">${f.sect}</div>`;
+    if (f.debts) return debtsHTML(sim, st);
+    const id=`${sim.id}-${f.k}`, cls = `field${f.wide?" wide":""}`;
+    if (f.opts) return `<div class="${cls}"><label for="${id}">${f.label}</label><select id="${id}" data-k="${f.k}">${f.opts.map(([val,l])=>`<option value="${val}" ${String(st[f.k])===val?"selected":""}>${l}</option>`).join("")}</select>${f.hint?`<small>${f.hint}</small>`:""}</div>`;
+    return `<div class="${cls}"><label for="${id}">${f.label}</label><div class="inp">${f.pre?`<span>${f.pre}</span>`:""}<input id="${id}" data-k="${f.k}" inputmode="decimal" value="${esc(st[f.k])}">${f.suf?`<span>${f.suf}</span>`:""}</div>${f.hint?`<small>${f.hint}</small>`:""}</div>`;
+  }).join("");
+  $("#main").innerHTML = `<div class="sim">
+    <section class="panel inputs" aria-label="Dados da simulação">
+      <div style="display:flex;flex-direction:column;gap:6px"><h2>${sim.title}</h2><p class="lede">${sim.lede}</p></div>
+      <div class="fields" id="fields">${fieldsHTML}</div>
+      <div class="rowbtns"><span class="sub">Os resultados atualizam enquanto você digita.</span><button class="textbtn" type="button" id="reset">Restaurar exemplo</button></div>
+    </section>
+    <div class="results" id="results" aria-live="polite"></div>
+  </div>`;
+  const fields = $("#fields");
+  let t;
+  const onChange = () => { clearTimeout(t); t=setTimeout(()=>compute(sim),120); };
+  fields.addEventListener("input", onChange);
+  fields.addEventListener("change", onChange);
+  fields.addEventListener("click", e=>{
+    const rm = e.target.closest("[data-rm]");
+    if (rm){ const s=readState(sim); s.debts.splice(+rm.dataset.rm,1); store.set("sim:"+sim.id,s); renderSim(sim); return; }
+    if (e.target.id==="addDebt"){ const s=readState(sim); s.debts.push({nome:`Dívida ${s.debts.length+1}`, saldo:"1.000", juros:"5", min:"100"}); store.set("sim:"+sim.id,s); renderSim(sim); }
+  });
+  $("#reset").addEventListener("click", ()=>{ store.set("sim:"+sim.id,null); renderSim(sim); });
+  compute(sim);
+}
+function readState(sim){
+  const s={};
+  document.querySelectorAll("#fields [data-k]").forEach(el=>{ s[el.dataset.k]=el.value; });
+  if (sim.fields.some(f=>f.debts)){
+    s.debts = [...document.querySelectorAll("#debts .debt")].map(row=>{ const o={}; row.querySelectorAll("[data-f]").forEach(el=>o[el.dataset.f]=el.value); return o; });
+  }
+  return s;
+}
+function compute(sim){
+  const st = readState(sim);
+  store.set("sim:"+sim.id, st);
+  const v={}; let missing=null;
+  for (const f of sim.fields){
+    if (!f.k) continue;
+    const el = document.getElementById(`${sim.id}-${f.k}`);
+    if (f.opts){ v[f.k]=st[f.k]; continue; }
+    const n = parseNum(st[f.k]);
+    const bad = !isFinite(n) || n<0;
+    el.closest(".inp").classList.toggle("bad", bad);
+    if (bad && !missing) missing=f.label;
+    v[f.k]=n;
+  }
+  const out = $("#results");
+  for (const el of [...charts.keys()]) if (!el.isConnected) charts.delete(el);
+  if (missing){ out.innerHTML = verdict("Falta um dado", `Preencha “${esc(missing)}” com um número válido, como 1.500 ou 12,5.`, "", true); return; }
+  let r;
+  try { r = sim.run(v, st); } catch(e){ r = {error:"Não foi possível calcular com esses valores. Confira os campos destacados."}; console.error(e); }
+  if (r.error){ out.innerHTML = verdict("Confira os dados", r.error, "", true); return; }
+  out.innerHTML = r.html;
+  r.after && r.after();
+}
+
+function select(id, push=true){
+  const sim = SIMS.find(s=>s.id===id) || SIMS[0];
+  document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.id===sim.id));
+  renderSim(sim);
+  store.set("sim:last", sim.id);
+  if (push){ try { history.replaceState(null,"","#"+sim.id); } catch {} }
+}
+$("#tabs").innerHTML = SIMS.map(s=>`<button role="tab" data-id="${s.id}" aria-selected="false">${s.nav}</button>`).join("");
+$("#tabs").addEventListener("click", e=>{ const b=e.target.closest("button"); if (b){ select(b.dataset.id); b.scrollIntoView({block:"nearest",inline:"nearest"}); } });
+window.addEventListener("hashchange", ()=>{ const h=location.hash.slice(1); if (h && h!==current?.id) select(h,false); });
+select(location.hash.slice(1) || store.get("sim:last") || SIMS[0].id, false);
+})();
+</script>
+</body>
+</html>
