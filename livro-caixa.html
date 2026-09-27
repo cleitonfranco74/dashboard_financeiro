@@ -808,27 +808,38 @@ const TAGS = {orcamento:"orçamento", cartao:"cartão"};
 const semAcento = s => String(s).normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
 const REGRAS = [
   ["Outros", /mercado ?livre|mercado ?pago|shopee|shein|aliexpress|temu/],
-  ["Mercado", /supermerc|mercad|atacad|assai|carrefour|hortifrut|sacolao|padaria|panific|acougue|pao de acucar|extra hiper|big bompreco|comper|fort atacad|zaffari|savegnago|feira/],
-  ["Transporte", /posto|combust|shell|ipiranga|petrobras|br mania|uber(?!.*eats)|\b99\b|99app|99pop|cabify|estacion|pedagio|sem parar|veloe|conectcar|metro|onibus|passagem|gol linhas|latam|azul linhas|localiza|movida|unidas|auto pecas|oficina|lava jato/],
-  ["Contas", /vivo|claro|\btim\b|oi fibra|\boi\b|net servicos|internet|energisa|cemig|enel|light|copel|celesc|sabesp|saneam|agua|condomin|seguro|porto seguro|tokio|mapfre|anuidade|tarifa|iof|juros|encargo|multa/],
+  ["Mercado", /\bsuper\b|supermerc|mercad|atacad|assai|carrefour|hortifrut|sacolao|padaria|panific|acougue|pao de acucar|extra hiper|big bompreco|comper|fort atacad|zaffari|savegnago|feira/],
+  ["Transporte", /posto|combust|shell|ipiranga|petrobras|br mania|uber(?!.*eats)|\b99\b|99app|99pop|cabify|estacion|pedagio|via brasil|rodovia|concession|\bconc\b|sem parar|veloe|conectcar|metro|onibus|passagem|gol linhas|latam|azul linhas|localiza|movida|unidas|auto pecas|oficina|lava jato/],
+  ["Contas", /parc\.? fat|parcelamento de fat|vivo|claro|\btim\b|oi fibra|\boi\b|net servicos|internet|energisa|cemig|enel|light|copel|celesc|sabesp|saneam|agua|condomin|seguro|porto seguro|tokio|mapfre|anuidade|tarifa|iof|juros|encargo|multa/],
   ["Saúde", /farmac|drogar|droga|raia|pacheco|pague menos|panvel|nissei|hospital|clinic|laborat|odonto|dentist|unimed|hapvida|amil|bradesco saude|sulamerica|medic|otica|academia|smart fit|bio ritmo/],
-  ["Lazer", /ifood|rappi|uber eats|restaurant|churrasc|pizz|burger|lanch|mcdonald|\bbk\b|bob'?s|subway|outback|coco bambu|\bbar\b|boteco|cervej|cinema|cinemark|ingresso|netflix|spotify|disney|prime video|amazon prime|hbo|max\.com|globoplay|deezer|youtube|steam|playstation|xbox|nintendo|viagem|hotel|airbnb|booking|decolar/],
+  ["Lazer", /ifood|rappi|uber eats|restaurant|churrasc|pizz|burger|lanch|mcdonald|\bbk\b|bob'?s|subway|outback|coco bambu|\bbar\b|boteco|cervej|cinema|\bcine\b|cinemark|ingresso|netflix|spotify|disney|prime video|amazon prime|hbo|max\.com|globoplay|deezer|youtube|steam|playstation|xbox|nintendo|viagem|hotel|airbnb|booking|decolar/],
   ["Educação", /escola|colegio|curso|faculd|universid|udemy|alura|coursera|livrar|livro|saraiva|cultura|papelaria|kalunga|material escolar|ingles|idioma/],
   ["Moradia", /aluguel|imobili|leroy|telhanorte|c&c|madeira|tok ?stok|mobly|casas bahia|magazine luiza|magalu|camicado|eletro/],
 ];
-const limpaDesc = d => String(d||"").replace(/\s+/g," ").replace(/\s+(US\$|USD|U\$|EUR|€)\s*[\d.,]*$/i,"").trim();
+const limpaDesc = d => String(d||"").replace(/\s+/g," ").replace(/\s+(US\$|USD|U\$|EUR|€)\s*[\d.,]*$/i,"").replace(/\s+(BRL|USD)$/i,"").trim();
 function guessCat(desc){ const d = semAcento(desc); for (const [c,re] of REGRAS) if (re.test(d)) return c; return "Outros"; }
-const IGNORAR = /pagamento|pgto|pag fatura|saldo anterior|saldo em|saldo atual|total d|total a pagar|total geral|subtotal|limite|vencimento|fatura anterior|credito rotativo|valor minimo|pagamento minimo/;
+const IGNORAR = /^r ?\$|pagamento|pagto|pgto|proximas faturas|pag fatura|saldo anterior|saldo em|saldo atual|total d|total a pagar|total geral|subtotal|limite|vencimento|fatura anterior|credito rotativo|valor minimo|pagamento minimo/;
 const MESES = {jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,nov:11,dez:12};
 
+let IMP_REF = null;
+function definirRef(linhas){
+  let best = null; const lim = Date.now() + 90*864e5;
+  for (const l of linhas) for (const m of String(l).matchAll(/\b(\d{2})\/(\d{2})\/(\d{4})\b/g)){
+    const d = new Date(+m[3], +m[2]-1, +m[1]);
+    if (+m[2]>=1 && +m[2]<=12 && d <= lim && (!best || d > best)) best = d;
+  }
+  IMP_REF = best;
+}
 function toIso(d, m, y, fatura){
   if (!(d>=1 && d<=31 && m>=1 && m<=12)) return null;
   let yy = y ? (String(y).length===2 ? 2000 + +y : +y) : null;
+  if (!yy && IMP_REF){ yy = IMP_REF.getFullYear(); if (new Date(yy, m-1, d) > new Date(IMP_REF.getTime() + 20*864e5)) yy--; }
   if (!yy){ const [fy, fm] = fatura.split("-").map(Number); yy = m > fm ? fy-1 : fy; }
   return `${yy}-${pad(m)}-${pad(d)}`;
 }
 function lerData(x, fatura){
   if (x instanceof Date && !isNaN(x)) return `${x.getFullYear()}-${pad(x.getMonth()+1)}-${pad(x.getDate())}`;
+  if (typeof x === "number") return null;
   const s = String(x||"").trim(); let m;
   if ((m = s.match(/^(\d{4})-(\d{2})-(\d{2})/))) return `${m[1]}-${m[2]}-${m[3]}`;
   if ((m = s.match(/^(\d{1,2})[\/.-](\d{1,2})(?:[\/.-](\d{2,4}))?(?:\s|$)/))) return toIso(+m[1], +m[2], m[3], fatura);
@@ -865,17 +876,35 @@ function splitCSV(line, sep){
 }
 /* Tabela genérica (CSV ou planilha): acha o cabeçalho nas primeiras linhas; sem cabeçalho, deduz as colunas linha a linha. */
 function parseRows(rows, fatura){
+  const a = parseRowsCab(rows, fatura), b = parseRowsLinha(rows, fatura);
+  return b.length > a.length ? b : a;
+}
+function parseRowsLinha(rows, fatura){
+  const out = [];
+  for (const row of rows){
+    const di = row.findIndex(c=>lerData(c, fatura)); if (di<0) continue;
+    let vi = -1; for (let i=row.length-1; i>di; i--) if (pareceValor(row[i])){ vi=i; break; }
+    if (vi<0) continue;
+    const date = lerData(row[di], fatura), v = parseValor(row[vi]);
+    const textos = row.slice(di+1, vi).map(c=>String(c).trim()).filter(c=>c && !pareceValor(c));
+    if (!date || !isFinite(v) || !v) continue;
+    out.push({date, desc:limpaDesc(textos[0]) || "Compra no cartão", v});
+  }
+  return out;
+}
+function parseRowsCab(rows, fatura){
   let h = -1, iD, iS, iV;
   for (let r=0; r<Math.min(rows.length, 25); r++){
     const cab = rows[r].map(c=>semAcento(c));
     const f = re => cab.findIndex(x=>re.test(x));
     const d = f(/^data|date|^dt\b|dt\.? ?compra/), v = f(/valor|amount|value|quantia|r\$/);
-    if (d>=0 && v>=0){ h=r; iD=d; iV=v; iS=f(/descri|lancamento|estabelec|title|historico|detalhe|nome|loja|comercio/); break; }
+    if (d>=0 && v>=0 && d!==v){ h=r; iD=d; iV=v; iS=f(/descri|lancamento|estabelec|title|historico|detalhe|nome|loja|comercio/); break; }
   }
+  if (h<0) return [];
   const out = [];
   for (const row of rows.slice(h+1)){
     let date, desc, v;
-    if (h>=0){ date = lerData(row[iD], fatura); v = parseValor(row[iV]); desc = iS>=0 ? row[iS] : row.filter((c,i)=>i!==iD && i!==iV).join(" "); }
+    if (h>=0){ date = lerData(row[iD], fatura); v = parseValor(row[iV]); desc = (iS>=0 && iS!==iD) ? row[iS] : row.filter((c,i)=>i!==iD && i!==iV).map(c=>String(c).trim()).filter(c=>c && !pareceValor(c))[0]; }
     else {
       const di = row.findIndex(c=>lerData(c, fatura)); if (di<0) continue;
       let vi = -1; for (let i=row.length-1; i>di; i--) if (pareceValor(row[i])){ vi=i; break; }
@@ -893,6 +922,7 @@ function parseCSV(txt, fatura){
   if (!linhas.length) return [];
   const amostra = linhas.slice(0,10).join("\n"), cont = c => (amostra.match(new RegExp("\\"+c,"g"))||[]).length;
   const sep = [";","\t",","].sort((a,b)=>cont(b)-cont(a))[0];
+  definirRef(linhas);
   return parseRows(linhas.map(l=>splitCSV(l, sep)), fatura);
 }
 function carregarScript(src, global){
@@ -903,11 +933,11 @@ async function parseXLSX(buf, fatura, linhasLidas){
   const X = await carregarScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js", "XLSX");
   const wb = X.read(buf, {type:"array", cellDates:true});
   let out = [];
-  for (const nome of wb.SheetNames){
-    const rows = X.utils.sheet_to_json(wb.Sheets[nome], {header:1, raw:true, defval:""});
-    rows.slice(0,40).forEach(r=>linhasLidas.push(r.map(c=>c instanceof Date ? c.toISOString().slice(0,10) : c).join(" | ")));
-    out = out.concat(parseRows(rows, fatura));
-  }
+  const folhas = wb.SheetNames.map(nome=>X.utils.sheet_to_json(wb.Sheets[nome], {header:1, raw:true, defval:""}));
+  const texto = folhas.flat().map(r=>r.map(c=>c instanceof Date ? c.toISOString().slice(0,10) : c).join(" | "));
+  texto.slice(0,60).forEach(l=>linhasLidas.push(l));
+  definirRef(texto);
+  for (const rows of folhas) out = out.concat(parseRows(rows, fatura));
   return out;
 }
 let pdfLib = null;
@@ -929,13 +959,16 @@ async function parsePDF(buf, fatura, senha, linhasLidas){
   for (let p=1; p<=pdf.numPages; p++){
     const c = await (await pdf.getPage(p)).getTextContent(), rows = new Map();
     for (const it of c.items){ if (!it.str.trim()) continue; const y = Math.round(it.transform[5]/3); if (!rows.has(y)) rows.set(y, []); rows.get(y).push({x:it.transform[4], s:it.str}); }
-    [...rows.entries()].sort((a,b)=>b[0]-a[0]).forEach(([,its])=>linhas.push(its.sort((a,b)=>a.x-b.x).map(i=>i.s).join(" ").replace(/\s+/g," ").trim()));
+    [...rows.entries()].sort((a,b)=>b[0]-a[0]).forEach(([,its])=>linhas.push(its.sort((a,b)=>a.x-b.x).map(i=>i.s).join(" ").replace(/[\u0000-\u001f\u007f\u00a0]/g," ").replace(/\s+/g," ").trim()));
   }
+  window.__impLinhas = linhas;
   linhas.slice(0,60).forEach(l=>linhasLidas.push(l));
+  definirRef(linhas);
   if (!linhas.length) throw Object.assign(new Error("sem texto"), {semTexto:true});
   const out = [], VAL = "(-?\\s*(?:R\\$)?\\s*-?\\d{1,3}(?:\\.\\d{3})*,\\d{2}\\s*-?)";
   const DATA = "(\\d{1,2}[\\/.-]\\d{1,2}(?:[\\/.-]\\d{2,4})?|\\d{1,2}\\s*(?:de\\s+)?(?:jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\\w*\\.?)";
-  const re = new RegExp("^" + DATA + "\\s+(.+?)\\s+" + VAL + "(?:\\s+" + VAL + ")?$", "i");
+  // Faturas em duas colunas: aceita texto da outra coluna depois do valor (começando por letra).
+  const re = new RegExp("^" + DATA + "\\s+(.+?)\\s+" + VAL + "(?:\\s+" + VAL + ")?(?:\\s+[A-Za-zÀ-ú*(].*)?$", "i");
   for (const l of linhas){
     const m = l.match(re); if (!m) continue;
     const date = lerData(m[1], fatura); if (!date) continue;
@@ -946,9 +979,9 @@ async function parsePDF(buf, fatura, senha, linhasLidas){
   return out;
 }
 
-let impRows = [], impArquivo = null, impLidas = [];
+let impRows = [], impArquivo = null, impLidas = [], impMesManual = false;
 const chaveTx = (date, desc, v) => `${date}|${Math.round(v*100)}|${semAcento(desc).replace(/[^a-z0-9]/g,"").slice(0,18)}`;
-function impReset(){ impRows=[]; impArquivo=null; impLidas=[]; $("#impWrap").hidden=true; $("#impFoot").hidden=true; $("#impSenhaBox").hidden=true; $("#impDiag").hidden=true; $("#impStatus").textContent=""; $("#impFile").value=""; }
+function impReset(){ impMesManual=false; impRows=[]; impArquivo=null; impLidas=[]; $("#impWrap").hidden=true; $("#impFoot").hidden=true; $("#impSenhaBox").hidden=true; $("#impDiag").hidden=true; $("#impStatus").textContent=""; $("#impFile").value=""; }
 function impDiagnostico(){
   const d = $("#impDiag");
   if (!impLidas.length){ d.hidden = true; return; }
@@ -965,6 +998,7 @@ async function impProcessar(senha){
   const nome = file.name.toLowerCase(), buf = await file.arrayBuffer();
   const ehPDF = nome.endsWith(".pdf") || new Uint8Array(buf.slice(0,5)).join(",")==="37,80,68,70,45";
   const ehXLS = /\.xlsx?$|\.ods$/.test(nome) || new Uint8Array(buf.slice(0,2)).join(",")==="80,75" || new Uint8Array(buf.slice(0,4)).join(",")==="208,207,17,224";
+  IMP_REF = null;
   $("#impStatus").textContent = "Lendo o arquivo…"; $("#impSenhaBox").hidden = true; impLidas = []; $("#impDiag").hidden = true;
   $("#impWrap").hidden = true; $("#impFoot").hidden = true;
   let brutos = [];
@@ -996,6 +1030,16 @@ async function impProcessar(senha){
   }
   // A maioria das linhas são compras: se vierem negativas, a convenção do banco é invertida.
   if (brutos.filter(r=>r.v<0).length > brutos.length/2) brutos.forEach(r=>r.v=-r.v);
+  // Mês da fatura: o das compras mais recentes (sem contar parcelas), se você não escolheu outro.
+  const PARC = /(\d{2})\/(\d{2})(?![\/\d])/;
+  const ehParcela = d => { const m = String(d).match(PARC); return m && +m[1]>=1 && +m[2]>=2 && +m[1]<=+m[2]; };
+  if (!impMesManual){
+    const datas = brutos.filter(r=>r.v>0 && !ehParcela(r.desc)).map(r=>r.date).sort();
+    if (datas.length){ const mm = datas[datas.length-1].slice(0,7); if (mm !== fatura){ $("#impMes").value = mm; $("#impVenc").value = `${mm}-10`; return impProcessar(senha); } }
+  }
+  // Data depois do mês da fatura só pode ser do ano anterior (compra parcelada antiga).
+  brutos.forEach(r=>{ if (r.date.slice(0,7) > fatura){ r.date = (+r.date.slice(0,4)-1) + r.date.slice(4); } });
+  brutos.forEach(r=>{ if (ehParcela(r.desc) && r.date.slice(0,7) < fatura){ r.date = `${fatura}-01`; r.parcela = true; } });
   const {tx, example} = dataset();
   const existentes = new Set((example?[]:tx).map(t=>chaveTx(t.date, t.desc, t.amount)));
   const venc = $("#impVenc").value || `${fatura}-10`;
@@ -1004,6 +1048,7 @@ async function impProcessar(senha){
     const date = $("#impData").value==="venc" ? venc : r.date;
     const dup = r.v>0 && existentes.has(chaveTx(date, r.desc, r.v));
     const why = r.v<=0 ? "crédito ou estorno" : dup ? "já importado" : "";
+    if (r.parcela && !why) return {date, desc:r.desc, v:Math.abs(r.v), cat:guessCat(r.desc), ok:true, why:"parcela desta fatura"};
     return {date, desc:r.desc, v:Math.abs(r.v), cat:guessCat(r.desc), ok:!why, why};
   });
   $("#impStatus").textContent = `${impRows.length} ${impRows.length===1?"linha encontrada":"linhas encontradas"}${ignor?` (${ignor} de pagamento ou totais ignoradas)`:""}. Confira as categorias antes de importar.`;
@@ -1011,6 +1056,7 @@ async function impProcessar(senha){
   drawImp();
 }
 $("#impFile").addEventListener("change", e=>{ impArquivo = e.target.files[0] || null; if (impArquivo) impProcessar(); });
+$("#impMes").addEventListener("input", ()=>{ impMesManual = true; });
 $("#impSenhaOk").addEventListener("click", ()=>impProcessar($("#impSenha").value));
 $("#impSenha").addEventListener("keydown", e=>{ if (e.key==="Enter"){ e.preventDefault(); impProcessar($("#impSenha").value); } });
 ["impData","impVenc","impMes"].forEach(id=>$("#"+id).addEventListener("change", ()=>{ if (impArquivo && !$("#impWrap").hidden) impProcessar($("#impSenha").value || undefined); }));
