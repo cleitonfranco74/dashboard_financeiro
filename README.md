@@ -8,7 +8,10 @@ Painel de finanças pessoais, simuladores e otimizador de carteira em português
 
 ## Páginas
 
-### Livro-Caixa (`index.html`)
+### Capa (`index.html`)
+Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória esperada pelo Focus), acesso às ferramentas e autoria.
+
+### Livro-Caixa (`livro-caixa.html`)
 - Resumo do mês: receitas, despesas, resultado e taxa de poupança.
 - **Reserva de emergência:** quantos meses de despesas você cobre e em quanto tempo completa 6 meses.
 - Fluxo de caixa dos últimos 6 meses, orçamento por categoria e livro de lançamentos com exportação para CSV.
