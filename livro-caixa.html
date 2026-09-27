@@ -48,7 +48,7 @@ header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:spac
 .brand{display:flex;flex-direction:column;gap:2px}
 .eyebrow{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
 h1{font-size:28px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.02em;text-wrap:balance}
-h1 .m{text-transform:capitalize}
+h1 .m{text-transform:none}
 .monthnav{display:flex;align-items:center;gap:6px}
 .iconbtn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;color:var(--ink-2)}
 .iconbtn:hover{background:var(--surface-2);color:var(--ink)}
@@ -132,6 +132,32 @@ h2{font-size:16px;margin:0;font-weight:650;letter-spacing:-.01em}
 
 /* ledger */
 .addform{display:grid;grid-template-columns:130px minmax(160px,1.6fr) minmax(130px,1fr) 130px auto;gap:8px;align-items:end}
+.cmp{gap:12px}
+#cmp{display:flex;flex-direction:column;gap:14px}
+.cmp-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 16px}
+.cmp-msg{margin:0;font-size:15.5px;max-width:70ch}
+.cmp-msg b{font-family:var(--mono);font-weight:600}
+.cmp-bar{position:relative;display:flex;gap:2px;height:24px;border-radius:7px;background:var(--surface-2);margin-top:14px}
+.cmp-bar .seg{display:block;height:100%;min-width:3px}
+.cmp-bar .seg:first-child{border-radius:7px 0 0 7px}
+.cmp-bar .seg:last-child{border-radius:0 7px 7px 0}
+.cmp-bar .seg:only-child{border-radius:7px}
+.cmp-bar .d{background:var(--desp)}
+.cmp-bar .d:nth-child(even){background:color-mix(in srgb,var(--desp) 72%,var(--surface))}
+.cmp-bar .s{background:var(--accent)}
+.cmp-bar .rmark{position:absolute;top:-16px;bottom:-4px;width:2px;background:var(--ink);transform:translateX(-1px)}
+.cmp-bar .rmark em{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-style:normal;font-size:11px;font-weight:600;white-space:nowrap;color:var(--ink)}
+.cmp-legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--ink-2)}
+.cmp-legend span{display:inline-flex;align-items:center;gap:6px}
+.cmp-legend i{width:10px;height:10px;border-radius:3px}
+.cmp-list{display:grid;grid-template-columns:minmax(90px,160px) 1fr auto auto;gap:6px 12px;align-items:center;font-size:13px;margin:0;padding:0;list-style:none}
+.cmp-list li{display:contents}
+.cmp-list .mini{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.cmp-list .mini i{display:block;height:100%;background:var(--desp);border-radius:4px}
+.cmp-list .mini i.s{background:var(--accent)}
+.cmp-list .v{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.cmp-list .p{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;color:var(--muted);min-width:52px}
+.cmp-list .tot{font-weight:600;border-top:1px solid var(--line);padding-top:6px}
 .kindbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
 .kindbar > span{font-size:13px;font-weight:600;color:var(--ink-2)}
 .kinds{display:inline-flex;gap:6px;flex-wrap:wrap}
@@ -225,6 +251,14 @@ tfoot td{font-weight:600;border-bottom:0}
       <div class="val" id="kTaxa">—</div>
       <div class="foot"><div class="meter" aria-hidden="true"><i id="mTaxa" style="width:0"></i></div><span class="delta" id="dTaxa">meta 20%</span></div>
     </div>
+  </section>
+
+  <section class="panel cmp" aria-labelledby="cmpTitle">
+    <div class="cmp-head">
+      <h2 id="cmpTitle">Receitas × despesas</h2>
+      <div class="cmp-legend" id="cmpLegend"><span><i style="background:var(--desp)"></i>Despesas por categoria</span><span><i style="background:var(--accent)"></i>Sobra</span></div>
+    </div>
+    <div id="cmp"></div>
   </section>
 
   <section class="panel reserva" aria-label="Reserva de emergência">
@@ -377,6 +411,31 @@ function dataset(){
   if (dbState === "off" && localTx.length) return {tx: localTx, example:false};
   return {tx: EXAMPLE, example:true};
 }
+function drawComparativo(s){
+  const mes = monthName(view.month,{month:"long"});
+  $("#cmpTitle").textContent = `Receitas × despesas em ${mes}`;
+  const el = $("#cmp"), sobra = s.r - s.d;
+  const btnR = `<button type="button" class="quick" data-quick="receita">+ Lançar receita</button>`;
+  const btnD = `<button type="button" class="quick" data-quick="despesa">+ Lançar despesa</button>`;
+  $("#cmpLegend").hidden = !(s.r && s.d);
+  if (!s.r && !s.d){ el.innerHTML = `<p class="cmp-msg">Nenhum lançamento em ${mes}. ${btnR} ${btnD}</p>`; return; }
+  if (!s.r){ el.innerHTML = `<p class="cmp-msg">Você lançou <b>${brl0.format(s.d)}</b> de despesas e nenhuma receita em ${mes}. Lance o que entrou no mês para ver quanto das receitas foi gasto. ${btnR}</p>`; return; }
+  if (!s.d){ el.innerHTML = `<p class="cmp-msg">Receitas de <b>${brl0.format(s.r)}</b> em ${mes}, e nenhuma despesa lançada ainda. Lance os gastos do mês para comparar. ${btnD}</p>`; return; }
+  const base = Math.max(s.r, s.d);
+  const cats = Object.entries(s.byCat).sort((a,b)=>b[1]-a[1]);
+  const msg = sobra >= 0
+    ? `As despesas consumiram <b>${pct(s.d/s.r)}</b> das receitas. Sobraram <b>${brl0.format(sobra)}</b> (${pct(sobra/s.r)}).`
+    : `As despesas superaram as receitas em <b>${brl0.format(-sobra)}</b>: você gastou ${pct(s.d/s.r)} do que recebeu.`;
+  const segs = cats.map(([c,v])=>`<i class="seg d" style="width:${v/base*100}%" title="${esc(c)}: ${brl.format(v)} (${pct(v/s.r)} das receitas)"></i>`).join("")
+    + (sobra>0 ? `<i class="seg s" style="width:${sobra/base*100}%" title="Sobra: ${brl.format(sobra)}"></i>` : "");
+  const mark = sobra<0 ? `<span class="rmark" style="left:${s.r/base*100}%"><em>receitas ${brl0.format(s.r)}</em></span>` : "";
+  const rows = cats.map(([c,v])=>`<li><span>${esc(c)}</span><span class="mini"><i style="width:${Math.min(100,v/s.r*100)}%"></i></span><span class="v">${brl0.format(v)}</span><span class="p">${pct(v/s.r)}</span></li>`).join("")
+    + (sobra>0 ? `<li><span>Sobra</span><span class="mini"><i class="s" style="width:${sobra/s.r*100}%"></i></span><span class="v">${brl0.format(sobra)}</span><span class="p">${pct(sobra/s.r)}</span></li>` : "")
+    + `<li class="tot"><span class="tot">Receitas</span><span class="tot"></span><span class="v tot">${brl0.format(s.r)}</span><span class="p tot">100%</span></li>`;
+  el.innerHTML = `<p class="cmp-msg">${msg}</p>
+    <div class="cmp-bar" role="img" aria-label="Despesas por categoria e sobra, em proporção das receitas">${segs}${mark}</div>
+    <ul class="cmp-list" aria-label="Despesas em percentual das receitas">${rows}</ul>`;
+}
 function sums(tx, k){
   let r=0,d=0; const byCat={};
   for (const t of tx){ if (t.date.slice(0,7)!==k) continue;
@@ -387,7 +446,7 @@ function sums(tx, k){
 /* ---------- render ---------- */
 function render(){
   const {tx, example} = dataset();
-  $("#monthTitle").textContent = monthName(view.month);
+  $("#monthTitle").textContent = (m => m.charAt(0).toUpperCase()+m.slice(1))(monthName(view.month));
   $("#nextM").disabled = view.month >= shiftMonth(curMonth, 1);
 
   const banner = $("#banner");
@@ -418,6 +477,7 @@ function render(){
 
   drawSpark(tx);
   drawReserva(tx);
+  drawComparativo(s);
   drawFlow(tx);
   drawBudget(s);
   drawLedger(tx, example);
@@ -601,6 +661,7 @@ function parseMoney(s){
   s = String(s).replace(/[R$\s]/g,"");
   if (!s) return NaN;
   if (s.includes(",")) s = s.replace(/\./g,"").replace(",",".");
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g,"");   // "5.000" = cinco mil
   return Number(s);
 }
 function fillCatSelect(){
@@ -626,7 +687,7 @@ function setKind(k, focar){
   if (focar){ $("#lancar").scrollIntoView({behavior:"smooth", block:"center"}); setTimeout(()=>$("#fDesc").focus({preventScroll:true}), 350); }
 }
 document.querySelectorAll(".kinds button").forEach(b=>b.addEventListener("click", ()=>setKind(b.dataset.kind, false)));
-document.querySelectorAll("[data-quick]").forEach(b=>b.addEventListener("click", ()=>setKind(b.dataset.quick, true)));
+document.addEventListener("click", e=>{ const b=e.target.closest("[data-quick]"); if (b) setKind(b.dataset.quick, true); });
 $("#addForm").addEventListener("submit", async e=>{
   e.preventDefault();
   const amount = Math.round(parseMoney($("#fAmt").value)*100)/100;
