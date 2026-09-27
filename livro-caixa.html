@@ -129,6 +129,19 @@ h2{font-size:16px;margin:0;font-weight:650;letter-spacing:-.01em}
 .bfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:12px;font-size:12.5px;color:var(--ink-2)}
 .textbtn{background:none;border:0;padding:4px 2px;color:var(--accent);font-weight:600}
 .textbtn:hover{text-decoration:underline}
+.blaunch{border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:14px;display:flex;flex-direction:column;gap:10px}
+.bl-head{display:flex;flex-direction:column;gap:2px;font-size:13.5px}
+.bl-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.bl-list li{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13.5px;min-height:34px}
+.bl-list li.done{opacity:.6}
+.bl-list label{display:flex;align-items:center;gap:8px;cursor:pointer}
+.bl-list input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent)}
+.bl-v{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px}
+.bl-v input{width:110px;height:32px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:0 8px;text-align:right}
+.bl-v input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.bl-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line);font-size:13px}
+.primary:disabled{opacity:.5;cursor:default;filter:none}
+.tag-orc{display:inline-block;font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--accent-soft);color:var(--accent);margin-left:6px;vertical-align:1px}
 
 /* ledger */
 .addform{display:grid;grid-template-columns:130px minmax(160px,1.6fr) minmax(130px,1fr) 130px auto;gap:8px;align-items:end}
@@ -285,9 +298,11 @@ tfoot td{font-weight:600;border-bottom:0}
         <div><h2>Orçamento por categoria</h2><div class="sub" id="budgetSub">Gasto no mês frente ao limite</div></div>
       </div>
       <ul class="blist" id="blist"></ul>
+      <div class="blaunch" id="blaunchBox" hidden></div>
       <div class="bfoot">
         <span id="bTotal"></span>
         <span style="display:flex;gap:10px">
+          <button class="textbtn" id="bLaunch">Lançar como despesas do mês</button>
           <button class="textbtn" id="bCancel" hidden>Cancelar</button>
           <button class="textbtn" id="bEdit">Editar limites</button>
         </span>
@@ -480,6 +495,7 @@ function render(){
   drawComparativo(s);
   drawFlow(tx);
   drawBudget(s);
+  drawLaunch();
   drawLedger(tx, example);
 }
 function setDelta(sel, cur, prev, upIsGood, prevName, absolute){
@@ -644,7 +660,7 @@ function drawLedger(tx, example){
     const canDel = !example;
     return `<tr>
       <td class="d num">${d}/${mo}</td>
-      <td>${esc(t.desc)}</td>
+      <td>${esc(t.desc)}${t.origem==="orcamento"?'<span class="tag-orc">orçamento</span>':""}</td>
       <td><span class="cat"><i style="background:${catColor(t)}"></i>${esc(t.cat)}</span></td>
       <td class="v num ${t.kind==="receita"?"in":""}">${t.kind==="receita"?"+":"−"} ${brl.format(t.amount)}</td>
       <td class="x">${canDel?`<button class="del ${confirmDel===t.id?"confirm":""}" data-id="${esc(t.id)}">${confirmDel===t.id?"Confirmar":"Excluir"}</button>`:""}</td>
@@ -747,6 +763,70 @@ $("#bEdit").addEventListener("click", async ()=>{
 });
 $("#bCancel").addEventListener("click", ()=>{ editingBudget=false; render(); });
 
+/* ---------- lançar o orçamento como despesas ---------- */
+let launching = false;
+function drawLaunch(){
+  const box = $("#blaunchBox");
+  $("#bLaunch").hidden = editingBudget;
+  $("#bLaunch").textContent = launching ? "Fechar" : "Lançar como despesas do mês";
+  if (!launching){ box.hidden = true; box.innerHTML = ""; delete box.dataset.k; return; }
+  box.hidden = false;
+  if (box.dataset.k === view.month && box.childElementCount) return;   // preserva o que está sendo editado
+  box.dataset.k = view.month;
+  const {tx, example} = dataset();
+  const feitos = new Set((example ? [] : tx).filter(t=>t.origem==="orcamento" && t.kind==="despesa" && t.date.slice(0,7)===view.month).map(t=>t.cat));
+  const cats = CATS.despesa.filter(c=>(+limits[c]||0)>0);
+  const mes = monthName(view.month,{month:"long"});
+  box.innerHTML = `<div class="bl-head"><b>Lançar o orçamento de ${mes} como despesas</b><span class="sub">Confira os valores. Cada categoria marcada vira uma despesa no dia 1º, identificada como “orçamento”. Você pode excluí-las depois no livro de lançamentos.</span></div>
+    <ul class="bl-list">${cats.map((c,i)=>{ const done = feitos.has(c);
+      return `<li class="${done?"done":""}"><label for="bl-${i}"><input type="checkbox" id="bl-${i}" data-bl="${esc(c)}" ${done?"disabled":"checked"}> ${esc(c)}</label>${done
+        ? `<span class="sub">já lançado neste mês</span>`
+        : `<span class="bl-v"><span>R$</span><input class="num" id="blv-${i}" inputmode="decimal" data-blv="${esc(c)}" value="${(+limits[c]).toLocaleString("pt-BR",{maximumFractionDigits:2})}" aria-label="Valor de ${esc(c)}"></span>`}</li>`; }).join("") || `<li class="sub">Nenhuma categoria tem limite definido. Use “Editar limites” primeiro.</li>`}</ul>
+    <div class="bl-foot"><span id="blTotal"></span><span style="display:flex;gap:10px;align-items:center"><button class="textbtn" id="blCancel" type="button">Cancelar</button><button class="primary" id="blGo" type="button">Lançar</button></span></div>`;
+  updateLaunchTotal();
+}
+function launchItems(){
+  const out = [];
+  document.querySelectorAll("#blaunchBox [data-bl]").forEach(cb=>{
+    if (!cb.checked || cb.disabled) return;
+    const inp = cb.closest("li").querySelector("[data-blv]");
+    out.push({cat:cb.dataset.bl, v:Math.round(parseMoney(inp.value)*100)/100, inp});
+  });
+  return out;
+}
+function updateLaunchTotal(){
+  const items = launchItems().filter(x=>x.v>0), tot = items.reduce((a,x)=>a+x.v,0), n = items.length;
+  $("#blTotal").innerHTML = n ? `${n} ${n===1?"despesa":"despesas"} · <b class="num">${brl.format(tot)}</b>` : "Nenhuma categoria selecionada";
+  const g = $("#blGo"); g.disabled = !n; g.textContent = n ? `Lançar ${n} ${n===1?"despesa":"despesas"}` : "Lançar";
+}
+$("#blaunchBox").addEventListener("input", updateLaunchTotal);
+$("#blaunchBox").addEventListener("change", updateLaunchTotal);
+$("#blaunchBox").addEventListener("click", async e=>{
+  if (e.target.id==="blCancel"){ launching=false; render(); return; }
+  if (e.target.id!=="blGo") return;
+  const items = launchItems();
+  const bad = items.find(x=>!(x.v>0));
+  if (bad){ toast(`Valor inválido em ${bad.cat}. Use um número como 1.500.`); bad.inp.focus(); return; }
+  if (!items.length) return;
+  const date = `${view.month}-01`, agora = new Date().toISOString();
+  const novos = items.map(x=>({date, desc:x.cat, cat:x.cat, kind:"despesa", amount:x.v, origem:"orcamento", createdAt:agora}));
+  $("#blGo").disabled = true;
+  if (dbState==="ready"){
+    try { for (const t of novos) await db.collection("lancamentos").add(t); }
+    catch(err){ dbError(err); $("#blGo").disabled = false; return; }
+  } else {
+    novos.forEach((t,i)=>localTx.push({id:"o"+Date.now()+"-"+i, ...t}));
+    if (typeof saveLocal === "function") saveLocal();
+  }
+  launching = false;
+  toast(`${novos.length} ${novos.length===1?"despesa lançada":"despesas lançadas"} a partir do orçamento.`);
+  render();
+});
+$("#bLaunch").addEventListener("click", ()=>{
+  launching = !launching; render();
+  if (launching) $("#blaunchBox").scrollIntoView({block:"nearest", behavior:"smooth"});
+});
+
 $("#exportBtn").addEventListener("click", async ()=>{
   const {tx} = dataset();
   const rows = [["data","descricao","categoria","tipo","valor"]].concat(
@@ -772,7 +852,7 @@ use("db").then(d=>{
   if (!d){ dbState="off"; setStatus(false,"Sem armazenamento"); render(); return; }
   db = d;
   db.collection("lancamentos").onSnapshot(snap=>{
-    realTx = snap.docs.map(doc=>{ const v=doc.data(); return {id:doc.id, date:String(v.date||""), desc:String(v.desc||""), cat:String(v.cat||"Outros"), kind:v.kind==="receita"?"receita":"despesa", amount:Number(v.amount)||0}; })
+    realTx = snap.docs.map(doc=>{ const v=doc.data(); return {id:doc.id, date:String(v.date||""), desc:String(v.desc||""), cat:String(v.cat||"Outros"), kind:v.kind==="receita"?"receita":"despesa", amount:Number(v.amount)||0, origem:v.origem==="orcamento"?"orcamento":undefined}; })
       .filter(t=>/^\d{4}-\d{2}-\d{2}$/.test(t.date));
     dbState = "ready"; setStatus(true,"Salvo na nuvem"); render();
   }, ()=>{ dbState="off"; setStatus(false,"Sem armazenamento"); render(); });
