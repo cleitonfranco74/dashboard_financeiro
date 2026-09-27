@@ -171,6 +171,23 @@ h2{font-size:16px;margin:0;font-weight:650;letter-spacing:-.01em}
 .cmp-list .v{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
 .cmp-list .p{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;color:var(--muted);min-width:52px}
 .cmp-list .tot{font-weight:600;border-top:1px solid var(--line);padding-top:6px}
+.impbar{margin-left:auto}
+.imp{border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:16px;display:flex;flex-direction:column;gap:12px}
+.imp-head{display:flex;flex-direction:column;gap:3px;font-size:13.5px}
+.imp-opts{display:grid;grid-template-columns:minmax(200px,1.4fr) repeat(3,minmax(140px,1fr));gap:10px;align-items:end}
+@media (max-width:900px){.imp-opts{grid-template-columns:1fr 1fr}}
+.imp-opts input[type=file]{height:38px;padding:6px;border:1px dashed var(--axis);border-radius:10px;background:var(--surface);width:100%;font-size:13px}
+.imp-warn{font-size:12.5px;color:var(--ink-2);background:color-mix(in srgb,var(--warn) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--warn) 45%,var(--line));border-radius:10px;padding:8px 12px}
+.imp-status{font-size:13px;color:var(--ink-2)}
+.imp-wrap{overflow-x:auto;max-height:420px;overflow-y:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.imp-tab{width:100%;border-collapse:collapse;min-width:620px;font-size:13px}
+.imp-tab th{position:sticky;top:0;background:var(--surface);z-index:1}
+.imp-tab td,.imp-tab th{padding:6px 10px;border-bottom:1px solid var(--line)}
+.imp-tab tr.off td{opacity:.5}
+.imp-tab select{height:30px;border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:0 6px;font-size:12.5px}
+.imp-tab input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent)}
+.imp-tab .why{font-size:11.5px;color:var(--muted)}
+.imp-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px}
 .kindbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
 .kindbar > span{font-size:13px;font-weight:600;color:var(--ink-2)}
 .kinds{display:inline-flex;gap:6px;flex-wrap:wrap}
@@ -320,6 +337,21 @@ tfoot td{font-weight:600;border-bottom:0}
         <button type="button" data-kind="receita" aria-pressed="false"><i style="background:var(--rec)"></i>Receita <small style="font-weight:500;color:var(--muted)">salário, vendas, rendimentos</small></button>
         <button type="button" data-kind="despesa" aria-pressed="true"><i style="background:var(--desp)"></i>Despesa <small style="font-weight:500;color:var(--muted)">contas, compras, gastos</small></button>
       </div>
+      <button type="button" class="ghost impbar" id="impBtn">Importar fatura do cartão</button>
+    </div>
+    <div class="imp" id="impBox" hidden>
+      <div class="imp-head"><b>Importar fatura do cartão de crédito</b>
+        <span class="sub">No aplicativo ou site do banco, baixe a fatura em <b>OFX</b> (mais confiável) ou <b>CSV</b>. PDF também funciona na maioria das faturas, mas confira a prévia. O arquivo é lido só no seu navegador.</span></div>
+      <div class="imp-opts">
+        <div class="field"><label for="impFile">Arquivo da fatura</label><input id="impFile" type="file" accept=".ofx,.qfx,.csv,.txt,.pdf"></div>
+        <div class="field"><label for="impMes">Mês da fatura</label><input id="impMes" type="month"></div>
+        <div class="field"><label for="impData">Data dos lançamentos</label><select id="impData"><option value="compra">Data de cada compra</option><option value="venc">Vencimento da fatura</option></select></div>
+        <div class="field"><label for="impVenc">Vencimento</label><input id="impVenc" type="date"></div>
+      </div>
+      <div class="imp-warn">Importe as compras da fatura <b>ou</b> lance o pagamento da fatura como uma despesa, nunca os dois. Senão os mesmos gastos contam duas vezes.</div>
+      <div class="imp-status" id="impStatus"></div>
+      <div class="imp-wrap" id="impWrap" hidden></div>
+      <div class="imp-foot" id="impFoot" hidden><span id="impTotal"></span><span style="display:flex;gap:10px;align-items:center"><button class="textbtn" type="button" id="impCancel">Cancelar</button><button class="primary" type="button" id="impGo">Importar</button></span></div>
     </div>
     <form class="addform is-despesa" id="addForm" autocomplete="off">
       <div class="field"><label for="fDate">Data</label><input id="fDate" type="date" required></div>
@@ -660,7 +692,7 @@ function drawLedger(tx, example){
     const canDel = !example;
     return `<tr>
       <td class="d num">${d}/${mo}</td>
-      <td>${esc(t.desc)}${t.origem==="orcamento"?'<span class="tag-orc">orçamento</span>':""}</td>
+      <td>${esc(t.desc)}${TAGS[t.origem]?`<span class="tag-orc">${TAGS[t.origem]}</span>`:""}</td>
       <td><span class="cat"><i style="background:${catColor(t)}"></i>${esc(t.cat)}</span></td>
       <td class="v num ${t.kind==="receita"?"in":""}">${t.kind==="receita"?"+":"−"} ${brl.format(t.amount)}</td>
       <td class="x">${canDel?`<button class="del ${confirmDel===t.id?"confirm":""}" data-id="${esc(t.id)}">${confirmDel===t.id?"Confirmar":"Excluir"}</button>`:""}</td>
@@ -763,6 +795,193 @@ $("#bEdit").addEventListener("click", async ()=>{
 });
 $("#bCancel").addEventListener("click", ()=>{ editingBudget=false; render(); });
 
+
+/* ---------- importar fatura do cartão ---------- */
+const TAGS = {orcamento:"orçamento", cartao:"cartão"};
+const semAcento = s => String(s).normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+const REGRAS = [
+  ["Outros", /mercado ?livre|mercado ?pago|shopee|shein|aliexpress|temu/],
+  ["Mercado", /supermerc|mercad|atacad|assai|carrefour|hortifrut|sacolao|padaria|panific|acougue|pao de acucar|extra hiper|big bompreco|comper|fort atacad|zaffari|savegnago|feira/],
+  ["Transporte", /posto|combust|shell|ipiranga|petrobras|br mania|uber(?!.*eats)|\b99\b|99app|99pop|cabify|estacion|pedagio|sem parar|veloe|conectcar|metro|onibus|passagem|gol linhas|latam|azul linhas|localiza|movida|unidas|auto pecas|oficina|lava jato/],
+  ["Contas", /vivo|claro|tim |\btim\b|oi fibra|\boi\b|net servicos|internet|energisa|cemig|enel|light|copel|celesc|sabesp|saneam|agua|condomin|seguro|porto seguro|tokio|mapfre|anuidade|tarifa|iof|juros|encargo|multa/],
+  ["Saúde", /farmac|drogar|droga|raia|pacheco|pague menos|panvel|nissei|hospital|clinic|laborat|odonto|dentist|unimed|hapvida|amil|bradesco saude|sulamerica|medic|otica|academia|smart fit|bio ritmo/],
+  ["Lazer", /ifood|rappi|uber eats|restaurant|churrasc|pizz|burger|lanch|mcdonald|bk |bob'?s|subway|outback|coco bambu|bar |boteco|cervej|cinema|cinemark|ingresso|netflix|spotify|disney|prime video|amazon prime|hbo|max\.com|globoplay|deezer|youtube|steam|playstation|xbox|nintendo|viagem|hotel|airbnb|booking|decolar/],
+  ["Educação", /escola|colegio|curso|faculd|universid|udemy|alura|coursera|livrar|livro|saraiva|cultura|papelaria|kalunga|material escolar|ingles|idioma/],
+  ["Moradia", /aluguel|imobili|leroy|telhanorte|c&c|madeira|tok ?stok|mobly|casas bahia|magazine luiza|magalu|camicado|eletro/],
+];
+function guessCat(desc){ const d = semAcento(desc); for (const [c,re] of REGRAS) if (re.test(d)) return c; return "Outros"; }
+const IGNORAR = /pagamento|pgto|pag fatura|saldo anterior|saldo em|total d|total a pagar|limite|vencimento|fatura anterior|credito rotativo|valor minimo|pagamento minimo/;
+const MESES = {jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,nov:11,dez:12};
+
+function toIso(d, m, y, fatura){
+  let yy = y ? (y.length===2 ? 2000+ +y : +y) : null;
+  if (!yy){ const [fy, fm] = fatura.split("-").map(Number); yy = m > fm ? fy-1 : fy; }
+  return `${yy}-${pad(m)}-${pad(d)}`;
+}
+function parseValor(s){
+  s = String(s).trim(); let neg = /^-|-$|\(.*\)|\dC$/.test(s.replace(/\s/g,""));
+  s = s.replace(/[R$\s()+CD-]/g,"");
+  if (/,\d{1,2}$/.test(s)) s = s.replace(/\./g,"").replace(",",".");
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g,"");
+  const v = Number(s); return isFinite(v) ? (neg ? -v : v) : NaN;
+}
+function parseOFX(txt, fatura){
+  const out = [];
+  for (const bloco of txt.split(/<STMTTRN>/i).slice(1)){
+    const tag = t => { const m = bloco.match(new RegExp("<"+t+">([^<\\r\\n]*)","i")); return m ? m[1].trim() : ""; };
+    const dt = tag("DTPOSTED"), v = parseValor(tag("TRNAMT").replace(".",","));
+    if (!/^\d{8}/.test(dt) || !isFinite(v)) continue;
+    out.push({date:`${dt.slice(0,4)}-${dt.slice(4,6)}-${dt.slice(6,8)}`, desc:(tag("MEMO")||tag("NAME")).replace(/\s+/g," "), v});
+  }
+  return out;
+}
+function splitCSV(line, sep){
+  const out=[]; let cur="", q=false;
+  for (const ch of line){ if (ch==='"') q=!q; else if (ch===sep && !q){ out.push(cur); cur=""; } else cur+=ch; }
+  out.push(cur); return out.map(x=>x.trim());
+}
+function parseCSV(txt, fatura){
+  const linhas = txt.replace(/^﻿/,"").split(/\r?\n/).filter(l=>l.trim());
+  if (!linhas.length) return [];
+  const sep = (linhas[0].match(/;/g)||[]).length >= (linhas[0].match(/,/g)||[]).length ? ";" : ",";
+  const head = splitCSV(linhas[0], sep).map(semAcento);
+  const idx = re => head.findIndex(h=>re.test(h));
+  let iD = idx(/^data|date|dt/), iS = idx(/descri|lancamento|estabelec|title|historico|detalhe|nome/), iV = idx(/valor|amount|value|quantia/);
+  const temCab = iD>=0 && iV>=0;
+  if (!temCab){ iD=0; iS=1; iV=2; }
+  const out = [];
+  for (const l of linhas.slice(temCab?1:0)){
+    const c = splitCSV(l, sep), ds = c[iD]||"", v = parseValor(c[iV]||"");
+    let date = null, m;
+    if ((m = ds.match(/^(\d{4})-(\d{2})-(\d{2})/))) date = `${m[1]}-${m[2]}-${m[3]}`;
+    else if ((m = ds.match(/^(\d{2})\/(\d{2})(?:\/(\d{2,4}))?/))) date = toIso(+m[1], +m[2], m[3], fatura);
+    if (!date || !isFinite(v)) continue;
+    out.push({date, desc:(c[iS]||"").replace(/\s+/g," "), v});
+  }
+  return out;
+}
+function loadPdfJs(){
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  return new Promise((res, rej)=>{
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    s.onload = async () => {
+      const W = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      try {   // worker a partir de uma cópia local (blob): evita bloqueio de worker entre domínios
+        const code = await (await fetch(W)).text();
+        pdfjsLib.GlobalWorkerOptions.workerPort = new Worker(URL.createObjectURL(new Blob([code], {type:"text/javascript"})));
+      } catch { pdfjsLib.GlobalWorkerOptions.workerSrc = W; }
+      res(pdfjsLib);
+    };
+    s.onerror = () => rej(new Error("pdfjs"));
+    document.head.appendChild(s);
+  });
+}
+async function parsePDF(buf, fatura){
+  const lib = await loadPdfJs();
+  const pdf = await Promise.race([lib.getDocument({data:buf}).promise, new Promise((_,rej)=>setTimeout(()=>rej(new Error("tempo")), 25000))]), linhas = [];
+  for (let p=1; p<=pdf.numPages; p++){
+    const c = await (await pdf.getPage(p)).getTextContent(), rows = new Map();
+    for (const it of c.items){ if (!it.str.trim()) continue; const y = Math.round(it.transform[5]/3); if (!rows.has(y)) rows.set(y, []); rows.get(y).push({x:it.transform[4], s:it.str}); }
+    [...rows.entries()].sort((a,b)=>b[0]-a[0]).forEach(([,its])=>linhas.push(its.sort((a,b)=>a.x-b.x).map(i=>i.s).join(" ").replace(/\s+/g," ").trim()));
+  }
+  const out = [], VAL = "(-?\\s*(?:R\\$)?\\s*-?\\d{1,3}(?:\\.\\d{3})*,\\d{2}\\s*-?)";
+  const reNum = new RegExp("^(\\d{2})\\/(\\d{2})(?:\\/(\\d{2,4}))?\\s+(.+?)\\s+" + VAL + "$");
+  const reMes = new RegExp("^(\\d{2})\\s+(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\\w*\\.?\\s+(.+?)\\s+" + VAL + "$", "i");
+  for (const l of linhas){
+    let m, date, desc, val;
+    if ((m = l.match(reNum))){ date = toIso(+m[1], +m[2], m[3], fatura); desc = m[4]; val = m[5]; }
+    else if ((m = l.match(reMes))){ date = toIso(+m[1], MESES[m[2].toLowerCase()], null, fatura); desc = m[3]; val = m[4]; }
+    else continue;
+    const v = parseValor(val); if (!isFinite(v)) continue;
+    out.push({date, desc:desc.replace(/\s+/g," ").trim(), v});
+  }
+  return out;
+}
+
+let impRows = [];
+const chaveTx = (date, desc, v) => `${date}|${Math.round(v*100)}|${semAcento(desc).replace(/[^a-z0-9]/g,"").slice(0,18)}`;
+function impReset(){ impRows=[]; $("#impWrap").hidden=true; $("#impFoot").hidden=true; $("#impStatus").textContent=""; $("#impFile").value=""; }
+$("#impBtn").addEventListener("click", ()=>{
+  const box = $("#impBox"); box.hidden = !box.hidden;
+  if (!box.hidden){ $("#impMes").value = view.month; $("#impVenc").value = `${view.month}-10`; impReset(); box.scrollIntoView({block:"nearest", behavior:"smooth"}); }
+});
+$("#impFile").addEventListener("change", async e=>{
+  const file = e.target.files[0]; if (!file) return;
+  const fatura = $("#impMes").value || view.month, nome = file.name.toLowerCase();
+  $("#impStatus").textContent = "Lendo o arquivo…";
+  let brutos = [];
+  try {
+    if (nome.endsWith(".pdf")) brutos = await parsePDF(await file.arrayBuffer(), fatura);
+    else {
+      const buf = await file.arrayBuffer();
+      let txt = new TextDecoder("utf-8").decode(buf);
+      if (txt.includes("�")) txt = new TextDecoder("windows-1252").decode(buf);
+      brutos = /<STMTTRN>|<OFX>/i.test(txt) ? parseOFX(txt, fatura) : parseCSV(txt, fatura);
+    }
+  } catch(err){
+    console.error("Importação da fatura:", err); window.__impErr = String(err && (err.stack || err.message) || err);
+    $("#impStatus").textContent = nome.endsWith(".pdf") ? "Não foi possível ler este PDF. Baixe a fatura em OFX ou CSV no aplicativo do banco e tente de novo." : "Não foi possível ler o arquivo. Confira se é OFX, CSV ou PDF de fatura.";
+    return;
+  }
+  if (!brutos.length){ $("#impStatus").textContent = "Nenhuma compra encontrada no arquivo. Se for PDF, tente a versão OFX ou CSV da fatura."; return; }
+  // Convenção de sinal: a maioria das linhas são compras. Se vierem negativas, inverte.
+  const neg = brutos.filter(r=>r.v<0).length;
+  if (neg > brutos.length/2) brutos.forEach(r=>r.v=-r.v);
+  const {tx, example} = dataset();
+  const existentes = new Set((example?[]:tx).map(t=>chaveTx(t.date, t.desc, t.amount)));
+  const venc = $("#impVenc").value || `${fatura}-10`;
+  let ignor = 0;
+  impRows = brutos.filter(r=>{ if (IGNORAR.test(semAcento(r.desc))){ ignor++; return false; } return true; }).map(r=>{
+    const date = $("#impData").value==="venc" ? venc : r.date;
+    const dup = r.v>0 && existentes.has(chaveTx(date, r.desc, r.v));
+    const why = r.v<=0 ? "crédito ou estorno" : dup ? "já importado" : "";
+    return {date, desc:r.desc, v:Math.abs(r.v), cat:guessCat(r.desc), ok:!why, why};
+  });
+  $("#impStatus").textContent = `${impRows.length} ${impRows.length===1?"linha encontrada":"linhas encontradas"}${ignor?` (${ignor} de pagamento ou totais ignoradas)`:""}. Confira as categorias antes de importar.`;
+  drawImp();
+});
+function drawImp(){
+  const opts = c => CATS.despesa.map(x=>`<option ${x===c?"selected":""}>${esc(x)}</option>`).join("");
+  $("#impWrap").hidden = false; $("#impFoot").hidden = false;
+  $("#impWrap").innerHTML = `<table class="imp-tab"><thead><tr><th></th><th>Data</th><th>Descrição</th><th>Categoria</th><th class="v">Valor</th></tr></thead><tbody>${impRows.map((r,i)=>`
+    <tr class="${r.ok?"":"off"}"><td><input type="checkbox" data-ir="${i}" ${r.ok?"checked":""} ${r.why==="crédito ou estorno"?"disabled":""} aria-label="Importar ${esc(r.desc)}"></td>
+    <td class="num">${r.date.split("-").reverse().join("/")}</td><td>${esc(r.desc)}${r.why?` <span class="why">${r.why}</span>`:""}</td>
+    <td><select data-ic="${i}" aria-label="Categoria de ${esc(r.desc)}">${opts(r.cat)}</select></td><td class="v num">${brl.format(r.v)}</td></tr>`).join("")}</tbody></table>`;
+  impTotal();
+}
+function impTotal(){
+  const sel = impRows.filter(r=>r.ok), tot = sel.reduce((a,r)=>a+r.v,0);
+  $("#impTotal").innerHTML = sel.length ? `${sel.length} ${sel.length===1?"compra":"compras"} · <b class="num">${brl.format(tot)}</b>` : "Nenhuma compra selecionada";
+  const g = $("#impGo"); g.disabled = !sel.length; g.textContent = sel.length ? `Importar ${sel.length} ${sel.length===1?"lançamento":"lançamentos"}` : "Importar";
+}
+$("#impWrap").addEventListener("change", e=>{
+  const cb = e.target.closest("[data-ir]"), sl = e.target.closest("[data-ic]");
+  if (cb){ impRows[+cb.dataset.ir].ok = cb.checked; cb.closest("tr").classList.toggle("off", !cb.checked); }
+  if (sl) impRows[+sl.dataset.ic].cat = sl.value;
+  impTotal();
+});
+["impData","impVenc","impMes"].forEach(id=>$("#"+id).addEventListener("change", ()=>{ if ($("#impFile").files[0]) $("#impFile").dispatchEvent(new Event("change")); }));
+$("#impCancel").addEventListener("click", ()=>{ impReset(); $("#impBox").hidden = true; });
+$("#impGo").addEventListener("click", async ()=>{
+  const sel = impRows.filter(r=>r.ok); if (!sel.length) return;
+  const agora = new Date().toISOString();
+  const novos = sel.map(r=>({date:r.date, desc:r.desc, cat:r.cat, kind:"despesa", amount:Math.round(r.v*100)/100, origem:"cartao", createdAt:agora}));
+  $("#impGo").disabled = true; $("#impGo").textContent = "Importando…";
+  if (dbState==="ready"){
+    try { for (const t of novos) await db.collection("lancamentos").add(t); }
+    catch(err){ dbError(err); impTotal(); return; }
+  } else {
+    novos.forEach((t,i)=>localTx.push({id:"c"+Date.now()+"-"+i, ...t}));
+    if (typeof saveLocal === "function") saveLocal();
+  }
+  const mes = novos[0].date.slice(0,7);
+  impReset(); $("#impBox").hidden = true;
+  view.month = mes;
+  toast(`${novos.length} ${novos.length===1?"compra importada":"compras importadas"} do cartão.`);
+  render();
+});
+
 /* ---------- lançar o orçamento como despesas ---------- */
 let launching = false;
 function drawLaunch(){
@@ -852,7 +1071,7 @@ use("db").then(d=>{
   if (!d){ dbState="off"; setStatus(false,"Sem armazenamento"); render(); return; }
   db = d;
   db.collection("lancamentos").onSnapshot(snap=>{
-    realTx = snap.docs.map(doc=>{ const v=doc.data(); return {id:doc.id, date:String(v.date||""), desc:String(v.desc||""), cat:String(v.cat||"Outros"), kind:v.kind==="receita"?"receita":"despesa", amount:Number(v.amount)||0, origem:v.origem==="orcamento"?"orcamento":undefined}; })
+    realTx = snap.docs.map(doc=>{ const v=doc.data(); return {id:doc.id, date:String(v.date||""), desc:String(v.desc||""), cat:String(v.cat||"Outros"), kind:v.kind==="receita"?"receita":"despesa", amount:Number(v.amount)||0, origem:["orcamento","cartao"].includes(v.origem)?v.origem:undefined}; })
       .filter(t=>/^\d{4}-\d{2}-\d{2}$/.test(t.date));
     dbState = "ready"; setStatus(true,"Salvo na nuvem"); render();
   }, ()=>{ dbState="off"; setStatus(false,"Sem armazenamento"); render(); });
