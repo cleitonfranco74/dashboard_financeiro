@@ -1469,7 +1469,113 @@ SIMS.push({
   }
 });
 
-/* ---------- 14. PGBL x VGBL ---------- */
+/* ---------- 14. Criptomoedas ---------- */
+const CRIPTO_IR = {
+  br:   {nome:"Exchange no Brasil", ir:.15, isencao:true},
+  ext:  {nome:"Exchange no exterior", ir:.15, isencao:false},
+  etf:  {nome:"ETF de cripto na B3", ir:.15, isencao:false},
+};
+SIMS.push({
+  id:"cripto", nav:"Criptomoedas",
+  title:"Quanto posso ganhar ou perder com criptomoedas?",
+  lede:"Criptomoedas sobem e caem muito mais que ações. O simulador gera 1.000 caminhos, sorteando trechos reais da história do ativo ou usando suas premissas, e mostra a faixa de resultados, as quedas pelo caminho e o efeito no seu patrimônio total.",
+  fields:[
+    {k:"ativo",label:"Criptomoeda",def:"BTC",opts:[["BTC","Bitcoin (BTC)"],["ETH","Ethereum (ETH)"]]},
+    {k:"onde",label:"Onde investe",def:"br",opts:[["br","Exchange no Brasil"],["ext","Exchange no exterior"],["etf","ETF na B3"]],wide:true},
+    {k:"inicial",label:"Investimento inicial",def:5000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:500,pre:"R$",sobra:true},
+    {k:"anos",label:"Prazo",def:5,suf:"anos"},
+    {k:"patrimonio",label:"Resto do patrimônio",def:100000,pre:"R$",hint:"fora de cripto, para medir o peso"},
+    {k:"modelo",label:"Como gerar os cenários",def:"historico",opts:[["historico","Histórico real do ativo, em reais"],["premissas","Minhas premissas abaixo"]],wide:true,hint:"O histórico sorteia blocos de 12 meses dos últimos anos, com quedas e altas reais."},
+    {k:"venda",label:"Venda no fim",def:"total",opts:[["total","De uma vez"],["aos-poucos","Até R$ 35 mil/mês"]],when:["onde","br"]},
+    UNIDADE,
+    {sect:"Premissas"},
+    {k:"valoriz",label:"Valorização média",def:20,suf:"% a.a.",hint:"em reais"},
+    {k:"vol",label:"Volatilidade",def:65,suf:"% a.a.",hint:"bitcoin: cerca de 50% a 80%"},
+    {k:"custo",label:"Custo de compra",def:0.5,suf:"%",hint:"spread e corretagem da exchange"},
+    {sect:"Comparar com renda fixa"},
+    {k:"cdi",label:"CDI médio no período",def:11.5,suf:"% a.a.",mkt:"cdiMedio",hz:v=>v.anos*12},
+  ],
+  run(v){
+    const months = Math.round(v.anos*12);
+    if (!(months>=12 && months<=360)) return {error:"Informe um prazo entre 1 e 30 anos."};
+    if (!(v.inicial+v.aporte>0)) return {error:"Informe um investimento inicial ou um aporte mensal."};
+    if (v.vol>200) return {error:"A volatilidade parece alta demais. Use algo entre 30% e 120% ao ano."};
+    if (v.custo>=100) return {error:"O custo de compra precisa ser menor que 100%."};
+    const O = CRIPTO_IR[v.onde] || CRIPTO_IR.br, nomeAtivo = v.ativo==="ETH" ? "ethereum" : "bitcoin";
+    const isento = O.isencao && v.venda==="aos-poucos";
+    const s = v.vol/100/Math.sqrt(12), mu = Math.log(1+v.valoriz/100)/12 - s*s/2, cu = v.custo/100;
+    const N = 1000, step = months>120 ? 12 : months>48 ? 3 : 1;
+    const pts = []; for (let t=0;t<=months;t+=step) pts.push(t); if (pts[pts.length-1]!==months) pts.push(months);
+    const idx = new Map(pts.map((t,i)=>[t,i]));
+    const netAt = pts.map(()=>new Float64Array(N)), finals = new Float64Array(N), dds = new Float64Array(N);
+    const invested = v.inicial + v.aporte*months;
+    const rnd = mulberry(Math.round(v.inicial+v.aporte*7+v.anos*131+v.valoriz*977+v.vol*313)+(v.ativo==="ETH"?17:0));
+    const gauss = () => { let u=0; while(!u) u=rnd(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*rnd()); };
+    const hist = (MKT?.series?.retornos?.[v.ativo] || []).filter(x=>x!=null);
+    const usarHist = v.modelo==="historico" && hist.length>=36;
+    const hs = usarHist ? (()=>{ const lg = hist.map(x=>Math.log(1+x)); const m = lg.reduce((a,b)=>a+b,0)/lg.length; const sd = Math.sqrt(lg.reduce((a,b)=>a+(b-m)**2,0)/(lg.length-1));
+      let pk=1, val=1, dd=0; for (const x of hist){ val*=1+x; pk=Math.max(pk,val); dd=Math.min(dd,val/pk-1); }
+      return {ret:Math.exp(12*m)-1, vol:sd*Math.sqrt(12), worst:Math.min(...hist), dd, n:hist.length}; })() : null;
+    for (let p=0;p<N;p++){
+      let preco = 1, cotas = (v.inicial+v.aporte)*(1-cu), basis = v.inicial+v.aporte, pico = 1, dd = 0, bloco = 0, pos = 0;
+      const net = () => { const val = cotas*preco, g = val-basis; return val - (g>0 && !isento ? g*O.ir : 0); };
+      netAt[0][p] = net();
+      for (let t=1;t<=months;t++){
+        let r;
+        if (usarHist){ if (bloco===0){ pos = Math.floor(rnd()*(hist.length-12)); bloco = 12; } r = hist[pos++]; bloco--; }
+        else r = Math.exp(mu + s*gauss()) - 1;
+        preco *= 1+r; pico = Math.max(pico, preco); dd = Math.min(dd, preco/pico-1);
+        if (t<months && v.aporte>0){ cotas += v.aporte*(1-cu)/preco; basis += v.aporte; }
+        const i = idx.get(t); if (i!==undefined) netAt[i][p] = net();
+      }
+      finals[p] = net(); dds[p] = dd;
+    }
+    const q = (arr, f) => { const a = Array.from(arr).sort((x,y)=>x-y); return a[Math.min(a.length-1, Math.floor(f*a.length))]; };
+    const P10 = netAt.map(a=>q(a,.10)), P50 = netAt.map(a=>q(a,.50)), P90 = netAt.map(a=>q(a,.90));
+    const rf = simInvest({p0:v.inicial, pmt:v.aporte, months, rate:()=>aToM(v.cdi/100), tax:irRF});
+    const rfPts = pts.map(t=>rf.series[t]);
+    const real = v.unid==="real", P = paths(v), D = deflator(P.ipca, months), Dm = real ? D[months] : 1;
+    const investedShow = real ? v.inicial + Array.from({length:months},(_,t)=>v.aporte/D[t]).reduce((a,b)=>a+b,0) : invested;
+    const beat = Array.from(finals).filter(x=>x>rf.net).length/N;
+    const loss = Array.from(finals).filter(x=>x/Dm<investedShow).length/N;
+    const half = Array.from(finals).filter(x=>x/Dm<investedShow/2).length/N;
+    const nMed = P50[P50.length-1], nLo = P10[P10.length-1], nHi = P90[P90.length-1];
+    const med = nMed/Dm, lo = nLo/Dm, hi = nHi/Dm, rfNet = rf.net/Dm;
+    const ddMed = q(dds,.5), ddRuim = q(dds,.1);
+    const sh = arr => real ? arr.map((x,i)=>x/D[pts[i]]) : arr;
+    const ipcaMed = mediaAnual(P.ipca, months);
+    const unid = real ? " em reais de hoje" : "";
+    // Peso na carteira: o que acontece com o patrimônio total numa queda de 80%
+    const hoje = v.inicial, peso = hoje/(hoje+v.patrimonio||1), quedaTot = peso*0.8;
+    const tag = beat>=.6 ? "Cripto tende a ganhar" : beat>=.4 ? "Resultado incerto" : "Renda fixa tende a ganhar";
+    return {
+      html: verdict(tag,
+          `Em ${yrs(months)}, o cenário central do ${nomeAtivo} é de <b>${money(med)}</b> líquidos${unid}, com ${money(investedShow)} investidos. Em 8 de cada 10 cenários, o resultado fica entre <b>${money(lo)}</b> e <b>${money(hi)}</b>.`,
+          `Supera a renda fixa (${money(rfNet)}) em <b>${pct(beat,0)}</b> dos cenários, mas termina abaixo do investido em ${pct(loss,0)} deles e com menos da metade em ${pct(half,0)}. No caminho, a queda típica do pico ao fundo é de <b>${pct(-ddMed,0)}</b>; em 1 de cada 10 cenários passa de ${pct(-ddRuim,0)}.${usarHist?` Cenários sorteados de ${hs.n} meses reais do ${nomeAtivo} em reais: retorno médio de ${pct(hs.ret,0)} a.a., volatilidade de ${pct(hs.vol,0)}, pior mês de ${pct(hs.worst,0)} e maior queda de ${pct(-hs.dd,0)}.`:v.modelo==="historico"?` O histórico do ${nomeAtivo} ainda não está disponível; usei suas premissas.`:""}`) +
+        `<div class="kpis">${kpi("Cenário central", money(med), "metade dos cenários fica acima", C.s1)}${kpi("Pessimista", money(lo), "só 10% dos cenários ficam abaixo", C.s2)}${kpi("Otimista", money(hi), "só 10% dos cenários ficam acima", C.s3)}${kpi("Renda fixa", money(rfNet), `CDI de ${nf(v.cdi,1)}%, após IR`, C.s4)}${kpi("Queda típica no caminho", pct(-ddMed,0), `pior 10%: ${pct(-ddRuim,0)}`)}${kpi("Peso no patrimônio", pct(peso,0), `queda de 80% no cripto = ${pct(quedaTot,1)} do total`)}</div>` +
+        chartPanel("Faixa de resultados ao longo do tempo", `Valor líquido se vendido em cada momento${unid}. A área mostra onde caem 80% dos cenários`, legend([["Otimista (90%)",C.s3],["Central",C.s1],["Pessimista (10%)",C.s2],["Renda fixa",C.s4,true]]), "ch") +
+        `<section class="panel"><h3>Como fica cada cenário no fim</h3><div class="tablewrap"><table><thead><tr><th>Cenário</th><th class="n">Valor líquido</th><th class="n">Ganho sobre o investido</th><th class="n">Retorno anual equivalente</th></tr></thead><tbody>
+        ${[["Otimista (90%)",nHi,C.s3],["Central",nMed,C.s1],["Pessimista (10%)",nLo,C.s2],["Renda fixa",rf.net,C.s4]].map(([n,val,c])=>{
+          const fl = Array(months+1).fill(0); fl[0]=-(v.inicial+v.aporte); for (let t=1;t<months;t++) fl[t]=-v.aporte; fl[months]+=val; const im=irr(fl);
+          const a = im===null ? null : real ? (1+mToA(im))/(1+ipcaMed)-1 : mToA(im);
+          return `<tr><td><span class="sw" style="background:${c}"></span>${n}</td><td class="n num">${money(val/Dm)}</td><td class="n num ${val/Dm<investedShow?"neg":""}">${money(val/Dm-investedShow)}</td><td class="n num">${a===null?"—":pct(a)+" a.a."+(real?" real":"")}</td></tr>`; }).join("")}
+        </tbody></table></div></section>` +
+        notes([usarHist?`Cenários gerados por bootstrap em blocos de 12 meses dos retornos mensais reais do ${nomeAtivo} cotado em reais (Yahoo Finance). Preserva quedas longas e altas explosivas que a curva normal subestima.`:"Retornos mensais sorteados de uma distribuição log-normal com a valorização média e a volatilidade informadas. Na prática, cripto tem quedas mais bruscas que a curva normal sugere.",
+          "São 1.000 cenários. O histórico de criptomoedas é curto e marcado por poucos ciclos; não há garantia de que se repita.",
+          "Arrasto da volatilidade: com oscilações tão grandes, o cenário central fica bem abaixo da valorização média. Uma queda de 50% exige alta de 100% só para voltar ao ponto de partida.",
+          "Exchange no Brasil: ganho de capital isento quando o total vendido no mês, somando todos os criptoativos, fica até R$ 35 mil; acima disso, 15% sobre o ganho (alíquota maior para ganhos acima de R$ 5 milhões).",
+          "Exchange no exterior: rendimentos de aplicações no exterior pagam 15% na declaração anual, sem a isenção mensal. ETF de cripto na B3: 15% sobre o ganho, sem isenção.",
+          "Mudanças na tributação de criptoativos estão em discussão. Confira as regras vigentes antes de decidir.",
+          "Criptomoedas não têm FGC, lastro ou fluxo de caixa. Exchanges podem quebrar ou ser invadidas; guardar em carteira própria exige cuidado com as chaves.",
+          "Peso no patrimônio: valor de hoje em cripto ÷ (cripto + resto do patrimônio). Muitos planejadores sugerem limitar cripto a uma fração pequena da carteira.",
+          "Renda fixa de comparação: título atrelado ao CDI com IR regressivo, sem oscilação."]),
+      after(){ lineChart($("#ch"),{label:"Faixa de resultados", xs:pts, band:{lo:sh(P10), hi:sh(P90), color:C.s1}, series:[{name:"Otimista (90%)",color:C.s3,values:sh(P90)},{name:"Central",color:C.s1,values:sh(P50)},{name:"Pessimista (10%)",color:C.s2,values:sh(P10)},{name:"Renda fixa",color:C.s4,values:sh(rfPts)}], dashed:[3], xFmt:monthX(months), tipTitle:x=>`Mês ${x} · ${yrs(x)}`}); }
+    };
+  }
+});
+
+/* ---------- 15. PGBL x VGBL ---------- */
 SIMS.push({
   id:"previdencia", nav:"PGBL ou VGBL",
   title:"PGBL, VGBL ou investir por fora?",
@@ -1537,7 +1643,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 14. Previdência privada ---------- */
+/* ---------- 16. Previdência privada ---------- */
 /* IR mensal pela tabela progressiva (desde maio/2025), com desconto simplificado e o redutor de 2026 (Lei 15.270/2025). */
 function irMensal(x){
   const b = Math.max(0, x-607.20);

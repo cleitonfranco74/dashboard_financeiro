@@ -28,6 +28,9 @@ ACOES = {
     "VALE3": "VALE3.SA",
     "WEGE3": "WEGE3.SA",
     "BBAS3": "BBAS3.SA",
+    # Criptomoedas cotadas em reais (simulador de cripto; a carteira não as usa)
+    "BTC": "BTC-BRL",
+    "ETH": "ETH-BRL",
 }
 TESOURO_CSV = (
     "https://www.tesourotransparente.gov.br/ckan/dataset/df56aa42-484a-4a59-8184-7676580c81e3/"
