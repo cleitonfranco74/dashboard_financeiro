@@ -18,7 +18,7 @@ Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória es
 - Dados salvos no `localStorage` do navegador.
 
 ### Simuladores (`simuladores.html`)
-Aposentadoria, Tesouro Direto, Tesouro Selic, Tesouro IPCA+, Tesouro Prefixado, Tesouro Educa+ (faculdade dos filhos), quitação de dívidas, alugar ou financiar, consórcio, CDB e LCI/LCA, ações, fundos imobiliários e PGBL/VGBL.
+Aposentadoria, Tesouro Direto, Tesouro Selic, Tesouro IPCA+, Tesouro Prefixado, Tesouro Educa+ (faculdade dos filhos), quitação de dívidas, alugar ou financiar, consórcio, CDB e LCI/LCA, ações, dividendos, fundos imobiliários e PGBL/VGBL.
 - **Dados ao vivo:** Selic, CDI, IPCA 12 meses e Focus, direto das APIs do Banco Central. As taxas de Prefixado e IPCA+ vêm do título do Tesouro com vencimento mais próximo do prazo.
 - **Cenário Focus:** a Selic e o IPCA seguem mês a mês a trajetória esperada pelo mercado, e não uma taxa fixa.
 - **Valores em reais de hoje:** opção de descontar a inflação esperada.
@@ -27,6 +27,7 @@ Aposentadoria, Tesouro Direto, Tesouro Selic, Tesouro IPCA+, Tesouro Prefixado, 
 - **Tesouro IPCA+:** ganho real garantido no vencimento e o risco de vender antes: marcação a mercado para cada taxa de venda, comparada ao Tesouro Selic.
 - **Tesouro Prefixado:** valor nominal garantido no vencimento, ganho real conforme a inflação, Selic e inflação de equilíbrio contra o Tesouro Selic e o IPCA+, e marcação a mercado na venda antecipada.
 - **CDB e LCI/LCA:** pós-fixado, prefixado ou IPCA+, taxas de empate em cada prazo, limite do FGC e carência da LCI/LCA.
+- **Dividendos:** renda mensal de ações pagadoras, yield on cost, IR sobre JCP e dividendos, preço-teto de Bazin e preço justo pelo modelo de Gordon.
 - **Fundos imobiliários:** renda mensal ao longo do tempo, número mágico, prazo para a renda desejada, IR sobre o ganho de capital e comparação com o Tesouro Selic e o IPCA+.
 - **Tesouro Educa+:** aporte mensal para que as 60 parcelas do título paguem Medicina, Odontologia, Direito ou outro curso, com a taxa do Educa+ do ano certo.
 - **Ações:** cenários sorteados de blocos de 12 meses da história real do BOVA11.
