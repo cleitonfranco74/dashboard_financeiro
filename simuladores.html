@@ -1066,7 +1066,100 @@ SIMS.push({
   }
 });
 
-/* ---------- 10. CDB e LCI/LCA ---------- */
+/* ---------- 10. Financiamento de veículos ---------- */
+/* IOF de operação de crédito para pessoa física: 0,38% fixo + 0,0082% ao dia sobre cada amortização, até 365 dias. */
+function iofCDC(P, i, n){
+  const pmt = i>0 ? P*i/(1-Math.pow(1+i,-n)) : P/n; let s = P, iof = P*0.0038;
+  for (let k=1;k<=n;k++){ const am = pmt - s*i; s -= am; iof += am*0.000082*Math.min(30*k, 365); }
+  return iof;
+}
+SIMS.push({
+  id:"veiculo", nav:"Financiar veículo",
+  title:"Quanto custa de verdade financiar um carro?",
+  lede:"Calcula a parcela do CDC com IOF e tarifas, o custo efetivo total (CET), o saldo devedor contra o valor do carro que se desvaloriza e o custo mensal de ter o veículo. Compara com juntar o dinheiro e comprar à vista.",
+  fields:[
+    {k:"preco",label:"Preço do veículo",def:90000,pre:"R$"},
+    {k:"entrada",label:"Entrada",def:20000,pre:"R$"},
+    {k:"prazo",label:"Prazo",def:48,suf:"meses"},
+    {k:"taxa",label:"Taxa de juros",def:1.99,suf:"% a.m.",hint:"a taxa nominal anunciada"},
+    {k:"tarifas",label:"Tarifas financiadas",def:1500,pre:"R$",hint:"cadastro, registro do contrato, avaliação"},
+    {k:"seguroPrest",label:"Seguro prestamista",def:0,suf:"% do valor",hint:"opcional: venda casada é proibida"},
+    {k:"renda",label:"Renda líquida da família",def:8000,pre:"R$",suf:"/mês"},
+    {sect:"Custo de ter o carro"},
+    {k:"deprec",label:"Desvalorização",def:12,suf:"% a.a.",hint:"carro novo perde mais nos primeiros anos"},
+    {k:"ipva",label:"IPVA",def:3,suf:"% do valor/ano",hint:"varia por estado"},
+    {k:"seguro",label:"Seguro do carro",def:3500,pre:"R$",suf:"/ano"},
+    {k:"uso",label:"Combustível e manutenção",def:700,pre:"R$",suf:"/mês"},
+    {sect:"Alternativa: juntar e comprar à vista"},
+    {k:"rend",label:"Rendimento líquido",def:10,suf:"% a.a.",mkt:"investLiq",hz:v=>v.prazo},
+    {k:"inflCarro",label:"Reajuste do preço do carro",def:4,suf:"% a.a."},
+  ],
+  run(v){
+    const n = Math.round(v.prazo), i = v.taxa/100;
+    if (!(v.preco>0)) return {error:"Informe o preço do veículo."};
+    if (!(v.entrada < v.preco)) return {error:"A entrada precisa ser menor que o preço; se não for, não há o que financiar."};
+    if (!(n>=1 && n<=120)) return {error:"Informe um prazo entre 1 e 120 meses."};
+    const liberado = v.preco - v.entrada;                                        // o que vai para a concessionária
+    const baseSemIof = liberado + v.tarifas;
+    // IOF e seguro também são financiados: ponto fixo do valor total
+    let P = baseSemIof; for (let k=0;k<20;k++) P = baseSemIof + iofCDC(P, i, n) + P*v.seguroPrest/100;
+    const iof = iofCDC(P, i, n), seg = P*v.seguroPrest/100;
+    const pmt = i>0 ? P*i/(1-Math.pow(1+i,-n)) : P/n;
+    const total = pmt*n, juros = total - P;
+    const fl = [liberado, ...Array(n).fill(-pmt)], cm = irr(fl), cetM = cm, cetA = cm==null ? null : mToA(cm);
+    // Tabela e saldo contra o valor do carro
+    const dm = Math.pow(1-v.deprec/100, 1/12);
+    let s = P; const saldo=[P], carro=[v.preco], linhas=[];
+    let jA=0, aA=0;
+    for (let k=1;k<=n;k++){ const j = s*i, am = pmt-j; s = Math.max(0, s-am); jA+=j; aA+=am; saldo.push(s); carro.push(v.preco*Math.pow(dm,k));
+      if (k%12===0 || k===n){ linhas.push({ano:Math.ceil(k/12), j:jA, a:aA, s}); jA=0; aA=0; } }
+    const negativo = saldo.findIndex((x,k)=>k>0 && x<=carro[k]);                // primeiro mês em que o carro vale mais que a dívida
+    // Custo mensal de ter o carro (média no prazo)
+    const rm = aToM(v.rend/100);
+    const valorMedio = carro.reduce((a,b)=>a+b,0)/carro.length;
+    const deprecMes = (v.preco - carro[n])/n, ipvaMes = valorMedio*v.ipva/100/12, segMes = v.seguro/12;
+    const oportEntrada = v.entrada*rm;                                          // o que a entrada renderia por mês
+    const custoMes = pmt + ipvaMes + segMes + v.uso;
+    const custoEcon = (juros/n) + deprecMes + ipvaMes + segMes + v.uso + oportEntrada;
+    // Alternativa: investir entrada + parcela até juntar o preço (que sobe com o reajuste)
+    const pc = aToM(v.inflCarro/100);
+    let b = v.entrada, mJunta = null;
+    for (let k=1;k<=600;k++){ b = b*(1+rm) + pmt; if (b >= v.preco*Math.pow(1+pc,k)){ mJunta = k; break; } }
+    const pesoRenda = pmt/v.renda;
+    const anosTab = linhas;
+    const xs = Array.from({length:n+1},(_,k)=>k);
+    return {
+      html: verdict(pesoRenda>0.3 ? "Parcela pesada" : "Resultado",
+          `A parcela fica em <b>${money2(pmt)}</b> por ${nf(n)} meses. Você paga <b>${money(total+v.entrada)}</b> por um carro de ${money(v.preco)}: ${money(juros)} de juros, ${money(iof)} de IOF e ${money(v.tarifas+seg)} de tarifas${seg>0?" e seguro":""}. O custo efetivo total é de <b>${cetM!=null?pct(cetM)+" a.m."+` (${pct(cetA,1)} a.a.)`:"—"}</b>, contra ${nf(v.taxa,2)}% a.m. anunciados.`,
+          `${pesoRenda>0.3?`A parcela consome ${pct(pesoRenda,1)} da renda, acima dos 30% que costumam ser o limite prudente. `:`A parcela consome ${pct(pesoRenda,0)} da renda. `}${negativo>1?`Até o mês ${negativo}, a dívida é maior que o valor do carro: se precisar vender, o dinheiro não quita o financiamento. `:""}${mJunta?`Investindo a entrada e o mesmo valor da parcela, você compraria à vista em <b>${yrs(mJunta)}</b>${mJunta<n?`, antes de terminar de pagar o financiamento`:""}.`:""}`) +
+        `<div class="kpis">${kpi("Parcela", money2(pmt), `${nf(n)}× · ${pct(pesoRenda,0)} da renda`, C.s1)}${kpi("CET", cetM!=null?pct(cetM)+" a.m.":"—", cetA!=null?`${pct(cetA,1)} a.a., com IOF e tarifas`:"")}${kpi("Juros + IOF + tarifas", money(juros+iof+v.tarifas+seg), `${pct((juros+iof+v.tarifas+seg)/liberado,0)} do valor financiado`, C.s2)}${kpi("Custo mensal do carro", money(custoMes), `parcela + IPVA + seguro + uso`)}</div>` +
+        chartPanel("Dívida × valor do carro", "Saldo devedor do financiamento e valor de mercado do veículo a cada mês", legend([["Saldo devedor",C.s2],["Valor do carro",C.s1]]), "ch") +
+        `<section class="panel"><div class="phead"><div><h3>Quanto o carro custa por mês</h3><div class="sub">Média no prazo do financiamento</div></div></div><div class="tablewrap"><table><thead><tr><th>Item</th><th class="n">Por mês</th><th>O que é</th></tr></thead><tbody>
+          <tr><td>Parcela</td><td class="n num">${money(pmt)}</td><td>sai do bolso; inclui juros e amortização</td></tr>
+          <tr><td>IPVA</td><td class="n num">${money(ipvaMes)}</td><td>${nf(v.ipva,1)}% do valor do carro por ano</td></tr>
+          <tr><td>Seguro</td><td class="n num">${money(segMes)}</td><td>${money(v.seguro)} por ano</td></tr>
+          <tr><td>Combustível e manutenção</td><td class="n num">${money(v.uso)}</td><td>informado</td></tr>
+          <tr class="best"><td><b>Desembolso mensal</b></td><td class="n num"><b>${money(custoMes)}</b></td><td>o que pesa no orçamento</td></tr>
+          <tr><td>Depreciação</td><td class="n num">${money(deprecMes)}</td><td>o carro perde ${money(v.preco-carro[n])} em ${yrs(n)}</td></tr>
+          <tr><td>Rendimento perdido da entrada</td><td class="n num">${money(oportEntrada)}</td><td>custo de oportunidade a ${nf(v.rend,1)}% a.a.</td></tr>
+          <tr class="best"><td><b>Custo econômico mensal</b></td><td class="n num"><b>${money(custoEcon)}</b></td><td>juros, depreciação, impostos, seguro, uso e oportunidade</td></tr>
+        </tbody></table></div></section>` +
+        `<section class="panel"><div class="phead"><div><h3>Tabela Price, ano a ano</h3><div class="sub">Parcela fixa: no começo quase tudo é juros; no fim, quase tudo é amortização</div></div></div><div class="tablewrap"><table><thead><tr><th>Ano</th><th class="n">Juros pagos</th><th class="n">Amortização</th><th class="n">Saldo devedor</th><th class="n">Valor do carro</th></tr></thead><tbody>
+        ${anosTab.map(l=>`<tr><td>${l.ano}º</td><td class="n num">${money(l.j)}</td><td class="n num">${money(l.a)}</td><td class="n num">${money(l.s)}</td><td class="n num">${money(carro[Math.min(n,l.ano*12)])}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
+        notes(["Tabela Price (parcelas iguais), o padrão do CDC de veículos. Juros compostos sobre o saldo devedor.",
+          "IOF de crédito para pessoa física: 0,38% sobre o valor mais 0,0082% ao dia sobre cada amortização, limitado a 365 dias. Como o IOF e as tarifas costumam ser financiados, entram no valor total e pagam juros.",
+          "CET (custo efetivo total): a taxa que iguala o dinheiro que você efetivamente recebe (preço − entrada) às parcelas pagas. Inclui juros, IOF, tarifas e seguro, e o banco é obrigado a informá-lo antes da contratação.",
+          "Seguro prestamista quita a dívida em caso de morte ou invalidez. É opcional: exigir a contratação na mesma instituição é venda casada, proibida pelo Código de Defesa do Consumidor.",
+          "Amortizar antes do prazo dá direito à redução proporcional dos juros. Quitar as últimas parcelas primeiro (as mais caras em valor presente) reduz mais a dívida.",
+          "Desvalorização constante ao ano, para simplificar; na prática, o carro novo perde mais no primeiro ano.",
+          "Juntar e comprar à vista: a entrada e o valor da parcela são investidos todo mês, enquanto o preço do carro sobe pelo reajuste informado. Nesse período você fica sem o carro."]),
+      after(){ lineChart($("#ch"),{label:"Saldo devedor e valor do carro", xs, series:[{name:"Saldo devedor",color:C.s2,values:saldo},{name:"Valor do carro",color:C.s1,values:carro}], xFmt:x=>`m${nf(x)}`, tipTitle:x=>`Mês ${x}`}); }
+    };
+  }
+});
+
+/* ---------- 11. CDB e LCI/LCA ---------- */
 const TIPOS_RF = {
   pos:  {nome:"pós-fixado", unid:"% do CDI", fmt:x=>`${nf(x,1)}% do CDI`},
   pre:  {nome:"prefixado", unid:"% a.a.", fmt:x=>`${nf(x,2)}% a.a.`},
@@ -1156,7 +1249,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 11. Ações ---------- */
+/* ---------- 12. Ações ---------- */
 function mulberry(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed>>>15, 1|seed); t = t + Math.imul(t ^ t>>>7, 61|t) ^ t; return ((t ^ t>>>14)>>>0)/4294967296; }; }
 const ATIVOS = {
   acoes:{nome:"Ações", ir:.15, isencao:true},
@@ -1264,7 +1357,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 12. Dividendos ---------- */
+/* ---------- 13. Dividendos ---------- */
 SIMS.push({
   id:"dividendos", nav:"Dividendos",
   title:"Quanto de renda as ações pagadoras de dividendos podem gerar?",
@@ -1385,7 +1478,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 13. Fundos imobiliários ---------- */
+/* ---------- 14. Fundos imobiliários ---------- */
 SIMS.push({
   id:"fii", nav:"Fundos imobiliários",
   title:"Quanto rendem os fundos imobiliários e quando viro rentista?",
@@ -1487,7 +1580,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 14. Criptomoedas ---------- */
+/* ---------- 15. Criptomoedas ---------- */
 const CRIPTO_IR = {
   br:   {nome:"Exchange no Brasil", ir:.15, isencao:true},
   ext:  {nome:"Exchange no exterior", ir:.15, isencao:false},
@@ -1593,7 +1686,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 15. PGBL x VGBL ---------- */
+/* ---------- 16. PGBL x VGBL ---------- */
 SIMS.push({
   id:"previdencia", nav:"PGBL ou VGBL",
   title:"PGBL, VGBL ou investir por fora?",
@@ -1661,7 +1754,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 16. Previdência privada ---------- */
+/* ---------- 17. Previdência privada ---------- */
 SIMS.push({
   id:"prevprivada", nav:"Previdência privada",
   title:"Quanto a previdência privada vai pagar por mês, e em qual tabela de IR?",
@@ -1761,7 +1854,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 17. Imposto de renda ---------- */
+/* ---------- 18. Imposto de renda ---------- */
 SIMS.push({
   id:"ir", nav:"Imposto de renda",
   title:"Quanto de imposto de renda eu pago, e qual declaração compensa?",
