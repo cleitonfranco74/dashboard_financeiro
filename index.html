@@ -486,7 +486,8 @@ function painelSerie(id, s, color, fmt, quando){
   const v = s.valores, L = v.length-1, tag = (x, txt) => `<span class="${x>=0?"up":"dn"}">${x>=0?"+":"−"}${nf(Math.abs(x)*100)}% ${txt}</span>`;
   $("#v"+id).textContent = fmt(v[L]);
   $("#d"+id).textContent = quando + Mercado.dataBR(s.datas[L]);
-  $("#x"+id).innerHTML = tag(v[L]/v[L-1]-1, "no dia") + tag(v[L]/v[0]-1, "em 12 meses");
+  const umAno = String(+s.datas[L].slice(0,4)-1) + s.datas[L].slice(4), k0 = Math.max(0, s.datas.findIndex(d=>d>=umAno));
+  $("#x"+id).innerHTML = tag(v[L]/v[L-1]-1, "no dia") + tag(v[L]/v[k0]-1, "em 12 meses");
   drawSerie($("#c"+id), s.datas, v, color, fmt);
 }
 
