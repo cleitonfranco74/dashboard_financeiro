@@ -629,7 +629,108 @@ SIMS.push({
   }
 });
 
-/* ---------- 5. Tesouro Educa+ ---------- */
+/* ---------- 5. Tesouro Prefixado ---------- */
+SIMS.push({
+  id:"prefixado", nav:"Tesouro Prefixado",
+  title:"Vale a pena travar a taxa no Tesouro Prefixado?",
+  lede:"O Prefixado paga um valor nominal conhecido no vencimento. O ganho real depende da inflação até lá, e quem vende antes recebe o preço de mercado do dia.",
+  fields:[
+    {k:"inicial",label:"Investimento inicial",def:10000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:300,pre:"R$",suf:"/mês",sobra:true},
+    {k:"anos",label:"Prazo até o vencimento",def:5,suf:"anos"},
+    {k:"venda",label:"Vender antes, em",def:2,suf:"anos"},
+    {k:"choque",label:"Variação da taxa até a venda",def:1,suf:"pontos",neg:true,hint:"positivo: juros sobem e o título cai"},
+    {sect:"Taxas e projeções"},
+    CENARIO, UNIDADE,
+    {k:"pre",label:"Taxa do Prefixado",def:13.5,suf:"% a.a.",mkt:"pre"},
+    {k:"real",label:"IPCA+ do mesmo prazo",def:7,suf:"% a.a.",mkt:"real",hint:"para a inflação implícita"},
+    {k:"ipca",label:"IPCA 12 meses",def:4.22,suf:"% a.a.",mkt:"ipca"},
+    {k:"selic",label:"Selic hoje",def:13.75,suf:"% a.a.",mkt:"selic"},
+    {k:"custodia",label:"Custódia B3",def:0.2,suf:"% a.a."},
+  ],
+  run(v){
+    const T = Math.round(v.anos*12), K = Math.round(v.venda*12), choque = v.choque;
+    if (!(T>=1 && T<=600)) return {error:"Informe um prazo entre 1 mês e 50 anos."};
+    if (!(K>=1 && K<=T)) return {error:"A venda antecipada precisa acontecer entre o primeiro mês e o vencimento."};
+    if (!(v.inicial+v.aporte>0)) return {error:"Informe um investimento inicial ou um aporte mensal."};
+    if (v.pre+choque <= -50) return {error:"A taxa na venda ficou baixa demais. Use uma variação menor."};
+    const P = paths(v), D = deflator(P.ipca, T), real = v.unid==="real", k = t => real ? 1/D[t] : 1;
+    const pm = aToM(v.pre/100), cust = 1-v.custodia/100/12;
+    const lots = [{s:0, a:v.inicial+v.aporte}]; for (let s=1;s<T;s++) if (v.aporte>0) lots.push({s, a:v.aporte});
+    /* Valor nominal líquido no mês t, vendendo à taxa y (decimal a.a.). y = taxa de compra dá o valor na curva. */
+    const valor = (t, y) => {
+      const ym = aToM(y); let bruto=0, ir=0, inv=0;
+      for (const l of lots){
+        if (l.s>0 && l.s>=t) break;
+        const nom = l.a*Math.pow(1+pm, T-l.s)/Math.pow(1+ym, T-t)*Math.pow(cust, t-l.s);
+        bruto += nom; inv += l.a; const g = nom-l.a; if (g>0) ir += g*irRF(t-l.s);
+      }
+      return {bruto, ir, liq:bruto-ir, inv};
+    };
+    /* Retorno anual de fluxos com aportes nominais fixos; defl(t) converte para reais de hoje (1 = nominal). */
+    const irrAt = (t, liq, defl=()=>1) => {
+      const f = Array(t+1).fill(0); f[0] = -(v.inicial+v.aporte);
+      for (let s=1;s<t;s++) f[s] = -v.aporte/defl(s);
+      f[t] += liq/defl(t);
+      const im = irr(f); return im==null ? null : mToA(im);
+    };
+    const r = v.pre/100, y = (v.pre+choque)/100;
+    const venc = valor(T, r), curvaK = valor(K, r), vendaK = valor(K, y);
+    const over = t => Math.max(0, P.selic(t)-0.001);
+    const selRun = rate => simInvest({p0:v.inicial, pmt:v.aporte, months:T, rate, fee:b=>Math.max(0,b-10000)*v.custodia/100/12, tax:irRF});
+    const sel = selRun(t=>aToM(over(t)));
+    // Selic média constante que empata com o Prefixado no vencimento
+    let lo=0, hi=0.6; for (let i=0;i<50;i++){ const mid=(lo+hi)/2; if (selRun(()=>aToM(mid)).net < venc.liq) lo=mid; else hi=mid; }
+    const selicEq = (lo+hi)/2, selicMed = mediaAnual(over, T), ipcaMed = mediaAnual(P.ipca, T);
+    const infImp = (1+v.pre/100)/(1+v.real/100)-1;
+    const irrV = irrAt(T, venc.liq), realLiq = irrAt(T, venc.liq, t=>D[t]), irrK = irrAt(K, vendaK.liq, real?t=>D[t]:undefined);
+    const selShow = {...sel, series:[...sel.series]}; if (real) toReal(selShow, D, v.inicial, v.aporte, T);
+    const unid = real ? " em reais de hoje" : "", dif = (vendaK.liq-curvaK.liq)*k(K);
+    const xs = Array.from({length:T+1},(_,i)=>i);
+    const sAlta = Math.max(1, Math.abs(choque)), serie = yy => xs.map(t=>valor(t,yy).liq*k(t));
+    const pts = d => `${nf(Math.abs(d),2)} ${Math.abs(d)===1?"ponto":"pontos"}`;
+    const ptxt = d => (d>0?"+":d<0?"−":"") + pts(d);
+    const sinal = x => (x<0?"−":"+")+money(Math.abs(x));
+    const choques = [-2,-1,0,1,2].map(d=>({d, ...valor(K,(v.pre+d)/100)}));
+    if (!choques.some(c=>Math.abs(c.d-choque)<1e-9)) choques.push({d:choque, ...valor(K,y)}), choques.sort((a,b)=>a.d-b.d);
+    /* Ganho real conforme a inflação média até o vencimento, contra o IPCA+ do mesmo prazo. */
+    const infls = [...new Set([3,4.5,6,8].map(x=>x/100).concat([r2(ipcaMed*100)/100, r2(infImp*100)/100]))].sort((a,b)=>a-b);
+    const cenInf = infls.map(pi=>{
+      const Dp = t => Math.pow(1+pi, t/12);
+      const ip = simInvest({p0:v.inicial, pmt:v.aporte, months:T, rate:()=>(1+aToM(pi))*(1+aToM(v.real/100))-1, fee:b=>b*v.custodia/100/12, tax:irRF});
+      return {pi, pre:irrAt(T, venc.liq, Dp), ipca:irrAt(T, ip.net, Dp), poder:venc.liq/Dp(T)};
+    });
+    const tagPi = pi => Math.abs(pi-r2(ipcaMed*100)/100)<1e-9 ? " <small>Focus</small>" : Math.abs(pi-r2(infImp*100)/100)<1e-9 ? " <small>implícita</small>" : "";
+    return {
+      html: verdict("Resultado",
+          `No vencimento, em ${yrs(T)}, você recebe <b>${money(venc.liq*k(T))}</b> líquidos${unid}, para ${money(real ? lots.reduce((a,l)=>a+l.a/D[l.s],0) : venc.inv)} investidos. ${real?`O valor nominal de ${money(venc.liq)} já está garantido`:"Esse valor nominal já está garantido"}; com a inflação esperada, o ganho é de <b>${realLiq!=null?pct(realLiq):"—"} ao ano acima do IPCA</b>.`,
+          `O Prefixado ganha do Tesouro Selic se a Selic média ficar abaixo de <b>${pct(selicEq)}</b> (${P.focus?"o Focus espera":"você supôs"} ${pct(selicMed)}) e ganha do IPCA+ se a inflação média ficar abaixo de <b>${pct(infImp)}</b> (${P.focus?"o Focus espera":"você supôs"} ${pct(ipcaMed)}). Se vender em ${yrs(K)} com a taxa ${choque>0?`${pts(choque)} mais alta`:choque<0?`${pts(choque)} mais baixa`:"igual"}, recebe ${money(vendaK.liq*k(K))}${Math.abs(dif)<1?", o mesmo da curva":`, ${sinal(dif)} em relação à curva`}.`) +
+        `<div class="kpis">${kpi("No vencimento", money(venc.liq*k(T)), `${irrV!=null?pct(irrV):"—"} a.a. líquido nominal`, C.s2)}${kpi("Ganho real esperado", realLiq!=null?pct(realLiq)+" a.a.":"—", `com IPCA médio de ${pct(ipcaMed)}`)}${kpi(`Venda em ${yrs(K)}`, money(vendaK.liq*k(K)), `taxa de ${nf(v.pre+choque,2)}% · ${irrK!=null?pct(irrK):"—"} a.a.${real?" real":""}`, dif<0?C.s2:C.s1)}${kpi("Tesouro Selic", money(selShow.net), `mesmo prazo e aportes${unid}`, C.ink)}</div>` +
+        chartPanel("Valor líquido se resgatado em cada mês", `Prefixado na curva (taxa sem mudança) e Tesouro Selic com os mesmos aportes${unid}`, legend([["Prefixado na curva",C.s2],["Tesouro Selic",C.ink]]), "ch") +
+        `<section class="panel"><div class="phead"><div><h3>Quanto sobra acima da inflação</h3><div class="sub">O valor nominal é o mesmo em todas as linhas; muda o poder de compra. Comparação com o IPCA+ de ${nf(v.real,2)}%</div></div></div><div class="tablewrap"><table><thead><tr><th>Inflação média</th><th class="n">Prefixado: ganho real</th><th class="n">IPCA+: ganho real</th><th class="n">Poder de compra no vencimento</th><th>Melhor</th></tr></thead><tbody>
+        ${cenInf.map(c=>`<tr class="${c.pre>=c.ipca?"best":""}"><td>${pct(c.pi)}${tagPi(c.pi)}</td><td class="n num">${c.pre!=null?pct(c.pre):"—"}</td><td class="n num">${c.ipca!=null?pct(c.ipca):"—"}</td><td class="n num">${money(c.poder)}</td><td>${Math.abs(c.pre-c.ipca)<0.0002?"Empate":c.pre>c.ipca?"Prefixado":"IPCA+"}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
+        chartPanel("Ganho ou perda da marcação a mercado", `Diferença para a curva se vender em cada mês, com a taxa ${pts(sAlta)} acima ou abaixo da de compra. Some no vencimento${unid}`, legend([[`Taxa ${ptxt(-sAlta)}`,C.s1],[`Taxa ${ptxt(sAlta)}`,C.s2]]), "ch2") +
+        `<section class="panel"><div class="phead"><div><h3>Venda em ${yrs(K)}: quanto você recebe para cada taxa</h3><div class="sub">Taxa de compra de ${nf(v.pre,2)}% a.a. Valores líquidos${unid}</div></div></div><div class="tablewrap"><table><thead><tr><th>Taxa na venda</th><th class="n">Valor líquido</th><th class="n">Diferença para a curva</th><th class="n">Retorno anual${real?" real":""}</th></tr></thead><tbody>
+        ${choques.map(c=>{ const im = irrAt(K, c.liq, real?t=>D[t]:undefined); return `<tr class="${Math.abs(c.d-choque)<1e-9?"best":""}"><td>${nf(v.pre+c.d,2)}% <small>(${c.d?ptxt(c.d):"sem mudança"})</small></td><td class="n num"><b>${money(c.liq*k(K))}</b></td><td class="n num">${c.d?sinal((c.liq-curvaK.liq)*k(K)):"—"}</td><td class="n num">${im!=null?pct(im):"—"}</td></tr>`; }).join("")}
+        </tbody></table></div></section>` +
+        notes(["Levado até o vencimento, o Prefixado paga exatamente a taxa contratada em reais. O que não se sabe é quanto esse dinheiro vai comprar: se a inflação surpreender para cima, o ganho real encolhe.",
+          "Equilíbrio com o Tesouro Selic: Selic média constante que faria o Tesouro Selic, com os mesmos aportes e custos, render o mesmo que o Prefixado.",
+          "Inflação implícita = (1 + prefixado) ÷ (1 + IPCA+) − 1. Abaixo dela, o Prefixado ganha do IPCA+; acima, perde.",
+          "Venda antecipada: o Tesouro recompra pelo valor de face descontado pela taxa do dia da venda. Juros em alta derrubam o preço; em queda, valorizam. A diferença some no vencimento.",
+          "Todos os aportes são comprados à mesma taxa. Na prática, cada compra trava a taxa do dia. A taxa de recompra costuma ficar um pouco acima da de compra, o que não foi incluído.",
+          "IR regressivo sobre o ganho de cada aporte: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima disso. Custódia da B3 de 0,20% a.a. sobre o saldo.",
+          "Taxas preenchidas com o Tesouro Prefixado e o Tesouro IPCA+ (sem juros semestrais) de vencimento mais próximo do prazo. O Prefixado com juros semestrais não é simulado aqui."]),
+      after(){
+        const curva = serie(r), alta = serie((v.pre+sAlta)/100), queda = serie((v.pre-sAlta)/100);
+        lineChart($("#ch"),{label:"Valor líquido do Prefixado e do Tesouro Selic por mês", xs, series:[{name:"Prefixado na curva",color:C.s2,values:curva},{name:"Tesouro Selic",color:C.ink,values:selShow.series}], xFmt:monthX(T), tipTitle:x=>`Mês ${x} · ${yrs(x)}`});
+        lineChart($("#ch2"),{label:"Marcação a mercado por mês de venda", xs, series:[{name:`Taxa ${ptxt(-sAlta)}`,color:C.s1,values:queda.map((x,i)=>x-curva[i])},{name:`Taxa ${ptxt(sAlta)}`,color:C.s2,values:alta.map((x,i)=>x-curva[i])}], xFmt:monthX(T), tipTitle:x=>`Venda no mês ${x} · ${yrs(x)}`});
+      }
+    };
+  }
+});
+
+/* ---------- 6. Tesouro Educa+ ---------- */
 /* O título acumula até 15/dez do ano do título e paga 60 parcelas mensais corrigidas pelo IPCA a partir de janeiro seguinte. */
 const educaAno = v => new Date().getFullYear() + Math.round(v.idadeFac - v.idade) - 1;   // ano do título = ano anterior ao ingresso
 function educaTitulo(M, ano){
@@ -742,7 +843,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 6. Quitação de dívidas ---------- */
+/* ---------- 7. Quitação de dívidas ---------- */
 const DEF_DEBTS = [
   {nome:"Cartão de crédito", saldo:4000, juros:12, min:400},
   {nome:"Cheque especial", saldo:2500, juros:7.5, min:150},
@@ -810,7 +911,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 7. Alugar ou financiar ---------- */
+/* ---------- 8. Alugar ou financiar ---------- */
 SIMS.push({
   id:"alugar", nav:"Alugar ou financiar",
   title:"Compensa mais alugar ou financiar o imóvel?",
@@ -875,7 +976,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 8. Consórcio ---------- */
+/* ---------- 9. Consórcio ---------- */
 SIMS.push({
   id:"consorcio", nav:"Consórcio",
   title:"Vale a pena entrar no consórcio?",
@@ -947,7 +1048,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 9. CDB ---------- */
+/* ---------- 10. CDB ---------- */
 SIMS.push({
   id:"cdb", nav:"CDB",
   title:"Quanto rende o seu CDB, e ele vence a LCI?",
@@ -1004,7 +1105,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 10. Ações ---------- */
+/* ---------- 11. Ações ---------- */
 function mulberry(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed>>>15, 1|seed); t = t + Math.imul(t ^ t>>>7, 61|t) ^ t; return ((t ^ t>>>14)>>>0)/4294967296; }; }
 const ATIVOS = {
   acoes:{nome:"Ações", ir:.15, isencao:true},
@@ -1112,7 +1213,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 11. PGBL x VGBL ---------- */
+/* ---------- 12. PGBL x VGBL ---------- */
 SIMS.push({
   id:"previdencia", nav:"PGBL ou VGBL",
   title:"PGBL, VGBL ou investir por fora?",
