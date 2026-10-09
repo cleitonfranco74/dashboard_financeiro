@@ -74,6 +74,12 @@ h3{font-size:15px;margin:0;font-weight:650}
 .lnk:hover{border-color:var(--accent)}
 .lnk b{color:var(--accent)}
 .lnk span{font-size:12px;color:var(--muted)}
+.stk{display:flex;flex-direction:column;gap:12px;margin-top:6px}
+.stkrow{display:grid;grid-template-columns:90px minmax(0,1fr) auto;align-items:center;gap:10px;font-size:13.5px}
+.stkbar{display:flex;height:22px;border-radius:6px;overflow:hidden;background:var(--surface-2)}
+.stkbar i{display:block;height:100%}
+.stkrow .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13px;min-width:90px;text-align:right}
+@media (max-width:520px){.stkrow{grid-template-columns:70px minmax(0,1fr);}.stkrow .v{grid-column:2;text-align:left}}
 .inp span{color:var(--muted);font-size:12px;white-space:nowrap}
 .inp.bad{border-color:var(--crit)}
 .field select{height:38px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:0 8px;width:100%}
@@ -2208,26 +2214,47 @@ SIMS.push({
 });
 
 /* ---------- 22. Orçamento de viagem ---------- */
+/* Estimativas de referência (2026) em euros. hosp: quarto duplo por noite; alim: por pessoa/dia; transp: grupo/dia;
+ * passeios: por pessoa/dia; compras: total; passagem: R$ por pessoa, ida e volta saindo do Brasil (luxo = executiva). */
+const CENARIOS = [["eco","Econômico",C.s3],["med","Médio",C.s1],["lux","Luxo",C.s2]];
+const DESTINOS = {
+  italia:   {em:"na Itália", nome:"Itália (Roma, Florença, Veneza)", hosp:[70,150,450], alim:[35,65,160], transp:[12,20,80], passeios:[15,30,90], passagem:[4800,6800,24000]},
+  franca:   {em:"na França", nome:"França (Paris)", hosp:[85,180,600], alim:[40,75,200], transp:[14,22,100], passeios:[20,35,110], passagem:[4600,6500,23000]},
+  grecia:   {em:"na Grécia", nome:"Grécia (Atenas e ilhas)", hosp:[55,120,400], alim:[28,50,140], transp:[15,30,90], passeios:[12,25,80], passagem:[5200,7500,26000]},
+  alemanha: {em:"na Alemanha", nome:"Alemanha (Berlim, Munique)", hosp:[70,140,380], alim:[32,60,150], transp:[12,20,80], passeios:[12,25,70], passagem:[4800,6800,24000]},
+  holanda:  {em:"na Holanda", nome:"Holanda (Amsterdã)", hosp:[90,190,500], alim:[38,70,170], transp:[14,22,90], passeios:[18,35,90], passagem:[4900,7000,24000]},
+  leste:    {em:"no Leste Europeu", nome:"Leste Europeu (Praga, Budapeste, Cracóvia)", hosp:[40,85,280], alim:[20,38,100], transp:[8,14,60], passeios:[10,20,60], passagem:[5000,7200,25000]},
+  noruega:  {em:"na Noruega", nome:"Noruega (Oslo e fiordes)", hosp:[110,210,550], alim:[50,90,220], transp:[25,40,120], passeios:[30,55,150], passagem:[5500,8000,27000]},
+  russia:   {em:"na Rússia", nome:"Rússia (Moscou, São Petersburgo)", hosp:[45,100,350], alim:[22,45,130], transp:[6,12,60], passeios:[12,25,80], passagem:[6500,9000,30000],
+             aviso:"Desde 2022, cartões Visa e Mastercard emitidos fora da Rússia não funcionam no país e não há voos diretos da União Europeia. Leve dinheiro em espécie, confira visto e as orientações do Itamaraty antes de planejar."},
+  portugal: {em:"em Portugal", nome:"Portugal (Lisboa, Porto)", hosp:[55,110,350], alim:[25,45,120], transp:[10,16,70], passeios:[10,20,60], passagem:[4200,6000,21000]},
+  espanha:  {em:"na Espanha", nome:"Espanha (Madri, Barcelona)", hosp:[65,130,400], alim:[30,55,140], transp:[12,18,80], passeios:[14,28,80], passagem:[4600,6500,23000]},
+};
+const COMPRAS_EUR = [100, 300, 1500];
+const MULT_CUSTOM = [0.6, 1, 2.6];          // cenários derivados dos valores digitados (que valem como "médio")
 SIMS.push({
   id:"viagem", nav:"Orçamento de viagem",
-  title:"Quanto vai custar a viagem e quanto guardar por mês?",
-  lede:"Soma passagens, hospedagem, alimentação, transporte, passeios, compras, seguro e imprevistos, converte os gastos no exterior pelo câmbio com IOF e monta o plano para juntar o dinheiro até a data. Compara pagar à vista com desconto ou parcelar sem juros.",
+  title:"Quanto vai custar a viagem: econômica, média ou de luxo?",
+  lede:"Compara três cenários de gastos diários (econômico, médio e luxo) para destinos europeus prontos ou para valores seus. Converte os gastos pelo câmbio com IOF, mostra quanto guardar por mês e se compensa pagar à vista ou parcelar.",
   fields:[
-    {k:"moeda",label:"Moeda do destino",def:"EUR",opts:[["BRL","Real (viagem nacional)"],["USD","Dólar americano"],["EUR","Euro"],["OUT","Outra"]],wide:true},
-    {k:"cotUSD",label:"Dólar comercial",def:5.0,pre:"R$",mkt:"dolar",when:["moeda","USD"]},
-    {k:"cotEUR",label:"Euro comercial",def:5.8,pre:"R$",when:["moeda","EUR"]},
-    {k:"cotX",label:"Cotação comercial",def:1,pre:"R$",when:["moeda","OUT"]},
-    {k:"fx",label:"Spread + IOF",def:5.1,suf:"%",hint:"conta global; cartão de crédito chega a 9%",when:["moeda","BRL"],whenNot:true},
+    {k:"destino",label:"Destino",def:"italia",opts:[...Object.entries(DESTINOS).map(([k,d])=>[k,d.nome]),["custom","Personalizado (digitar os valores)"]],wide:true},
+    {k:"moeda",label:"Moeda do destino",def:"EUR",opts:[["BRL","Real (viagem nacional)"],["USD","Dólar americano"],["EUR","Euro"],["OUT","Outra"]],when:["destino","custom"]},
+    {k:"cotEUR",label:"Euro comercial",def:5.8,pre:"R$",when:st=>st.destino!=="custom"||st.moeda==="EUR"},
+    {k:"cotUSD",label:"Dólar comercial",def:5.0,pre:"R$",mkt:"dolar",when:st=>st.destino==="custom"&&st.moeda==="USD"},
+    {k:"cotX",label:"Cotação comercial",def:1,pre:"R$",when:st=>st.destino==="custom"&&st.moeda==="OUT"},
+    {k:"fx",label:"Spread + IOF",def:5.1,suf:"%",hint:"conta global; cartão de crédito chega a 9%",when:st=>!(st.destino==="custom"&&st.moeda==="BRL")},
     {k:"pessoas",label:"Pessoas",def:2,suf:"pessoas"},
     {k:"dias",label:"Dias de viagem",def:10,suf:"dias"},
-    {sect:"Custos (gastos no destino na moeda local)"},
-    {k:"passagem",label:"Passagem por pessoa",def:6500,pre:"R$",hint:"ida e volta, com bagagem"},
-    {k:"diaria",label:"Hospedagem por noite",def:120,suf:"/quarto",hint:"na moeda do destino"},
+    {k:"cenario",label:"Cenário do plano",def:"med",opts:CENARIOS.map(([k,n])=>[k,n]),hint:"usado no plano de poupança e no pagamento"},
+    {sect:"Seus valores (cenário médio)",when:["destino","custom"]},
+    {k:"passagem",label:"Passagem por pessoa",def:6500,pre:"R$",hint:"ida e volta, com bagagem",when:["destino","custom"]},
+    {k:"diaria",label:"Hospedagem por noite",def:120,suf:"/quarto",hint:"na moeda do destino",when:["destino","custom"]},
+    {k:"alim",label:"Alimentação",def:50,suf:"/pessoa/dia",when:["destino","custom"]},
+    {k:"transp",label:"Transporte local",def:25,suf:"/dia",hint:"para o grupo",when:["destino","custom"]},
+    {k:"passeios",label:"Passeios e ingressos",def:400,suf:"total",when:["destino","custom"]},
+    {k:"compras",label:"Compras",def:300,suf:"total",when:["destino","custom"]},
+    {sect:"Comum aos cenários"},
     {k:"quartos",label:"Quartos",def:1,suf:"quartos"},
-    {k:"alim",label:"Alimentação",def:50,suf:"/pessoa/dia"},
-    {k:"transp",label:"Transporte local",def:25,suf:"/dia",hint:"para o grupo: metrô, trem, aplicativo"},
-    {k:"passeios",label:"Passeios e ingressos",def:400,suf:"total"},
-    {k:"compras",label:"Compras",def:300,suf:"total"},
     {k:"seguro",label:"Seguro-viagem",def:25,pre:"R$",suf:"/pessoa/dia",hint:"obrigatório na Europa"},
     {k:"docs",label:"Documentos e vistos",def:0,pre:"R$",hint:"passaporte, visto, vacinas"},
     {k:"imprev",label:"Reserva para imprevistos",def:10,suf:"%"},
@@ -2239,51 +2266,74 @@ SIMS.push({
     {k:"parc",label:"Ou parcelado sem juros em",def:10,suf:"vezes"},
   ],
   run(v){
-    const nac = v.moeda==="BRL";
-    const cot = nac ? 1 : v.moeda==="USD" ? v.cotUSD : v.moeda==="EUR" ? v.cotEUR : v.cotX;
+    const custom = v.destino==="custom", Dst = DESTINOS[v.destino];
+    const moeda = custom ? v.moeda : "EUR", nac = moeda==="BRL";
+    const cot = nac ? 1 : moeda==="USD" ? v.cotUSD : moeda==="EUR" ? v.cotEUR : v.cotX;
     if (!(cot>0)) return {error:"Informe a cotação da moeda do destino."};
-    const P = Math.max(1, Math.round(v.pessoas)), D = Math.max(1, Math.round(v.dias)), noites = Math.max(0, D-1);
-    const conv = nac ? 1 : cot*(1+v.fx/100), simb = nac ? "R$" : v.moeda==="USD" ? "US$" : v.moeda==="EUR" ? "€" : "";
+    const P = Math.max(1, Math.round(v.pessoas)), D = Math.max(1, Math.round(v.dias)), noites = Math.max(0, D-1), Q = Math.max(1, Math.round(v.quartos));
+    const conv = nac ? 1 : cot*(1+v.fx/100), simb = nac ? "R$" : moeda==="USD" ? "US$" : moeda==="EUR" ? "€" : "";
     const loc = x => nac ? money(x) : `${simb} ${nf(x,0)}`;
-    const itens = [
-      {nome:"Passagens", brl:v.passagem*P, color:C.s1, det:`${P} × ${money(v.passagem)}`},
-      {nome:"Hospedagem", local:v.diaria*noites*Math.max(1,Math.round(v.quartos)), color:C.s2, det:`${noites} noites × ${Math.max(1,Math.round(v.quartos))} quarto(s) × ${loc(v.diaria)}`},
-      {nome:"Alimentação", local:v.alim*P*D, color:C.s3, det:`${P} pessoas × ${D} dias × ${loc(v.alim)}`},
-      {nome:"Transporte local", local:v.transp*D, color:C.s4, det:`${D} dias × ${loc(v.transp)}`},
-      {nome:"Passeios e ingressos", local:v.passeios, color:C.s1, det:"total"},
-      {nome:"Compras", local:v.compras, color:C.s2, det:"total"},
-      {nome:"Seguro-viagem", brl:v.seguro*P*D, color:C.s3, det:`${P} × ${D} dias × ${money(v.seguro)}`},
-      {nome:"Documentos e vistos", brl:v.docs, color:C.s4, det:"total"},
-    ].map(i=>({...i, reais: i.brl!=null ? i.brl : i.local*conv})).filter(i=>i.reais>0);
-    const sub = itens.reduce((a,i)=>a+i.reais,0), imp = sub*v.imprev/100, total = sub+imp;
-    if (imp>0) itens.push({nome:"Imprevistos", reais:imp, color:C.ink, det:`${nf(v.imprev)}% do total`});
-    const localTot = itens.filter(i=>i.local!=null).reduce((a,i)=>a+i.local,0)*(1+v.imprev/100);
+    /* Custos de um cenário (0 econômico, 1 médio, 2 luxo). */
+    const custos = c => {
+      const g = custom ? {passagem:v.passagem*MULT_CUSTOM[c], hosp:v.diaria*MULT_CUSTOM[c], alim:v.alim*MULT_CUSTOM[c], transp:v.transp*MULT_CUSTOM[c], passeiosTot:v.passeios*MULT_CUSTOM[c], compras:v.compras*MULT_CUSTOM[c]}
+                       : {passagem:Dst.passagem[c], hosp:Dst.hosp[c], alim:Dst.alim[c], transp:Dst.transp[c], passeiosTot:Dst.passeios[c]*P*D, compras:COMPRAS_EUR[c]};
+      const it = [
+        {nome:"Passagens", brl:g.passagem*P, color:C.s1, det:`${P} × ${money(g.passagem)}`},
+        {nome:"Hospedagem", local:g.hosp*noites*Q, color:C.s2, det:`${noites} noites × ${Q} quarto(s) × ${loc(g.hosp)}`},
+        {nome:"Alimentação", local:g.alim*P*D, color:C.s3, det:`${P} pessoas × ${D} dias × ${loc(g.alim)}`},
+        {nome:"Transporte local", local:g.transp*D, color:C.s4, det:`${D} dias × ${loc(g.transp)}`},
+        {nome:"Passeios e ingressos", local:g.passeiosTot, color:"var(--accent)", det:custom?"total":`${P} pessoas × ${D} dias × ${loc(Dst.passeios[c])}`},
+        {nome:"Compras", local:g.compras, color:"var(--muted)", det:"total"},
+        {nome:"Seguro-viagem", brl:v.seguro*P*D, color:"var(--ink-2)", det:`${P} × ${D} dias × ${money(v.seguro)}`},
+        {nome:"Documentos e vistos", brl:v.docs, color:"var(--axis)", det:"total"},
+      ].map(i=>({...i, reais: i.brl!=null ? i.brl : i.local*conv}));
+      const sub = it.reduce((a,i)=>a+i.reais,0), imp = sub*v.imprev/100;
+      it.push({nome:"Imprevistos", reais:imp, color:"repeating-linear-gradient(45deg,var(--muted) 0 3px,transparent 3px 6px)", det:`${nf(v.imprev)}% do total`});
+      const diario = it.filter(i=>i.local!=null && i.nome!=="Compras").reduce((a,i)=>a+i.reais,0)/D;
+      return {it, total:sub+imp, diario, local:it.filter(i=>i.local!=null).reduce((a,i)=>a+i.local,0)};
+    };
+    const cen = CENARIOS.map(([k,nome,color],c)=>({k, nome, color, ...custos(c)}));
+    const sel = cen.find(c=>c.k===v.cenario) || cen[1], itens = sel.it.filter(i=>i.reais>0), total = sel.total;
     // Plano
     const n = Math.max(0, Math.round(v.meses)), r = aToM(v.rend/100);
     const fv = (g, m) => r>0 ? g*(Math.pow(1+r,m)-1)/r : g*m;
-    const junta = fv(v.guardo, n), falta = Math.max(0, total-junta);
-    const mensal = n<1 ? total : (r>0 ? total*r/(Math.pow(1+r,n)-1) : total/n);
-    const mesesPrecisa = v.guardo>0 ? (r>0 ? Math.ceil(Math.log(1+total*r/v.guardo)/Math.log(1+r)) : Math.ceil(total/v.guardo)) : null;
-    // À vista com desconto × parcelado sem juros (passagens + hospedagem)
-    const pacote = itens.filter(i=>i.nome==="Passagens"||i.nome==="Hospedagem").reduce((a,i)=>a+i.reais,0);
+    const junta = fv(v.guardo, n);
+    const mensalDe = T => n<1 ? T : (r>0 ? T*r/(Math.pow(1+r,n)-1) : T/n);
+    const mesesDe = T => v.guardo>0 ? (r>0 ? Math.ceil(Math.log(1+T*r/v.guardo)/Math.log(1+r)) : Math.ceil(T/v.guardo)) : null;
+    const falta = Math.max(0, total-junta), mensal = mensalDe(total), mesesPrecisa = mesesDe(total);
+    // À vista × parcelado (passagens + hospedagem do cenário escolhido)
+    const pacote = sel.it.filter(i=>i.nome==="Passagens"||i.nome==="Hospedagem").reduce((a,i)=>a+i.reais,0);
     const N = Math.max(1, Math.round(v.parc)), pvParc = pacote/N * (r>0 ? (1-Math.pow(1+r,-N))/r : N);
     const aVista = pacote*(1-v.desc/100), descEquil = 1 - pvParc/pacote, vistaMelhor = aVista <= pvParc;
-    const max = Math.max(...itens.map(i=>i.reais));
+    const maxCen = Math.max(...cen.map(c=>c.total)), max = Math.max(...itens.map(i=>i.reais));
+    const cats = cen[0].it.map(i=>i.nome).filter(nm=>cen.some(c=>c.it.find(i=>i.nome===nm).reais>0));
+    const destNome = custom ? "no seu destino" : `${Dst.em} (${Dst.nome.replace(/^[^(]*\(|\)$/g,"")})`;
     return {
-      html: verdict(n>0 && falta>1 ? "Falta dinheiro" : "Orçamento",
-          `A viagem de ${D} dias para ${P} ${P===1?"pessoa":"pessoas"} custa cerca de <b>${money(total)}</b>: ${money(total/P)} por pessoa, ou ${money(total/D)} por dia.${nac?"":` Dos gastos no destino, ${loc(localTot)} viram ${money(localTot*conv)} a ${money2(conv)} por ${simb} (com spread e IOF).`}`,
-          `${n>0?(falta>1?`Guardando ${money(v.guardo)}/mês por ${yrs(n)}, você junta ${money(junta)}: faltam <b>${money(falta)}</b>. Para chegar ao total, guarde <b>${money(mensal)}/mês</b>${mesesPrecisa?`, ou mantenha os ${money(v.guardo)} e viaje daqui a ${yrs(mesesPrecisa)}`:""}.`:`Guardando ${money(v.guardo)}/mês por ${yrs(n)}, você junta ${money(junta)}, o suficiente para a viagem.`):""} Na passagem e na hospedagem, ${vistaMelhor?`<b>pagar à vista com ${nf(v.desc,1)}% de desconto</b> sai melhor que ${N}× sem juros`:`<b>parcelar em ${N}× sem juros</b> sai melhor que o desconto de ${nf(v.desc,1)}%`}: o desconto que empata é de ${pct(descEquil,1)}.`) +
-        `<div class="kpis">${kpi("Total da viagem", money(total), `${money(total/P)} por pessoa`, C.s1)}${kpi("Por dia", money(total/D), `${money(total/D/P)} por pessoa`)}${kpi("Guardar por mês", n>0?money(mensal):"—", n>0?`para juntar em ${yrs(n)} a ${nf(v.rend,1)}% a.a.`:"informe os meses até a viagem", C.s2)}${kpi("Desconto que empata", pct(descEquil,1), `à vista × ${N}× sem juros`)}</div>` +
-        `<section class="panel"><div class="phead"><div><h3>Para onde vai o dinheiro</h3><div class="sub">Em reais${nac?"":`, com a moeda do destino a ${money2(conv)}`}</div></div></div><div class="bars">${itens.map(i=>`<div class="bar"><span>${esc(i.nome)} <small>${pct(i.reais/total,0)}</small></span><span class="track"><i style="width:${Math.max(2,i.reais/max*100)}%;background:${i.color}"></i></span><span class="v">${money(i.reais)}</span></div>`).join("")}</div></section>` +
-        `<section class="panel"><div class="phead"><div><h3>Detalhamento</h3></div></div><div class="tablewrap"><table><thead><tr><th>Item</th><th>Como foi calculado</th>${nac?"":`<th class="n">Na moeda</th>`}<th class="n">Em reais</th></tr></thead><tbody>
+      html: (Dst?.aviso ? verdict("Atenção", Dst.aviso, "", true) : "") +
+        verdict(`Cenário ${sel.nome.toLowerCase()}`,
+          `${D} dias ${esc(destNome)} para ${P} ${P===1?"pessoa":"pessoas"}: de <b>${money(cen[0].total)}</b> no cenário econômico a <b>${money(cen[2].total)}</b> no de luxo, passando por ${money(cen[1].total)} no médio. No destino, o gasto diário vai de ${money(cen[0].diario)} a ${money(cen[2].diario)} para o grupo.`,
+          `${n>0?(falta>1?`No cenário ${sel.nome.toLowerCase()} (${money(total)}), guardando ${money(v.guardo)}/mês por ${yrs(n)} você junta ${money(junta)}: faltam <b>${money(falta)}</b>. Guarde <b>${money(mensal)}/mês</b>${mesesPrecisa?`, ou mantenha os ${money(v.guardo)} e viaje daqui a ${yrs(mesesPrecisa)}`:""}.`:`No cenário ${sel.nome.toLowerCase()} (${money(total)}), guardando ${money(v.guardo)}/mês por ${yrs(n)} você junta ${money(junta)}, o suficiente.`):""} Na passagem e na hospedagem, ${vistaMelhor?`<b>pagar à vista com ${nf(v.desc,1)}% de desconto</b> sai melhor que ${N}× sem juros`:`<b>parcelar em ${N}× sem juros</b> sai melhor que o desconto de ${nf(v.desc,1)}%`} (desconto que empata: ${pct(descEquil,1)}).`) +
+        `<div class="kpis">${cen.map(c=>kpi(c.nome+(c.k===sel.k?" · seu plano":""), money(c.total), `${money(c.total/P)} por pessoa · ${money(c.diario)}/dia no destino`, c.color)).join("")}${kpi("Guardar por mês", n>0?money(mensal):"—", n>0?`cenário ${sel.nome.toLowerCase()}, em ${yrs(n)}`:"informe os meses até a viagem")}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>Os três cenários lado a lado</h3><div class="sub">Custo total da viagem por categoria, em reais${nac?"":` (moeda a ${money2(conv)} com spread e IOF)`}</div></div>${legend(cats.map(nm=>[nm, cen[0].it.find(i=>i.nome===nm).color]))}</div>
+          <div class="stk">${cen.map(c=>`<div class="stkrow"><span class="stkl">${c.nome}</span><span class="stkbar">${c.it.filter(i=>i.reais>0).map(i=>`<i style="width:${i.reais/maxCen*100}%;background:${i.color}" title="${esc(i.nome)}: ${money(i.reais)}"></i>`).join("")}</span><span class="v">${money(c.total)}</span></div>`).join("")}</div></section>` +
+        `<section class="panel"><div class="phead"><div><h3>Comparação por categoria</h3><div class="sub">Em reais${custom?"; econômico e luxo derivados dos seus valores (×0,6 e ×2,6)":"; estimativas de referência para o destino"}</div></div></div><div class="tablewrap"><table><thead><tr><th>Item</th>${cen.map(c=>`<th class="n">${c.nome}</th>`).join("")}</tr></thead><tbody>
+        ${cats.map(nm=>`<tr><td>${nm}</td>${cen.map(c=>`<td class="n num">${money(c.it.find(i=>i.nome===nm).reais)}</td>`).join("")}</tr>`).join("")}
+          <tr class="best"><td><b>Total</b></td>${cen.map(c=>`<td class="n num"><b>${money(c.total)}</b></td>`).join("")}</tr>
+          <tr><td>Por pessoa</td>${cen.map(c=>`<td class="n num">${money(c.total/P)}</td>`).join("")}</tr>
+          <tr><td>Gasto diário no destino (grupo)</td>${cen.map(c=>`<td class="n num">${money(c.diario)}</td>`).join("")}</tr>
+          <tr><td>Guardar por mês${n>0?` (${yrs(n)})`:""}</td>${cen.map(c=>`<td class="n num">${n>0?money(mensalDe(c.total)):"—"}</td>`).join("")}</tr>
+        </tbody></table></div></section>` +
+        `<section class="panel"><div class="phead"><div><h3>Para onde vai o dinheiro no cenário ${sel.nome.toLowerCase()}</h3></div></div><div class="bars">${itens.map(i=>`<div class="bar"><span>${esc(i.nome)} <small>${pct(i.reais/total,0)}</small></span><span class="track"><i style="width:${Math.max(2,i.reais/max*100)}%;background:${i.color}"></i></span><span class="v">${money(i.reais)}</span></div>`).join("")}</div></section>` +
+        `<section class="panel"><div class="phead"><div><h3>Detalhamento do cenário ${sel.nome.toLowerCase()}</h3></div></div><div class="tablewrap"><table><thead><tr><th>Item</th><th>Como foi calculado</th>${nac?"":`<th class="n">Na moeda</th>`}<th class="n">Em reais</th></tr></thead><tbody>
         ${itens.map(i=>`<tr><td>${i.nome}</td><td>${i.det}</td>${nac?"":`<td class="n num">${i.local!=null?loc(i.local):"—"}</td>`}<td class="n num">${money(i.reais)}</td></tr>`).join("")}
           <tr class="best"><td><b>Total</b></td><td></td>${nac?"":"<td></td>"}<td class="n num"><b>${money(total)}</b></td></tr>
         </tbody></table></div></section>` +
-        notes(["Gastos no destino (hospedagem, alimentação, transporte, passeios e compras) convertidos pela cotação comercial mais spread e IOF. Passagens, seguro e documentos são informados em reais.",
-          "Valores de referência: ajuste com as cotações reais do seu roteiro. A reserva para imprevistos cobre extravios, taxas não previstas e variação do câmbio.",
-          "Plano: valor mensal investido até a viagem ao rendimento líquido informado. Comprar a moeda aos poucos nesse período reduz o risco de o câmbio subir (veja a aba Câmbio e viagem).",
-          "À vista × parcelado sem juros: as parcelas são trazidas a valor presente pelo rendimento do seu dinheiro. Se o desconto à vista for maior que o desconto que empata, pague à vista; se for menor, parcele e deixe o dinheiro rendendo.",
-          "Seguro-viagem é obrigatório para entrar nos países do Acordo de Schengen, na Europa, com cobertura médica mínima de 30 mil euros."]),
+        notes(["Cenários: econômico (hostel ou hotel simples, mercado e lanchonetes, transporte público, passagem promocional), médio (hotel 3 ou 4 estrelas, restaurantes comuns, alguns passeios pagos) e luxo (hotel 5 estrelas, restaurantes sofisticados, táxi e transfers, passagem em classe executiva).",
+          "Valores dos destinos: estimativas de referência em euros para 2026, com base em médias de preços de viagem. Variam muito com temporada, cidade e antecedência: ajuste com cotações reais.",
+          "No Leste Europeu (Chéquia, Hungria, Polônia), na Noruega e na Rússia a moeda local não é o euro; os valores estão convertidos para euro só para comparar. Pague na moeda local para evitar conversões duplas.",
+          "Gastos no destino convertidos pela cotação comercial mais spread e IOF. Passagens (saindo do Brasil, ida e volta), seguro e documentos são em reais.",
+          "Plano: valor mensal investido até a viagem ao rendimento líquido informado. À vista × parcelado: as parcelas são trazidas a valor presente; se o desconto à vista superar o desconto que empata, pague à vista.",
+          "Seguro-viagem é obrigatório para os países do Acordo de Schengen, com cobertura médica mínima de 30 mil euros."]),
     };
   }
 });
@@ -2319,7 +2369,7 @@ function renderSim(sim){
   const st = loadState(sim);
   edited = st._ed || {};
   const fieldsHTML = sim.fields.map(f=>{
-    if (f.sect) return `<div class="sect">${f.sect}</div>`;
+    if (f.sect) return `<div class="sect"${f.when?` data-sw="${sim.fields.indexOf(f)}"`:""}>${f.sect}</div>`;
     if (f.debts) return debtsHTML(sim, st);
     const id=`${sim.id}-${f.k}`, cls = `field${f.wide?" wide":""}`;
     if (f.opts) return `<div class="${cls}"><label for="${id}">${f.label}</label><select id="${id}" data-k="${f.k}">${f.opts.map(([val,l])=>`<option value="${val}" ${String(st[f.k])===val?"selected":""}>${l}</option>`).join("")}</select>${f.hint?`<small>${f.hint}</small>`:""}</div>`;
@@ -2380,8 +2430,9 @@ function compute(sim){
     } else h.innerHTML = `<span class="mk">● ${esc(m.hint)}</span>`;
   }
   // Campos condicionais: aparecem só quando o seletor indicado tem o valor certo.
-  const off = f => f.when && ((st[f.when[0]]===f.when[1]) === !!f.whenNot);   // whenNot: esconde quando o seletor TEM o valor
-  for (const f of sim.fields) if (f.when) document.getElementById(`${sim.id}-${f.k}`).closest(".field").hidden = off(f);
+  // when: [seletor, valor] ou função (st => mostrar?); whenNot inverte a regra do par.
+  const off = f => f.when && (typeof f.when==="function" ? !f.when(st) : (st[f.when[0]]===f.when[1]) === !!f.whenNot);
+  sim.fields.forEach((f,i)=>{ if (!f.when) return; const el = f.k ? document.getElementById(`${sim.id}-${f.k}`).closest(".field") : document.querySelector(`#fields [data-sw="${i}"]`); if (el) el.hidden = off(f); });
   st._ed = edited;
   store.set("sim:"+sim.id, st);
   for (const f of sim.fields){

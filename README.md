@@ -30,7 +30,7 @@ Aposentadoria, Tesouro Direto, Tesouro Selic, Tesouro IPCA+, Tesouro Prefixado, 
 - **Financiar imóvel:** SAC × Price com TR, seguros MIP e DFI e taxa de administração, CET, renda mínima, FGTS e amortizações extras para reduzir prazo ou parcela.
 - **CDB e LCI/LCA:** pós-fixado, prefixado ou IPCA+, taxas de empate em cada prazo, limite do FGC e carência da LCI/LCA.
 - **Dividendos:** renda mensal de ações pagadoras, yield on cost, IR sobre JCP e dividendos, preço-teto de Bazin e preço justo pelo modelo de Gordon.
-- **Orçamento de viagem:** custo total por categoria com câmbio e IOF, quanto guardar por mês até a data e se compensa pagar à vista com desconto ou parcelar sem juros.
+- **Orçamento de viagem:** três cenários (econômico, médio e luxo) para destinos europeus prontos (Itália, França, Grécia, Alemanha, Holanda, Leste Europeu, Noruega, Rússia, Portugal e Espanha) ou valores próprios, custo por categoria com câmbio e IOF, quanto guardar por mês até a data e se compensa pagar à vista com desconto ou parcelar sem juros.
 - **Passagens aéreas:** links de busca já preenchidos (Google Voos, Skyscanner, Kayak, Momondo) para voos nacionais e internacionais, antecedência ideal e comparação entre pagar em dinheiro ou em milhas. Não consulta preços ao vivo.
 - **Câmbio e viagem:** cartão de crédito, pré-pago, conta global e espécie pelo valor efetivo total (spread + IOF), risco cambial até a viagem com a volatilidade do dólar e quanto guardar por mês.
 - **Imposto de renda:** IR retido no salário pela tabela de 2026 (com o redutor), INSS, declaração completa × simplificada, efeito do PGBL e alíquotas efetiva e marginal faixa a faixa.
