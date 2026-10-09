@@ -196,7 +196,7 @@ const irPrev = y => y<=2 ? .35 : y<=4 ? .30 : y<=6 ? .25 : y<=8 ? .20 : y<=10 ? 
 function poupM(selicA, trM){ return selicA>0.085 ? 0.005+trM : aToM(0.7*selicA)+trM; }
 function irr(flows){
   const npv = r => { let s=0; for (let i=0;i<flows.length;i++) s += flows[i]/Math.pow(1+r,i); return s; };
-  let lo=-0.99, hi=1, flo=npv(lo), fhi=npv(hi);
+  let lo=-0.5, hi=1, flo=npv(lo), fhi=npv(hi);   // −50% a.m. já basta e evita estouro numérico em prazos longos
   if (!isFinite(flo)||!isFinite(fhi)||flo*fhi>0) return null;
   for (let i=0;i<120;i++){ const mid=(lo+hi)/2, f=npv(mid); if (f*flo>0){lo=mid;flo=f;} else hi=mid; }
   return (lo+hi)/2;
@@ -1246,7 +1246,128 @@ SIMS.push({
   }
 });
 
-/* ---------- 12. Fundos imobiliários ---------- */
+/* ---------- 12. Dividendos ---------- */
+SIMS.push({
+  id:"dividendos", nav:"Dividendos",
+  title:"Quanto de renda as ações pagadoras de dividendos podem gerar?",
+  lede:"Projeta uma carteira de ações boas pagadoras com aportes mensais, dividendos e JCP reinvestidos ou sacados, e o imposto de cada tipo de provento. Calcula o preço-teto de Bazin e o preço justo pelo modelo de Gordon.",
+  fields:[
+    {k:"inicial",label:"Investimento inicial",def:10000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:1000,pre:"R$",suf:"/mês",sobra:true},
+    {k:"anos",label:"Prazo",def:15,suf:"anos"},
+    {k:"meta",label:"Renda mensal desejada",def:3000,pre:"R$",suf:"/mês",hint:"líquida, em valores de hoje"},
+    {sect:"Ação ou carteira"},
+    {k:"preco",label:"Preço da ação",def:40,pre:"R$"},
+    {k:"dpa",label:"Proventos por ação em 12 meses",def:3.2,pre:"R$",hint:"dividendos + JCP pagos no último ano"},
+    {k:"jcp",label:"Parte paga como JCP",def:30,suf:"%",hint:"o restante é dividendo"},
+    {k:"cresc",label:"Crescimento dos proventos acima do IPCA",def:2,suf:"% a.a.",neg:true,hint:"o preço acompanha, mantendo o dividend yield"},
+    {k:"reinv",label:"Proventos",def:"sim",opts:[["sim","Reinvestir"],["nao","Sacar todo mês"]]},
+    {k:"custo",label:"Custos de negociação",def:0.03,suf:"%",hint:"corretagem e emolumentos"},
+    {sect:"Preço justo"},
+    {k:"k",label:"Retorno exigido",def:14,suf:"% a.a.",hint:"para o modelo de Gordon"},
+    {k:"bazin",label:"Dividend yield mínimo (Bazin)",def:6,suf:"% a.a."},
+    {sect:"Impostos"},
+    {k:"irJcp",label:"IR sobre JCP",def:15,suf:"%",hint:"retido na fonte"},
+    {k:"irDiv",label:"IR sobre dividendos",def:10,suf:"%",hint:"retido sobre o que passar do limite"},
+    {k:"limDiv",label:"Limite isento por empresa",def:50000,pre:"R$",suf:"/mês"},
+    {sect:"Mercado e comparação"},
+    CENARIO, UNIDADE,
+    {k:"ipca",label:"IPCA 12 meses",def:4.22,suf:"% a.a.",mkt:"ipca"},
+    {k:"selic",label:"Selic hoje",def:13.75,suf:"% a.a.",mkt:"selic"},
+    {k:"real",label:"Tesouro IPCA+",def:7,suf:"% a.a.",mkt:"real"},
+  ],
+  run(v){
+    const T = Math.round(v.anos*12);
+    if (!(T>=1 && T<=600)) return {error:"Informe um prazo entre 1 mês e 50 anos."};
+    if (!(v.inicial+v.aporte>0)) return {error:"Informe um investimento inicial ou um aporte mensal."};
+    if (!(v.preco>0)) return {error:"Informe o preço da ação."};
+    if (v.jcp>100) return {error:"A parte paga como JCP vai de 0% a 100%."};
+    if (v.cresc <= -50) return {error:"O crescimento real precisa ser maior que −50% a.a."};
+    const P = paths(v), D = deflator(P.ipca, T), real = v.unid==="real", reinv = v.reinv==="sim";
+    const dy = v.dpa/v.preco, gm = aToM(v.cresc/100), cu = v.custo/100, fj = v.jcp/100;
+    /* Proventos pagos em parcelas mensais iguais, proporcionais ao preço (dividend yield constante). */
+    const sim = (choque=0) => {
+      let preco = v.preco, acoes = (v.inicial+v.aporte)*(1-cu)/preco, base = v.inicial+v.aporte, sacado = 0, sacadoR = 0, irJ = 0, irD = 0, bruto = 0;
+      const renda=[0], liqS=[];
+      const liquido = pr => { const venda = acoes*pr*(1-cu); return venda - Math.max(0, venda-base)*0.15; };
+      liqS.push(liquido(preco));
+      for (let t=1;t<=T;t++){
+        const prov = acoes*preco*dy/12, jcp = prov*fj, div = prov-jcp;
+        const tJ = jcp*v.irJcp/100, tD = Math.max(0, div-v.limDiv)*v.irDiv/100, liq = prov-tJ-tD;
+        irJ += tJ/(real?D[t]:1); irD += tD/(real?D[t]:1); bruto += prov/(real?D[t]:1);
+        preco *= (1+aToM(P.ipca(t)))*(1+gm);
+        if (reinv){ acoes += liq*(1-cu)/preco; base += liq; } else { sacado += liq; sacadoR += liq/D[t]; }
+        if (t<T && v.aporte>0){ acoes += v.aporte*(1-cu)/preco; base += v.aporte; }
+        renda.push(liq); liqS.push(liquido(preco));
+      }
+      const venda = acoes*preco*(1+choque)*(1-cu), ir = Math.max(0, venda-base)*0.15;
+      return {renda, liqS, acoes, preco, base, venda, ir, liq:venda-ir, sacado, sacadoR, irJ, irD, bruto};
+    };
+    const r = sim(), k = t => real ? 1/D[t] : 1;
+    const inv = v.inicial + v.aporte*T;
+    const total = r.liq*k(T) + (real ? r.sacadoR : r.sacado);
+    const rendaFim = r.renda[T], rendaFimR = rendaFim/D[T];
+    const yoc = rendaFim*12/inv;                                          // proventos anuais sobre o valor investido (nominal)
+    const liqUnit = 1 - fj*v.irJcp/100;                                    // fração líquida dos proventos abaixo do limite
+    const patMeta = v.meta*12/(dy*liqUnit);
+    const mMeta = r.renda.findIndex((x,t)=>t>0 && x/D[t] >= v.meta);
+    // Preço justo
+    const gN = (1+mediaAnual(P.ipca, 120))*(1+v.cresc/100)-1, kk = v.k/100;
+    const gordon = kk>gN ? v.dpa*(1+gN)/(kk-gN) : null, teto = v.bazin>0 ? v.dpa/(v.bazin/100) : null;
+    const margem = x => x==null ? "" : x>=v.preco ? `${pct(x/v.preco-1,0)} acima do preço atual` : `${pct(1-x/v.preco,0)} abaixo do preço atual`;
+    // Comparação com os mesmos aportes
+    const base = {p0:v.inicial, pmt:v.aporte, months:T, tax:irRF};
+    const over = t => Math.max(0, P.selic(t)-0.001);
+    const sel = simInvest({...base, rate:t=>aToM(over(t)), fee:b=>Math.max(0,b-10000)*0.002/12});
+    const ipc = simInvest({...base, rate:t=>(1+aToM(P.ipca(t)))*(1+aToM(v.real/100))-1, fee:b=>b*0.002/12});
+    if (real){ toReal(sel, D, v.inicial, v.aporte, T); toReal(ipc, D, v.inicial, v.aporte, T); }
+    const fluxo = Array(T+1).fill(0); fluxo[0] = -(v.inicial+v.aporte);
+    for (let t=1;t<T;t++) fluxo[t] = -v.aporte/(real?D[t]:1);
+    if (!reinv) for (let t=1;t<=T;t++) fluxo[t] += r.renda[t]/(real?D[t]:1);
+    fluxo[T] += r.liq*k(T);
+    const im = irr(fluxo), irrA = im==null ? null : mToA(im);
+    const res = [
+      {name:"Ações de dividendos", color:C.s2, net:total},
+      {name:"Tesouro IPCA+", color:C.s3, net:ipc.net},
+      {name:"Tesouro Selic", color:C.s1, net:sel.net},
+    ];
+    const best = res.reduce((a,b)=>b.net>a.net?b:a), max = best.net;
+    const unid = real ? " em reais de hoje" : "";
+    const choques = [-0.3,-0.15,0,0.15].map(c=>{ const s = sim(c); return {c, tot:s.liq*k(T) + (real ? s.sacadoR : s.sacado), ir:s.ir*k(T)}; });
+    const xs = Array.from({length:T+1},(_,i)=>i);
+    return {
+      html: verdict(reinv ? "Proventos reinvestidos" : "Proventos sacados",
+          `Em ${yrs(T)}, a carteira chega a <b>${nf(r.acoes,0)} ações</b>, que pagam <b>${money(rendaFim*k(T))}/mês</b> líquidos${unid}${real?"":` (${money(rendaFimR)} em valores de hoje)`}. Isso é ${pct(yoc,1)} ao ano sobre o que você investiu (yield on cost). ${reinv?"":`Você terá sacado ${money(real?r.sacadoR:r.sacado)} em proventos. `}Vendendo tudo no fim, sobram ${money(r.liq*k(T))} após ${money(r.ir*k(T))} de IR.`,
+          `Para receber ${money(v.meta)}/mês líquidos em valores de hoje, são necessários cerca de <b>${money(patMeta)}</b> investidos com dividend yield de ${pct(dy,1)}. ${mMeta>0?`Seguindo este plano, você chega lá em <b>${yrs(mMeta)}</b>.`:`No prazo simulado, a renda chega a ${money(rendaFimR)}/mês em valores de hoje.`}`) +
+        `<div class="kpis">${kpi("Renda mensal no fim", money(rendaFim*k(T)), real?"líquida, em reais de hoje":`líquida; ${money(rendaFimR)} em valores de hoje`, C.s2)}${kpi("Yield on cost", pct(yoc,1)+" a.a.", "proventos anuais ÷ total investido")}${kpi("Preço-teto (Bazin)", teto!=null?money2(teto):"—", teto!=null?`para render ${nf(v.bazin,1)}% a.a.; ${margem(teto)}`:"")}${kpi("Preço justo (Gordon)", gordon!=null?money2(gordon):"—", gordon!=null?`com k = ${nf(v.k,1)}% e g = ${pct(gN,1)}; ${margem(gordon)}`:"o retorno exigido precisa superar o crescimento")}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>Valor líquido no fim, com os mesmos aportes</h3><div class="sub">Ações vendidas no fim do prazo${reinv?"":", somando os proventos sacados"}; títulos com IR e custódia${unid}</div></div></div><div class="bars">${res.map(x=>`<div class="bar"><span>${esc(x.name)}${x===best?` <span class="badge">melhor</span>`:""}</span><span class="track"><i style="width:${Math.max(2,x.net/max*100)}%;background:${x.color}"></i></span><span class="v">${money(x.net)}</span></div>`).join("")}</div></section>` +
+        chartPanel("Renda mensal dos proventos", `Dividendos e JCP líquidos recebidos em cada mês${unid}`, legend([["Proventos líquidos",C.s2],["Renda desejada",C.ink,true]]), "ch") +
+        `<section class="panel"><div class="phead"><div><h3>Impostos sobre os proventos no período</h3><div class="sub">Somados mês a mês${unid}</div></div></div><div class="tablewrap"><table><thead><tr><th>Item</th><th class="n">Valor</th><th>Regra usada</th></tr></thead><tbody>
+          <tr><td>Proventos brutos</td><td class="n num">${money(r.bruto)}</td><td>${nf(100-v.jcp)}% dividendos, ${nf(v.jcp)}% JCP</td></tr>
+          <tr><td>IR sobre JCP</td><td class="n num">${money(r.irJ)}</td><td>${nf(v.irJcp,1)}% retido na fonte</td></tr>
+          <tr><td>IR sobre dividendos</td><td class="n num">${money(r.irD)}</td><td>${nf(v.irDiv,1)}% sobre o que passa de ${money(v.limDiv)}/mês</td></tr>
+          <tr><td>Retorno anual da carteira</td><td class="n num">${irrA!=null?pct(irrA):"—"}</td><td>líquido${real?", acima da inflação":""}, vendendo no fim</td></tr>
+        </tbody></table></div></section>` +
+        chartPanel("Valor líquido se vender em cada mês", `Ações sem os proventos sacados; Tesouro com IR e custódia${unid}`, legend([["Ações de dividendos",C.s2],["Tesouro IPCA+",C.s3],["Tesouro Selic",C.s1]]), "ch2") +
+        `<section class="panel"><div class="phead"><div><h3>E se o preço estiver diferente na venda?</h3><div class="sub">A projeção supõe preço acompanhando os proventos; na bolsa, ele oscila muito mais. Veja a aba Ações para cenários de volatilidade</div></div></div><div class="tablewrap"><table><thead><tr><th>Preço na venda</th><th class="n">Total líquido${reinv?"":" com proventos"}</th><th class="n">IR sobre o ganho</th></tr></thead><tbody>
+        ${choques.map(c=>`<tr class="${c.c===0?"best":""}"><td>${c.c===0?"Como projetado":`${c.c>0?"+":"−"}${nf(Math.abs(c.c)*100)}% em relação ao projetado`}</td><td class="n num"><b>${money(c.tot)}</b></td><td class="n num">${money(c.ir)}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
+        notes(["Proventos anuais = dividend yield × preço, pagos em parcelas mensais iguais. Preço e proventos crescem com o IPCA mais o crescimento real informado, então o dividend yield fica constante.",
+          "JCP (juros sobre capital próprio): IR retido na fonte, sem ajuste na declaração. Para a empresa, o JCP é despesa dedutível, por isso muitas pagam parte dos proventos assim.",
+          "Dividendos: isentos até o limite mensal por empresa; acima dele, retenção na fonte. A partir de 2026, a lei prevê 10% acima de R$ 50 mil por mês de uma mesma empresa e um imposto mínimo para rendas muito altas. Confira a regra vigente; os campos permitem ajustar.",
+          "Em uma carteira com várias empresas, o limite vale para cada uma. Aqui a carteira é tratada como uma única empresa, o que superestima o imposto de quem tem várias.",
+          "Venda: IR de 15% sobre o ganho, considerando venda de tudo de uma vez (acima da isenção de R$ 20 mil por mês). Vender aos poucos pode reduzir o imposto.",
+          "Bazin: preço-teto = proventos dos últimos 12 meses ÷ dividend yield mínimo desejado. Gordon: P = D₁ ÷ (k − g), com D₁ = proventos × (1 + g) e g = IPCA esperado + crescimento real.",
+          "Comparação com os mesmos aportes: Tesouro Selic e Tesouro IPCA+ com IR regressivo e custódia. Ações não têm garantia, e empresas podem cortar dividendos."]),
+      after(){
+        lineChart($("#ch"),{label:"Renda mensal dos proventos", xs, series:[{name:"Proventos líquidos",color:C.s2,values:r.renda.map((x,t)=>t===0?null:x*k(t))},{name:"Renda desejada",color:C.ink,values:xs.map(t=>real?v.meta:v.meta*D[t])}], dashed:[1], xFmt:monthX(T), tipTitle:x=>`Mês ${x} · ${yrs(x)}`});
+        lineChart($("#ch2"),{label:"Valor líquido por mês", xs, series:[{name:"Ações de dividendos",color:C.s2,values:r.liqS.map((x,t)=>x*k(t))},{name:"Tesouro IPCA+",color:C.s3,values:ipc.series},{name:"Tesouro Selic",color:C.s1,values:sel.series}], xFmt:monthX(T), tipTitle:x=>`Mês ${x} · ${yrs(x)}`});
+      }
+    };
+  }
+});
+
+/* ---------- 13. Fundos imobiliários ---------- */
 SIMS.push({
   id:"fii", nav:"Fundos imobiliários",
   title:"Quanto rendem os fundos imobiliários e quando viro rentista?",
@@ -1295,7 +1416,7 @@ SIMS.push({
     };
     const r = sim();
     const k = t => real ? 1/D[t] : 1;
-    const inv = v.inicial + v.aporte*T, invR = v.inicial + Array.from({length:T},(_,t)=>v.aporte/D[t]).reduce((a,b)=>a+b,0);
+    const inv = v.inicial + v.aporte*T;
     const total = r.liq*k(T) + (real ? r.sacadoR : r.sacado);           // venda líquida + rendimentos sacados
     const rendaFim = r.renda[T], rendaFimR = rendaFim/D[T];
     const magico = Math.ceil(1/(dy*(1-irD)));                             // cotas cujo rendimento compra uma cota nova
@@ -1348,7 +1469,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 13. PGBL x VGBL ---------- */
+/* ---------- 14. PGBL x VGBL ---------- */
 SIMS.push({
   id:"previdencia", nav:"PGBL ou VGBL",
   title:"PGBL, VGBL ou investir por fora?",
