@@ -390,7 +390,7 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
 const $ = s => document.querySelector(s);
 const nf = (v,d=2) => v.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
 
-const SIMS = [["aposentadoria","Aposentadoria"],["tesouro","Tesouro Direto"],["selic","Tesouro Selic"],["ipca","Tesouro IPCA+"],["prefixado","Tesouro Prefixado"],["educa","Tesouro Educa+"],["dividas","Quitar dívidas"],["alugar","Alugar ou financiar"],["consorcio","Consórcio"],["cdb","CDB"],["acoes","Ações"],["previdencia","PGBL ou VGBL"]];
+const SIMS = [["aposentadoria","Aposentadoria"],["tesouro","Tesouro Direto"],["selic","Tesouro Selic"],["ipca","Tesouro IPCA+"],["prefixado","Tesouro Prefixado"],["educa","Tesouro Educa+"],["dividas","Quitar dívidas"],["alugar","Alugar ou financiar"],["consorcio","Consórcio"],["cdb","CDB e LCI/LCA"],["acoes","Ações"],["previdencia","PGBL ou VGBL"]];
 $(".sims").innerHTML = SIMS.map(([id,n])=>`<a href="simuladores.html#${id}">${n}</a>`).join("");
 
 const tex = (el, t, display) => { try { if (window.katex) katex.render(t, el, {displayMode:display, throwOnError:false}); } catch {} };
