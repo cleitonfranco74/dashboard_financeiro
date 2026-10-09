@@ -68,6 +68,12 @@ h3{font-size:15px;margin:0;font-weight:650}
 .inp{display:flex;align-items:center;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:0 10px;gap:6px;min-width:0}
 .inp:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .inp input{border:0;background:none;outline:none;width:100%;min-width:0;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13.5px}
+.inp input[type=date]{color:inherit}
+.lnks{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.lnk{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;text-decoration:none;color:var(--ink);background:var(--bg)}
+.lnk:hover{border-color:var(--accent)}
+.lnk b{color:var(--accent)}
+.lnk span{font-size:12px;color:var(--muted)}
 .inp span{color:var(--muted);font-size:12px;white-space:nowrap}
 .inp.bad{border-color:var(--crit)}
 .field select{height:38px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:0 8px;width:100%}
@@ -2110,6 +2116,97 @@ SIMS.push({
   }
 });
 
+/* ---------- 21. Passagens aéreas ---------- */
+const AEROPORTOS = [
+  ["OPS","Sinop (MT)","BR"],["CGB","Cuiabá (MT)","BR"],["BSB","Brasília (DF)","BR"],["GRU","São Paulo – Guarulhos","BR"],["CGH","São Paulo – Congonhas","BR"],
+  ["VCP","Campinas – Viracopos","BR"],["GIG","Rio de Janeiro – Galeão","BR"],["SDU","Rio de Janeiro – Santos Dumont","BR"],["CNF","Belo Horizonte – Confins","BR"],
+  ["POA","Porto Alegre (RS)","BR"],["CWB","Curitiba (PR)","BR"],["FLN","Florianópolis (SC)","BR"],["IGU","Foz do Iguaçu (PR)","BR"],["CGR","Campo Grande (MS)","BR"],
+  ["GYN","Goiânia (GO)","BR"],["SSA","Salvador (BA)","BR"],["REC","Recife (PE)","BR"],["FOR","Fortaleza (CE)","BR"],["NAT","Natal (RN)","BR"],["MCZ","Maceió (AL)","BR"],
+  ["JPA","João Pessoa (PB)","BR"],["AJU","Aracaju (SE)","BR"],["SLZ","São Luís (MA)","BR"],["THE","Teresina (PI)","BR"],["BEL","Belém (PA)","BR"],["MAO","Manaus (AM)","BR"],
+  ["PVH","Porto Velho (RO)","BR"],["RBR","Rio Branco (AC)","BR"],["PMW","Palmas (TO)","BR"],["VIX","Vitória (ES)","BR"],["FEN","Fernando de Noronha (PE)","BR"],
+  ["EZE","Buenos Aires – Ezeiza","AR"],["AEP","Buenos Aires – Aeroparque","AR"],["SCL","Santiago","CL"],["MVD","Montevidéu","UY"],["ASU","Assunção","PY"],["LIM","Lima","PE"],
+  ["BOG","Bogotá","CO"],["PTY","Cidade do Panamá","PA"],["CUN","Cancún","MX"],["MEX","Cidade do México","MX"],["MIA","Miami","US"],["MCO","Orlando","US"],
+  ["JFK","Nova York – JFK","US"],["LAX","Los Angeles","US"],["YYZ","Toronto","CA"],["LIS","Lisboa","PT"],["OPO","Porto","PT"],["MAD","Madri","ES"],["BCN","Barcelona","ES"],
+  ["CDG","Paris – Charles de Gaulle","FR"],["FCO","Roma – Fiumicino","IT"],["MXP","Milão – Malpensa","IT"],["LHR","Londres – Heathrow","GB"],["FRA","Frankfurt","DE"],
+  ["AMS","Amsterdã","NL"],["ZRH","Zurique","CH"],["DXB","Dubai","AE"],["DOH","Doha","QA"],["NRT","Tóquio – Narita","JP"],["JNB","Joanesburgo","ZA"],
+];
+const AERO = Object.fromEntries(AEROPORTOS.map(([c,n,p])=>[c,{n,p}]));
+const isoDias = d => { const x = new Date(); x.setDate(x.getDate()+d); return x.toISOString().slice(0,10); };
+SIMS.push({
+  id:"voos", nav:"Passagens aéreas",
+  title:"Onde pesquisar a passagem e vale a pena usar milhas?",
+  lede:"Monta a pesquisa já preenchida nos principais buscadores de passagens, nacionais e internacionais, orienta sobre a antecedência e compara pagar em dinheiro ou em milhas. Os preços aparecem nos próprios buscadores: este site não consulta tarifas ao vivo.",
+  fields:[
+    {k:"origem",label:"Origem",def:"CGB",opts:AEROPORTOS.map(([c,n])=>[c,`${c} · ${n}`]),wide:true},
+    {k:"destino",label:"Destino",def:"LIS",opts:AEROPORTOS.map(([c,n])=>[c,`${c} · ${n}`]),wide:true},
+    {k:"tipo",label:"Viagem",def:"ida-volta",opts:[["ida-volta","Ida e volta"],["ida","Só ida"]]},
+    {k:"classe",label:"Classe",def:"economy",opts:[["economy","Econômica"],["premium","Econômica premium"],["business","Executiva"]]},
+    {k:"ida",label:"Ida",def:isoDias(60),type:"date"},
+    {k:"volta",label:"Volta",def:isoDias(74),type:"date",when:["tipo","ida-volta"]},
+    {k:"adultos",label:"Passageiros",def:1,suf:"adultos"},
+    {sect:"Dinheiro ou milhas? (preencha com o que encontrar)"},
+    {k:"preco",label:"Preço em dinheiro",def:6500,pre:"R$",hint:"total por pessoa, com taxas"},
+    {k:"moedaEst",label:"Cobrado em moeda estrangeira?",def:"nao",opts:[["nao","Não, em reais"],["sim","Sim (site do exterior)"]],hint:"aí incidem IOF e spread do cartão"},
+    {k:"milhas",label:"Milhas exigidas",def:140000,suf:"milhas",hint:"por pessoa"},
+    {k:"taxas",label:"Taxas na emissão com milhas",def:1200,pre:"R$",hint:"taxa de embarque e combustível"},
+    {k:"milheiro",label:"Valor do milheiro",def:25,pre:"R$",suf:"/mil",hint:"preço de venda ou de compra das suas milhas"},
+    {k:"iof",label:"IOF + spread do cartão",def:8.7,suf:"%",when:["moedaEst","sim"],hint:"veja a aba Câmbio e viagem"},
+  ],
+  run(v, st){
+    const O = AERO[v.origem], Dd = AERO[v.destino], idaVolta = v.tipo==="ida-volta";
+    if (v.origem===v.destino) return {error:"Escolha origem e destino diferentes."};
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v.ida||"")) return {error:"Informe a data de ida."};
+    if (idaVolta && !(v.volta>v.ida)) return {error:"A volta precisa ser depois da ida."};
+    const pax = Math.max(1, Math.round(v.adultos||1));
+    const hoje = new Date().toISOString().slice(0,10);
+    if (v.ida < hoje) return {error:"A data de ida já passou. Escolha uma nova data ou clique em “Restaurar exemplo”."};
+    const intl = O.p!=="BR" || Dd.p!=="BR";
+    const dias = Math.round((new Date(v.ida) - new Date(hoje))/864e5);
+    const [jMin, jMax] = intl ? [60, 180] : [30, 90];
+    const janela = dias<jMin*0.5 ? "em cima da hora" : dias<jMin ? "um pouco tarde" : dias<=jMax ? "na janela ideal" : "cedo";
+    // Links de busca
+    const o = v.origem, d = v.destino, yymmdd = s => s.slice(2).replace(/-/g,"");
+    const kayakCab = {economy:"", premium:"/premium", business:"/business"}[v.classe];
+    const kayakPax = pax>1 ? `/${pax}adults` : "";
+    const datasK = idaVolta ? `${v.ida}/${v.volta}` : v.ida;
+    const gq = `Flights from ${o} to ${d} on ${v.ida}${idaVolta?` through ${v.volta}`:" one way"}${v.classe==="business"?" business class":v.classe==="premium"?" premium economy":""}${pax>1?` for ${pax} adults`:""}`;
+    const links = [
+      ["Google Voos", `https://www.google.com/travel/flights?q=${encodeURIComponent(gq)}&hl=pt-BR&curr=BRL`, "calendário de preços e alertas"],
+      ["Skyscanner", `https://www.skyscanner.com.br/transporte/passagens-aereas/${o.toLowerCase()}/${d.toLowerCase()}/${yymmdd(v.ida)}/${idaVolta?yymmdd(v.volta)+"/":""}?adultsv2=${pax}&cabinclass=${v.classe==="premium"?"premiumeconomy":v.classe}&rtn=${idaVolta?1:0}`, "compara agências e companhias"],
+      ["Kayak", `https://www.kayak.com.br/flights/${o}-${d}/${datasK}${kayakPax}${kayakCab}?sort=bestflight_a`, "previsão de alta ou queda"],
+      ["Momondo", `https://www.momondo.com.br/flight-search/${o}-${d}/${datasK}${kayakPax}${kayakCab}?sort=bestflight_a`, "boa cobertura internacional"],
+    ];
+    const cias = intl ? [["LATAM","https://www.latamairlines.com/br/pt"],["Azul","https://www.voeazul.com.br"],["TAP","https://www.flytap.com/pt-br"],["GOL","https://www.voegol.com.br"]]
+                      : [["LATAM","https://www.latamairlines.com/br/pt"],["GOL","https://www.voegol.com.br"],["Azul","https://www.voeazul.com.br"]];
+    // Dinheiro × milhas
+    const fx = v.moedaEst==="sim" ? 1+v.iof/100 : 1;
+    const dinheiro = v.preco*fx*pax, comMilhas = (v.milhas/1000*v.milheiro + v.taxas)*pax;
+    const equil = v.milhas>0 ? (v.preco*fx - v.taxas)/(v.milhas/1000) : null;      // milheiro que empata
+    const usaMilhas = comMilhas < dinheiro;
+    const btn = (n,u,s) => `<a class="lnk" href="${u}" target="_blank" rel="noopener noreferrer"><b>${esc(n)}</b><span>${esc(s)}</span></a>`;
+    return {
+      html: verdict(intl ? "Voo internacional" : "Voo nacional",
+          `${esc(O.n)} → ${esc(Dd.n)}, ${idaVolta?`de ${Mercado.dataBR(v.ida)} a ${Mercado.dataBR(v.volta)}`:`só ida em ${Mercado.dataBR(v.ida)}`}, ${pax} ${pax===1?"adulto":"adultos"}. Faltam <b>${nf(dias)} dias</b>: você está <b>${janela}</b> (para voos ${intl?"internacionais":"nacionais"}, a faixa costuma ser de ${jMin} a ${jMax} dias de antecedência).`,
+          `Com os valores informados, ${usaMilhas?`<b>vale usar milhas</b>: custa ${money(comMilhas)} contra ${money(dinheiro)} em dinheiro`:`<b>vale pagar em dinheiro</b>: ${money(dinheiro)} contra ${money(comMilhas)} usando milhas`}. Milhas compensam quando o seu milheiro vale menos que ${equil!=null?money2(equil):"—"}.`) +
+        `<section class="panel"><div class="phead"><div><h3>Pesquise nos buscadores</h3><div class="sub">Os links abrem a busca já preenchida em uma nova aba. Compare pelo menos dois e confira o preço final, com bagagem</div></div></div><div class="lnks">${links.map(l=>btn(...l)).join("")}</div>
+          <div class="sub" style="margin-top:12px">Sites das companhias: ${cias.map(([n,u])=>`<a href="${u}" target="_blank" rel="noopener noreferrer">${n}</a>`).join(" · ")}</div></section>` +
+        `<div class="kpis">${kpi("Em dinheiro", money(dinheiro), `${pax>1?`${pax} × ${money(v.preco*fx)}`:"por pessoa, com taxas"}${fx>1?`; inclui IOF e spread de ${pct(fx-1,1)}`:""}`, C.s2, !usaMilhas)}${kpi("Com milhas", money(comMilhas), `${nf(v.milhas*pax)} milhas a ${money2(v.milheiro)}/mil + taxas`, C.s1, usaMilhas)}${kpi("Milheiro que empata", equil!=null?money2(equil):"—", "acima disso, pague em dinheiro")}${kpi("Antecedência", nf(dias)+" dias", janela)}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>Como economizar</h3></div></div><ul class="notes">
+          <li><b>Datas flexíveis:</b> no Google Voos, o calendário e o gráfico de preços mostram as datas mais baratas em volta da sua. Terças, quartas e sábados costumam sair mais em conta.</li>
+          <li><b>Alertas de preço:</b> ative o alerta da rota no Google Voos ou no Kayak e compre quando o preço cair para a faixa baixa da rota.</li>
+          <li><b>Aeroportos próximos:</b> ${o==="OPS"?"de Sinop, compare também a saída por Cuiabá (CGB); ":""}em São Paulo e no Rio, compare os dois ou três aeroportos da cidade.</li>
+          <li><b>Bagagem e assento:</b> tarifas básicas não incluem mala despachada. Some bagagem, marcação de assento e taxas antes de comparar.</li>
+          ${intl?`<li><b>Moeda da compra:</b> compre em reais em sites brasileiros quando possível. Se a cobrança for em dólar ou euro, o cartão soma IOF e spread (veja a aba Câmbio e viagem).</li><li><b>Documentos:</b> confira passaporte, visto e seguro-viagem exigidos pelo destino antes de emitir.</li>`:`<li><b>Promoções relâmpago:</b> companhias nacionais fazem promoções frequentes; o alerta de preço ajuda a pegar a queda.</li>`}
+          <li><b>Milhas:</b> transferências bonificadas de pontos do cartão para programas de fidelidade podem baixar bastante o custo do milheiro.</li>
+        </ul></section>` +
+        notes(["Este simulador não consulta preços ao vivo: os preços aparecem nos buscadores, que recebem a rota, as datas, os passageiros e a classe pelo link. Se algum site mudar o formato dos links, faça a busca diretamente nele.",
+          "Antecedência: faixas usuais de referência (nacional: 1 a 3 meses; internacional: 2 a 6 meses). Alta temporada, feriados e eventos exigem mais antecedência.",
+          "Milhas: custo = milhas ÷ 1.000 × valor do milheiro + taxas de emissão. O milheiro que empata é (preço em dinheiro − taxas) ÷ (milhas ÷ 1.000). Use o valor pelo qual você venderia ou compraria as milhas.",
+          "Compras em moeda estrangeira com cartão pagam IOF e a conversão com spread do banco, informados no campo correspondente."]),
+    };
+  }
+});
+
 /* ================= shell ================= */
 const store = {
   get(k){ try { return JSON.parse(localStorage.getItem(k)||"null"); } catch { return null; } },
@@ -2146,7 +2243,7 @@ function renderSim(sim){
     const id=`${sim.id}-${f.k}`, cls = `field${f.wide?" wide":""}`;
     if (f.opts) return `<div class="${cls}"><label for="${id}">${f.label}</label><select id="${id}" data-k="${f.k}">${f.opts.map(([val,l])=>`<option value="${val}" ${String(st[f.k])===val?"selected":""}>${l}</option>`).join("")}</select>${f.hint?`<small>${f.hint}</small>`:""}</div>`;
     const sobra = f.sobra && SOBRA ? `<button type="button" class="linkbtn" data-sobra="${f.k}">Usar minha sobra média do Livro-Caixa: ${money(SOBRA.valor)}</button>` : "";
-    return `<div class="${cls}"><label for="${id}">${f.label}</label><div class="inp">${f.pre?`<span>${f.pre}</span>`:""}<input id="${id}" data-k="${f.k}" inputmode="decimal" value="${esc(st[f.k])}">${f.suf?`<span>${f.suf}</span>`:""}</div><small id="${id}-h">${f.hint||""}</small>${sobra}</div>`;
+    return `<div class="${cls}"><label for="${id}">${f.label}</label><div class="inp">${f.pre?`<span>${f.pre}</span>`:""}<input id="${id}" data-k="${f.k}" ${f.type?`type="${f.type}"`:`inputmode="decimal"`} value="${esc(st[f.k])}">${f.suf?`<span>${f.suf}</span>`:""}</div><small id="${id}-h">${f.hint||""}</small>${sobra}</div>`;
   }).join("");
   $("#main").innerHTML = `<div class="sim">
     <section class="panel inputs" aria-label="Dados da simulação">
@@ -2186,7 +2283,7 @@ function compute(sim){
   const v={}; let missing=null;
   for (const f of sim.fields){
     if (!f.k) continue;
-    v[f.k] = f.opts ? st[f.k] : parseNum(st[f.k]);
+    v[f.k] = f.opts || f.type ? st[f.k] : parseNum(st[f.k]);
   }
   // Campos de mercado: seguem o dado atual até o usuário digitar outro valor.
   for (const f of sim.fields){
@@ -2207,7 +2304,7 @@ function compute(sim){
   st._ed = edited;
   store.set("sim:"+sim.id, st);
   for (const f of sim.fields){
-    if (!f.k || f.opts || off(f)) continue;
+    if (!f.k || f.opts || f.type || off(f)) continue;
     const bad = !isFinite(v[f.k]) || (v[f.k]<0 && !f.neg);
     document.getElementById(`${sim.id}-${f.k}`).closest(".inp").classList.toggle("bad", bad);
     if (bad && !missing) missing=f.label;
