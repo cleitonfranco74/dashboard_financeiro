@@ -1048,58 +1048,91 @@ SIMS.push({
   }
 });
 
-/* ---------- 10. CDB ---------- */
+/* ---------- 10. CDB e LCI/LCA ---------- */
+const TIPOS_RF = {
+  pos:  {nome:"pós-fixado", unid:"% do CDI", fmt:x=>`${nf(x,1)}% do CDI`},
+  pre:  {nome:"prefixado", unid:"% a.a.", fmt:x=>`${nf(x,2)}% a.a.`},
+  ipca: {nome:"IPCA+", unid:"IPCA + % a.a.", fmt:x=>`IPCA + ${nf(x,2)}%`},
+};
 SIMS.push({
-  id:"cdb", nav:"CDB",
-  title:"Quanto rende o seu CDB, e ele vence a LCI?",
-  lede:"Calcula o CDB pelo percentual do CDI, desconta o IR do prazo e compara com LCI/LCA (isentas), Tesouro Selic e poupança.",
+  id:"cdb", nav:"CDB e LCI/LCA",
+  title:"CDB ou LCI/LCA: qual rende mais no seu prazo?",
+  lede:"Compara um CDB, que paga IR, com uma LCI ou LCA isenta, nas versões pós-fixada, prefixada e IPCA+. Mostra a taxa de empate em cada prazo, o limite do FGC e a carência da LCI/LCA.",
   fields:[
     {k:"valor",label:"Valor investido",def:10000,pre:"R$"},
     {k:"aporte",label:"Aporte mensal",def:0,pre:"R$",sobra:true},
-    {k:"prazo",label:"Prazo",def:24,suf:"meses",wide:true},
-    {sect:"Taxas"},
+    {k:"prazo",label:"Prazo",def:24,suf:"meses"},
+    {k:"tipo",label:"Tipo de remuneração",def:"pos",wide:true,opts:[["pos","Pós-fixado (% do CDI)"],["pre","Prefixado"],["ipca","IPCA+"]]},
+    {sect:"Taxas oferecidas"},
+    {k:"pcdb",label:"CDB",def:110,suf:"% do CDI",when:["tipo","pos"]},
+    {k:"plci",label:"LCI / LCA",def:92,suf:"% do CDI",when:["tipo","pos"]},
+    {k:"rcdb",label:"CDB",def:13.5,suf:"% a.a.",when:["tipo","pre"]},
+    {k:"rlci",label:"LCI / LCA",def:11.5,suf:"% a.a.",when:["tipo","pre"]},
+    {k:"icdb",label:"CDB",def:7.5,pre:"IPCA +",suf:"%",when:["tipo","ipca"]},
+    {k:"ilci",label:"LCI / LCA",def:6.2,pre:"IPCA +",suf:"%",when:["tipo","ipca"]},
+    {k:"carencia",label:"Carência da LCI/LCA",def:9,suf:"meses",hint:"prazo mínimo exigido; confira a regra vigente"},
+    {k:"nobanco",label:"Já tem neste banco",def:0,pre:"R$",hint:"para checar o limite do FGC"},
+    {sect:"Mercado"},
     CENARIO, UNIDADE,
     {k:"cdi",label:"CDI hoje",def:13.65,suf:"% a.a.",mkt:"cdi"},
     {k:"selic",label:"Selic hoje",def:13.75,suf:"% a.a.",mkt:"selic"},
-    {k:"pcdb",label:"CDB",def:110,suf:"% do CDI"},
-    {k:"plci",label:"LCI / LCA",def:92,suf:"% do CDI"},
     {k:"ipca",label:"IPCA 12 meses",def:4.22,suf:"% a.a.",mkt:"ipca"},
-    {k:"tr",label:"TR",def:0.15,suf:"% a.m."},
+    {k:"tr",label:"TR",def:0.15,suf:"% a.m.",hint:"usada na poupança"},
   ],
   run(v){
-    const months=Math.round(v.prazo);
+    const months = Math.round(v.prazo);
     if (!(months>=1 && months<=600)) return {error:"Informe um prazo entre 1 e 600 meses."};
     if (!(v.valor+v.aporte>0)) return {error:"Informe um valor investido ou um aporte mensal."};
-    const P = paths(v), D = deflator(P.ipca, months), real = v.unid==="real";
+    const T = TIPOS_RF[v.tipo], P = paths(v), real = v.unid==="real";
     const cdiP = P.focus ? (()=>{ const s = Mercado.selicPath(MKT, v.cdi+0.10); return t=>s(t)-0.001; })() : ()=>v.cdi/100;
-    const base = {p0:v.valor, pmt:v.aporte, months, tax:irRF};
+    const over = t => Math.max(0, P.selic(t)-0.001);
+    const [xCdb, xLci] = v.tipo==="pos" ? [v.pcdb, v.plci] : v.tipo==="pre" ? [v.rcdb, v.rlci] : [v.icdb, v.ilci];
+    /* Taxa mensal de um título do tipo escolhido com parâmetro x (percentual do CDI, taxa prefixada ou taxa real). */
+    const taxa = x => v.tipo==="pos" ? t=>aToM(cdiP(t)*x/100) : v.tipo==="pre" ? ()=>aToM(x/100) : t=>(1+aToM(P.ipca(t)))*(1+aToM(x/100))-1;
+    const run = (x, isento, m=months) => simInvest({p0:v.valor, pmt:v.aporte, months:m, rate:taxa(x), tax:isento?()=>0:irRF});
+    /* Parâmetro da outra aplicação que empata com o líquido de referência, por bisseção. */
+    const empate = (alvo, isento, m) => { let lo=-50, hi=v.tipo==="pos"?400:100; for (let i=0;i<60;i++){ const mid=(lo+hi)/2; if (run(mid,isento,m).net < alvo) lo=mid; else hi=mid; } return (lo+hi)/2; };
+    const D = deflator(P.ipca, Math.max(months, 60));
     const res = [
-      {name:`CDB ${nf(v.pcdb,1)}% do CDI`, color:C.s1, ...simInvest({...base, rate:t=>aToM(cdiP(t)*v.pcdb/100)})},
-      {name:`LCI/LCA ${nf(v.plci,1)}% do CDI`, color:C.s2, ...simInvest({...base, rate:t=>aToM(cdiP(t)*v.plci/100), tax:()=>0})},
-      {name:"Tesouro Selic", color:C.s3, ...simInvest({...base, rate:t=>aToM(P.selic(t)), fee:b=>Math.max(0,b-10000)*0.002/12})},
-      {name:"Poupança", color:C.s4, ...simInvest({...base, rate:t=>poupM(P.selic(t), v.tr/100), tax:()=>0})},
+      {name:`CDB ${T.fmt(xCdb)}`, color:C.s1, ...run(xCdb,false)},
+      {name:`LCI/LCA ${T.fmt(xLci)}`, color:C.s2, ...run(xLci,true)},
+      {name:"Tesouro Selic", color:C.s3, ...simInvest({p0:v.valor, pmt:v.aporte, months, rate:t=>aToM(over(t)), fee:b=>Math.max(0,b-10000)*0.002/12, tax:irRF})},
+      {name:"Poupança", color:C.s4, ...simInvest({p0:v.valor, pmt:v.aporte, months, rate:t=>poupM(P.selic(t), v.tr/100), tax:()=>0})},
     ];
-    const cdiMed = mediaAnual(cdiP, months);
+    const cdb = res[0], lci = res[1];
+    const lciEq = empate(cdb.net, true, months), cdbEq = empate(lci.net, false, months);
+    const brutoCdb = cdb.net + cdb.tax;                               // nominal, antes da conversão
+    const fgcTot = brutoCdb + v.nobanco, fgcOk = fgcTot <= 250000;
+    const carOk = months >= v.carencia;
     if (real) res.forEach(r=>toReal(r, D, v.valor, v.aporte, months));
     const unid = real ? " em reais de hoje" : "";
     const best = res.reduce((a,b)=>b.net>a.net?b:a), max = best.net;
-    const ir = irRF(months), cdb=res[0];
-    const lciEq = v.pcdb*(1-ir), cdbEq = v.plci/(1-ir);
-    const days = Math.round(months*30.4);
+    const ganha = lci.net > cdb.net ? lci : cdb, perde = ganha===lci ? cdb : lci;
+    const prazos = [...new Set([6,12,24,36,60,months])].filter(m=>m<=600).sort((a,b)=>a-b);
+    const tab = prazos.map(m=>{ const c = run(xCdb,false,m), l = run(xLci,true,m); return {m, ir:irRF(m), lEq:empate(c.net,true,m), cEq:empate(l.net,false,m), melhor: l.net>c.net ? "LCI/LCA" : "CDB"}; });
+    const cdiMed = mediaAnual(cdiP, months);
+    const avisos = [];
+    if (!carOk) avisos.push(`A LCI/LCA exige pelo menos ${nf(v.carencia)} meses de prazo: com ${nf(months)} meses ela não está disponível. A comparação vale só como referência.`);
+    if (!fgcOk) avisos.push(`O CDB somado ao que você já tem no banco chega a ${money(fgcTot)} no vencimento, acima do limite de R$ 250 mil do FGC por CPF e por instituição. O excedente fica exposto ao risco do banco.`);
     return {
-      html: verdict("Resultado",
-          `Em ${yrs(months)}, o CDB de ${nf(v.pcdb,1)}% do CDI vira <b>${money(cdb.net)}</b> líquidos${unid} (${money(cdb.net-cdb.invested)} de ganho após ${pct(ir,1)} de IR). ${best===cdb?"É a melhor opção da comparação.":`Mas <b>${best.name}</b> rende mais: ${money(best.net)}.`}`,
-          `Neste prazo, uma LCI/LCA precisa pagar pelo menos <b>${nf(lciEq,1)}% do CDI</b> para empatar com esse CDB. Para vencer a LCI de ${nf(v.plci,1)}%, o CDB precisa pagar ${nf(cdbEq,1)}% do CDI.${P.focus?` CDI médio esperado no período: ${pct(cdiMed)} ao ano, pelo Focus.`:""}`) +
-        `<div class="kpis">${kpi("Valor líquido", money(cdb.net), `investido ${money(cdb.invested)}`, C.s1)}${kpi("Imposto de renda", money(cdb.tax), `alíquota de ${pct(ir,1)} (${days} dias)`)}${kpi("Rentabilidade líquida", cdb.irrA!=null?pct(cdb.irrA)+" a.a."+(real?" real":""):"—", `bruta: ${pct(cdiMed*v.pcdb/100)} a.a. nominal`)}${kpi("Empate com LCI/LCA", nf(lciEq,1)+"% do CDI", "taxa isenta equivalente")}</div>` +
-        `<section class="panel"><div class="phead"><div><h3>Valor líquido no fim do prazo</h3><div class="sub">Já descontados IR e custódia${unid}</div></div></div><div class="bars">${res.map(r=>`<div class="bar"><span>${esc(r.name)}${r===best?` <span class="badge">melhor</span>`:""}</span><span class="track"><i style="width:${Math.max(2,(r.net-0)/max*100)}%;background:${r.color}"></i></span><span class="v">${money(r.net)}</span></div>`).join("")}</div></section>` +
+      html: verdict(ganha===lci?"LCI/LCA rende mais":"CDB rende mais",
+          `Em ${yrs(months)}, ${ganha===lci?`a <b>${esc(lci.name)}</b>`:`o <b>${esc(cdb.name)}</b>`} entrega <b>${money(ganha.net)}</b> líquidos${unid}, ${money(ganha.net-perde.net)} a mais que ${perde===lci?"a LCI/LCA":"o CDB"}. O CDB paga ${pct(irRF(months),1)} de IR neste prazo (${money(cdb.tax)}).`,
+          `Para empatar com esse CDB, a LCI/LCA precisaria pagar <b>${T.fmt(lciEq)}</b>; para empatar com essa LCI/LCA, o CDB precisaria pagar <b>${T.fmt(cdbEq)}</b>${T.fmt(cdbEq).endsWith(".")?"":"."}${v.tipo==="pos"&&P.focus?` CDI médio esperado no período: ${pct(cdiMed)} ao ano, pelo Focus.`:""}`) +
+        (avisos.length ? verdict("Atenção", avisos.join(" "), "", true) : "") +
+        `<div class="kpis">${kpi("CDB", money(cdb.net), `${T.fmt(xCdb)} · ${cdb.irrA!=null?pct(cdb.irrA):"—"} a.a. líquido${real?" real":""}`, C.s1, ganha===cdb)}${kpi("LCI/LCA", money(lci.net), `${T.fmt(xLci)} · ${lci.irrA!=null?pct(lci.irrA):"—"} a.a.${real?" real":""}, isento`, C.s2, ganha===lci)}${kpi("LCI/LCA que empata", T.fmt(lciEq), "taxa isenta equivalente ao CDB")}${kpi("CDB que empata", T.fmt(cdbEq), "taxa tributada equivalente à LCI/LCA")}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>Valor líquido no fim do prazo</h3><div class="sub">Já descontados IR e custódia${unid}</div></div></div><div class="bars">${res.map(r=>`<div class="bar"><span>${esc(r.name)}${r===best?` <span class="badge">melhor</span>`:""}</span><span class="track"><i style="width:${Math.max(2,r.net/max*100)}%;background:${r.color}"></i></span><span class="v">${money(r.net)}</span></div>`).join("")}</div></section>` +
+        `<section class="panel"><div class="phead"><div><h3>Taxas de empate em cada prazo</h3><div class="sub">Com as taxas oferecidas, o mesmo valor e os mesmos aportes. Quanto maior o prazo, menor o IR e menor a vantagem da isenção</div></div></div><div class="tablewrap"><table><thead><tr><th>Prazo</th><th class="n">IR do CDB</th><th class="n">LCI/LCA que empata com o CDB</th><th class="n">CDB que empata com a LCI/LCA</th><th>Melhor</th></tr></thead><tbody>
+        ${tab.map(r=>`<tr class="${r.m===months?"best":""}"><td>${yrs(r.m)}${r.m<v.carencia?` <small>abaixo da carência</small>`:""}</td><td class="n num">${pct(r.ir,1)}</td><td class="n num">${T.fmt(r.lEq)}</td><td class="n num">${T.fmt(r.cEq)}</td><td>${r.melhor}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
         chartPanel("Evolução do valor líquido", "Se resgatado em cada mês", legend(res.map(r=>[r.name,r.color])), "ch") +
-        notes(["IR regressivo do CDB e do Tesouro: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima. LCI, LCA e poupança são isentas para pessoa física.",
-          "Resgates antes de 30 dias também pagam IOF regressivo, que não foi considerado.",
-          "CDB, LCI e LCA têm garantia do FGC de até R$ 250 mil por CPF e por instituição, com teto de R$ 1 milhão a cada 4 anos.",
-          "LCI e LCA têm prazo mínimo (carência) de 9 a 12 meses para novas emissões. Confira a liquidez antes de aplicar.",
-          "Tesouro Selic com custódia de 0,20% a.a. sobre o que passa de R$ 10 mil.",
-          "Cenário Focus: o CDI parte da taxa de hoje e acompanha a trajetória da Selic esperada no Boletim Focus.",
-          "Um CDB acima de 100% do CDI paga prêmio pelo risco de crédito do banco emissor. Acima do limite do FGC, esse risco é seu."]),
+        notes(["IR regressivo do CDB e do Tesouro sobre o rendimento de cada aporte: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima. LCI, LCA e poupança são isentas para pessoa física.",
+          "Taxa de empate: a taxa que faz as duas aplicações chegarem ao mesmo valor líquido, calculada com o mesmo valor, aportes e prazo. Para um aporte único pós-fixado, fica perto da regra prática % isento = % do CDB × (1 − alíquota).",
+          "CDB, LCI e LCA têm garantia do FGC de até R$ 250 mil por CPF e por instituição, somando principal e rendimentos, com teto de R$ 1 milhão a cada 4 anos. Acima disso, o risco é do banco emissor.",
+          "LCI e LCA têm prazo mínimo de resgate definido pelo Conselho Monetário Nacional. Confira a carência e a liquidez antes de aplicar; muitos CDBs têm liquidez diária, a maioria das LCI/LCA não.",
+          "Resgates antes de 30 dias pagam IOF regressivo, não incluído aqui.",
+          "Pós-fixado: o CDI parte da taxa de hoje e acompanha a Selic esperada no Focus (CDI = Selic − 0,10 ponto). IPCA+: IPCA do Focus mês a mês mais a taxa real. Prefixado: taxa fixa.",
+          "Tesouro Selic: Selic over com custódia de 0,20% a.a. sobre o que passa de R$ 10 mil.",
+          "Um CDB acima de 100% do CDI costuma pagar prêmio pelo risco de crédito do banco emissor."]),
       after(){ lineChart($("#ch"),{label:"Valor líquido", xs:Array.from({length:months+1},(_,i)=>i), series:res.map(r=>({name:r.name,color:r.color,values:r.series})), xFmt:monthX(months), tipTitle:x=>`Mês ${x} · ${yrs(x)}`}); }
     };
   }
@@ -1329,7 +1362,7 @@ function renderSim(sim){
   </div>`;
   const fields = $("#fields");
   let t;
-  const onChange = () => { clearTimeout(t); t=setTimeout(()=>compute(sim),120); };
+  const onChange = () => { clearTimeout(t); t=setTimeout(()=>{ if (current===sim) compute(sim); },120); };
   fields.addEventListener("input", e=>{ const k=e.target.dataset?.k; if (k) edited[k]=true; onChange(); });
   fields.addEventListener("change", onChange);
   fields.addEventListener("click", e=>{
@@ -1372,10 +1405,13 @@ function compute(sim){
       h.innerHTML = `Valor seu. Mercado: ${nf(m.valor,2)}. <button type="button" class="linkbtn" data-mkt="${f.k}">Usar mercado</button>`;
     } else h.innerHTML = `<span class="mk">● ${esc(m.hint)}</span>`;
   }
+  // Campos condicionais: aparecem só quando o seletor indicado tem o valor certo.
+  const off = f => f.when && st[f.when[0]]!==f.when[1];
+  for (const f of sim.fields) if (f.when) document.getElementById(`${sim.id}-${f.k}`).closest(".field").hidden = off(f);
   st._ed = edited;
   store.set("sim:"+sim.id, st);
   for (const f of sim.fields){
-    if (!f.k || f.opts) continue;
+    if (!f.k || f.opts || off(f)) continue;
     const bad = !isFinite(v[f.k]) || (v[f.k]<0 && !f.neg);
     document.getElementById(`${sim.id}-${f.k}`).closest(".inp").classList.toggle("bad", bad);
     if (bad && !missing) missing=f.label;
