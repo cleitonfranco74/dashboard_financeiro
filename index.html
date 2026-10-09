@@ -153,7 +153,9 @@ h2.sec{font-size:clamp(28px,4.2vw,48px);letter-spacing:-.035em;line-height:1.05;
 .tool li::before{content:"";flex:none;width:6px;height:6px;margin-top:8px;border-radius:50%;background:var(--accent)}
 .tool .go{margin-top:auto;padding-top:10px;font-weight:700;color:var(--accent);font-size:14.5px;text-decoration:none}
 .tool .go::after{content:"";position:absolute;inset:0;border-radius:24px}
-.sims{display:flex;flex-wrap:wrap;gap:6px;padding-top:14px;border-top:1px solid var(--line)}
+.sims{display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid var(--line)}
+.simg{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.simg span{width:100%;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .sims a{position:relative;z-index:1;font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:5px 11px;text-decoration:none;color:var(--ink-2);background:var(--bg)}
 .sims a:hover{color:var(--accent);border-color:var(--accent)}
 
@@ -423,8 +425,14 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
 const $ = s => document.querySelector(s);
 const nf = (v,d=2) => v.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
 
-const SIMS = [["aposentadoria","Aposentadoria"],["tesouro","Tesouro Direto"],["selic","Tesouro Selic"],["ipca","Tesouro IPCA+"],["prefixado","Tesouro Prefixado"],["educa","Tesouro Educa+"],["dividas","Quitar dívidas"],["alugar","Alugar ou financiar"],["consorcio","Consórcio"],["veiculo","Financiar veículo"],["imovel","Financiar imóvel"],["cdb","CDB e LCI/LCA"],["acoes","Ações"],["dividendos","Dividendos"],["fii","Fundos imobiliários"],["cripto","Criptomoedas"],["previdencia","PGBL ou VGBL"],["prevprivada","Previdência privada"],["ir","Imposto de renda"],["cambio","Câmbio e viagem"],["voos","Passagens aéreas"],["viagem","Orçamento de viagem"]];
-$(".sims").innerHTML = SIMS.map(([id,n])=>`<a href="simuladores.html#${id}">${n}</a>`).join("");
+const GRUPOS = [
+  ["Tesouro Direto", [["tesouro","Comparar títulos"],["selic","Tesouro Selic"],["ipca","Tesouro IPCA+"],["prefixado","Tesouro Prefixado"],["educa","Tesouro Educa+"]]],
+  ["Investimentos", [["cdb","CDB e LCI/LCA"],["acoes","Ações"],["dividendos","Dividendos"],["fii","Fundos imobiliários"],["cripto","Criptomoedas"]]],
+  ["Aposentadoria e impostos", [["aposentadoria","Aposentadoria"],["prevprivada","Previdência privada"],["previdencia","PGBL ou VGBL"],["ir","Imposto de renda"]]],
+  ["Crédito e moradia", [["dividas","Quitar dívidas"],["veiculo","Financiar veículo"],["imovel","Financiar imóvel"],["alugar","Alugar ou financiar"],["consorcio","Consórcio"]]],
+  ["Viagem", [["viagem","Orçamento de viagem"],["voos","Passagens aéreas"],["cambio","Câmbio e viagem"]]],
+];
+$(".sims").innerHTML = GRUPOS.map(([g,itens])=>`<div class="simg"><span>${g}</span>${itens.map(([id,n])=>`<a href="simuladores.html#${id}">${n}</a>`).join("")}</div>`).join("");
 
 const tex = (el, t, display) => { try { if (window.katex) katex.render(t, el, {displayMode:display, throwOnError:false}); } catch {} };
 document.querySelectorAll("[data-tex]").forEach(el=>tex(el, el.dataset.tex, true));
