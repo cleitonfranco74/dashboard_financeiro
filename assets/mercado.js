@@ -46,6 +46,14 @@ window.Mercado = (() => {
         vivo.indicadores = true;
       } catch { /* mantém o arquivo */ }
       try {
+        // Dólar PTAX de venda ao vivo: acrescenta o último valor à série diária do arquivo, se for mais novo.
+        const d = await buscar(SGS(1)), u = d[d.length - 1], data = brIso(u.data), valor = parseFloat(u.valor);
+        m.bolsa = m.bolsa || {};
+        const s = m.bolsa.dolar || { datas: [], valores: [] };
+        if (!s.datas.length || data > s.datas[s.datas.length - 1]) { s.datas = [...s.datas, data]; s.valores = [...s.valores, valor]; }
+        m.bolsa.dolar = s; vivo.dolar = true;
+      } catch { /* mantém o arquivo */ }
+      try {
         const [s, i] = await Promise.all([focusAoVivo("Selic"), focusAoVivo("IPCA")]);
         m.focus = { data: s.data > i.data ? s.data : i.data, selic: s.anos, ipca: i.anos };
         vivo.focus = true;
@@ -53,6 +61,7 @@ window.Mercado = (() => {
       if (!m.indicadores) m.indicadores = REFERENCIA.indicadores;
       if (!m.focus) m.focus = REFERENCIA.focus;
       m.aoVivo = vivo.indicadores || vivo.focus;
+      m.dolarAoVivo = !!vivo.dolar;
       m.referencia = m.fonte === "referencia" && !m.aoVivo;
       return m;
     })();
