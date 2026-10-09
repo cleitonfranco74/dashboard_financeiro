@@ -193,6 +193,24 @@ const fmtIn = v => typeof v==="number" ? v.toLocaleString("pt-BR",{maximumFracti
 function yrs(m){ const a=Math.floor(m/12), r=m%12; return (a?`${a} ${a===1?"ano":"anos"}`:"") + (a&&r?" e ":"") + (r||!a?`${r} ${r===1?"mês":"meses"}`:""); }
 const irRF = m => m<=6 ? .225 : m<=12 ? .20 : m<=24 ? .175 : .15;       // renda fixa, prazo em meses
 const irPrev = y => y<=2 ? .35 : y<=4 ? .30 : y<=6 ? .25 : y<=8 ? .20 : y<=10 ? .15 : .10; // previdência regressiva
+/* Imposto de renda da pessoa física: tabela progressiva (desde maio/2025) e redutor de 2026 (Lei 15.270/2025).
+ * Todos os valores ficam aqui para serem revisados quando a lei mudar. */
+const IRPF = {
+  mes: {faixas:[[2428.80,0,0],[2826.65,.075,182.16],[3751.05,.15,394.16],[4664.68,.225,675.49],[Infinity,.275,908.73]],
+        simplificado:607.20, dependente:189.59, red:{ate:5000, max:312.89, fim:7350, a:978.62, b:0.133145}},
+  ano: {faixas:[[29145.60,0,0],[33919.80,.075,2185.92],[45012.60,.15,4729.92],[55976.16,.225,8105.88],[Infinity,.275,10904.76]],
+        simplificadoPct:.20, simplificadoMax:16754.34, dependente:2275.08, educacao:3561.50, pgbl:.12,
+        red:{ate:60000, max:2694.15, fim:88200, a:8429.73, b:0.095575}},
+  inss: [[1518.00,.075],[2793.88,.09],[4190.83,.12],[8157.41,.14]],      // tabela de 2025 do empregado
+};
+const irTabela = (base, faixas) => { const f = faixas.find(([lim])=>base<=lim); return Math.max(0, base*f[1]-f[2]); };
+/* Redutor: zera o imposto até o primeiro limite e diminui linearmente até o segundo. Calculado sobre os rendimentos tributáveis. */
+const irRedutor = (renda, r) => renda<=r.ate ? r.max : renda<=r.fim ? Math.max(0, r.a-r.b*renda) : 0;
+const irMesBase = (base, renda) => Math.max(0, irTabela(base, IRPF.mes.faixas) - irRedutor(renda, IRPF.mes.red));
+const irAnoBase = (base, renda) => Math.max(0, irTabela(base, IRPF.ano.faixas) - irRedutor(renda, IRPF.ano.red));
+const inssMes = s => { let c=0, ant=0; for (const [lim,a] of IRPF.inss){ if (s>ant) c += (Math.min(s,lim)-ant)*a; ant=lim; } return c; };
+/* IR mensal de quem só tem o desconto simplificado (usado na renda da previdência). */
+const irMensal = x => irMesBase(Math.max(0, x-IRPF.mes.simplificado), x);
 function poupM(selicA, trM){ return selicA>0.085 ? 0.005+trM : aToM(0.7*selicA)+trM; }
 function irr(flows){
   const npv = r => { let s=0; for (let i=0;i<flows.length;i++) s += flows[i]/Math.pow(1+r,i); return s; };
@@ -243,7 +261,7 @@ function drawLine(el, spec){
   const {xs, series, xFmt, tipTitle, height=270, yFmt=compact, dashed=[]} = spec;
   const W = Math.max(280, el.clientWidth||640), H = height, m={t:14,r:14,b:30,l:58};
   const all = series.flatMap(s=>s.values.filter(v=>v!=null&&isFinite(v)));
-  const ticks = niceTicks(Math.min(0,...all), Math.max(1,...all), 5);
+  const ticks = niceTicks(Math.min(0,...all), Math.max(spec.minTop ?? 1,...all), 5);
   const y0=ticks[0], y1=ticks[ticks.length-1];
   const x0=xs[0], x1=xs[xs.length-1]||1;
   const X = v => m.l + (v-x0)/((x1-x0)||1)*(W-m.l-m.r);
@@ -279,7 +297,7 @@ function drawLine(el, spec){
     hov.style.display=""; const cx=X(xs[i]); $(".cx",hov).setAttribute("x1",cx); $(".cx",hov).setAttribute("x2",cx);
     series.forEach((s,k)=>{ const v=s.values[i]; if (v==null||!isFinite(v)){dots[k].style.display="none";return;} dots[k].style.display=""; dots[k].setAttribute("cx",cx); dots[k].setAttribute("cy",Y(v)); });
     tip.hidden=false;
-    tip.innerHTML = `<div class="t">${esc(tipTitle(xs[i]))}</div>` + series.map(s=>`<div class="r"><span><i style="background:${s.color}"></i>${esc(s.name)}</span><span class="num">${s.values[i]==null||!isFinite(s.values[i])?"—":money(s.values[i])}</span></div>`).join("");
+    tip.innerHTML = `<div class="t">${esc(tipTitle(xs[i]))}</div>` + series.map(s=>`<div class="r"><span><i style="background:${s.color}"></i>${esc(s.name)}</span><span class="num">${s.values[i]==null||!isFinite(s.values[i])?"—":(spec.tipFmt||money)(s.values[i])}</span></div>`).join("");
     const lx = (cx/W)*b.width; let x = lx+14; if (x+tip.offsetWidth > b.width) x = lx-tip.offsetWidth-14;
     tip.style.left = Math.max(0,x)+"px"; tip.style.top = "8px";
   };
@@ -1644,13 +1662,6 @@ SIMS.push({
 });
 
 /* ---------- 16. Previdência privada ---------- */
-/* IR mensal pela tabela progressiva (desde maio/2025), com desconto simplificado e o redutor de 2026 (Lei 15.270/2025). */
-function irMensal(x){
-  const b = Math.max(0, x-607.20);
-  const t = b<=2428.80 ? 0 : b<=2826.65 ? b*.075-182.16 : b<=3751.05 ? b*.15-394.16 : b<=4664.68 ? b*.225-675.49 : b*.275-908.73;
-  const red = x<=5000 ? 312.89 : x<=7350 ? 978.62-0.133145*x : 0;
-  return Math.max(0, t-Math.max(0,red));
-}
 SIMS.push({
   id:"prevprivada", nav:"Previdência privada",
   title:"Quanto a previdência privada vai pagar por mês, e em qual tabela de IR?",
@@ -1746,6 +1757,89 @@ SIMS.push({
         const xr = Array.from({length:M},(_,k)=>v.idadeApos+(k+1)/12);
         lineChart($("#ch2"),{label:"Renda líquida mensal", xs:xr, series:[{name:"Tabela regressiva",color:C.s2,values:P.regR},{name:"Tabela progressiva",color:C.s4,values:P.progR}], xFmt:x=>`${nf(x)}`, tipTitle:x=>`${yrs(Math.round(x*12))} de idade`});
       }
+    };
+  }
+});
+
+/* ---------- 17. Imposto de renda ---------- */
+SIMS.push({
+  id:"ir", nav:"Imposto de renda",
+  title:"Quanto de imposto de renda eu pago, e qual declaração compensa?",
+  lede:"Calcula o IR retido no salário com a tabela de 2026, compara a declaração completa com a simplificada, mostra quanto o PGBL reduz o imposto e explica a diferença entre alíquota efetiva e marginal.",
+  fields:[
+    {k:"salario",label:"Salário bruto",def:8000,pre:"R$",suf:"/mês"},
+    {k:"dep",label:"Dependentes",def:1,suf:"pessoas"},
+    {k:"prev",label:"Previdência oficial",def:"inss",opts:[["inss","INSS (calcular)"],["outro","Informar o valor"]]},
+    {k:"prevValor",label:"Contribuição previdenciária",def:900,pre:"R$",suf:"/mês",when:["prev","outro"],hint:"regime próprio de servidor, por exemplo"},
+    {k:"pensao",label:"Pensão alimentícia paga",def:0,pre:"R$",suf:"/mês",hint:"judicial ou por escritura"},
+    {sect:"Para a declaração anual"},
+    {k:"outras",label:"Outras rendas tributáveis",def:0,pre:"R$",suf:"/ano",hint:"aluguéis, autônomo; sem retenção na fonte"},
+    {k:"saude",label:"Despesas médicas",def:3000,pre:"R$",suf:"/ano",hint:"sem limite"},
+    {k:"educ",label:"Despesas com educação",def:0,pre:"R$",suf:"/ano",hint:`limite de ${brl.format(3561.50)} por pessoa`},
+    {k:"pgbl",label:"Contribuição ao PGBL",def:0,pre:"R$",suf:"/ano",hint:"dedutível até 12% da renda tributável"},
+  ],
+  run(v){
+    if (!(v.salario>0)) return {error:"Informe o salário bruto."};
+    const M = IRPF.mes, A = IRPF.ano, dep = Math.round(v.dep);
+    const prevMes = s => v.prev==="inss" ? inssMes(s) : v.prevValor;
+    /* IR retido no mês: a fonte usa o maior entre as deduções legais e o desconto simplificado. */
+    const mes = s => {
+      const p = prevMes(s), legais = p + dep*M.dependente + v.pensao, ded = Math.max(legais, M.simplificado);
+      const base = Math.max(0, s-ded), ir = irMesBase(base, s);
+      return {p, ded, base, ir, simplif: M.simplificado>legais, liq: s-p-ir-v.pensao};
+    };
+    const m = mes(v.salario);
+    const marg = (mes(v.salario+100).ir - m.ir)/100;
+    // Declaração anual (13º tem tributação exclusiva e fica de fora)
+    const renda = 12*v.salario + v.outras, retido = 12*m.ir;
+    const pgblDed = Math.min(v.pgbl, A.pgbl*renda);
+    const completa = pg => {
+      const ded = 12*m.p + dep*A.dependente + v.saude + Math.min(v.educ, A.educacao*(1+dep)) + 12*v.pensao + pg;
+      const base = Math.max(0, renda-ded); return {ded, base, ir:irAnoBase(base, renda)};
+    };
+    const Comp = completa(pgblDed);
+    const sDesc = Math.min(A.simplificadoPct*renda, A.simplificadoMax);
+    const Simp = {ded:sDesc, base:Math.max(0, renda-sDesc), ir:irAnoBase(Math.max(0, renda-sDesc), renda)};
+    const melhor = Comp.ir <= Simp.ir ? "completa" : "simplificada", D = melhor==="completa" ? Comp : Simp;
+    const saldo = retido - D.ir;
+    // PGBL: quanto o imposto cai contribuindo com 12% da renda (só na completa)
+    const pgblMax = A.pgbl*renda, C0 = completa(0), Cmax = completa(pgblMax);
+    const econMax = Math.max(0, Math.min(C0.ir, Simp.ir) - Math.min(Cmax.ir, Simp.ir));
+    const econAtual = Math.max(0, Math.min(C0.ir, Simp.ir) - Math.min(Comp.ir, Simp.ir));
+    // Faixa a faixa da tabela mensal
+    let ant = 0; const porFaixa = M.faixas.map(([lim,a])=>{ const parte = Math.max(0, Math.min(m.base, lim)-ant); const r = {de:ant, ate:lim, a, parte, ir:parte*a}; ant = lim; return r; });
+    const brutoTab = porFaixa.reduce((x,f)=>x+f.ir,0), red = Math.min(brutoTab, irRedutor(v.salario, M.red));
+    // Curva de alíquotas por salário
+    const xs = [], efet = [], margS = [];
+    for (let s=1000; s<=30000; s+=250){ const a = mes(s), b = mes(s+100); xs.push(s); efet.push(a.ir/s); margS.push((b.ir-a.ir)/100); }
+    const fx = lim => lim===Infinity ? "acima" : money2(lim);
+    return {
+      html: verdict(Math.abs(saldo)<1 ? (retido<1 ? "Isento" : "Sem ajuste") : saldo>0 ? "Restituição" : "Imposto a pagar",
+          `Com salário de ${money(v.salario)}, são retidos <b>${money2(m.ir)}/mês</b> de IR, uma alíquota efetiva de <b>${pct(m.ir/v.salario,1)}</b>. Cada R$ 100 a mais de salário paga ${money2(marg*100)} de imposto: alíquota marginal de <b>${pct(marg,1)}</b>.`,
+          `Na declaração anual, ${Math.abs(Comp.ir-Simp.ir)<1?`completa e simplificada dão o mesmo imposto: ${money(D.ir)}.`:`a <b>${melhor}</b> compensa: imposto devido de ${money(D.ir)}, contra ${money(melhor==="completa"?Simp.ir:Comp.ir)} na ${melhor==="completa"?"simplificada":"completa"}.`} ${Math.abs(saldo)<1?(retido<1?" Nada é retido no ano e não há imposto a pagar.":` Os ${money(retido)} retidos no ano cobrem exatamente o imposto.`):` Com ${money(retido)} retidos no ano, você ${saldo>0?`<b>recebe ${money(saldo)}</b> de restituição`:`<b>paga ${money(-saldo)}</b> na declaração`}.`}${econMax>econAtual+1?` Contribuindo com ${money(pgblMax)} por ano ao PGBL (12% da renda), o imposto cairia mais ${money(econMax-econAtual)}.`:""}`) +
+        `<div class="kpis">${kpi("IR retido no mês", money2(m.ir), `${m.simplif?"desconto simplificado":"deduções legais"} de ${money2(m.ded)}`, C.s2)}${kpi("Salário líquido", money2(m.liq), `${v.prev==="inss"?"INSS":"previdência"} de ${money2(m.p)}`, C.s1)}${kpi("Alíquota efetiva", pct(m.ir/v.salario,1), "imposto ÷ salário bruto")}${kpi("Alíquota marginal", pct(marg,1), "sobre o próximo real ganho")}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>Declaração anual: completa ou simplificada?</h3><div class="sub">Ano-calendário 2026, sem o 13º salário (tributação exclusiva na fonte)</div></div></div><div class="tablewrap"><table><thead><tr><th>Item</th><th class="n">Completa</th><th class="n">Simplificada</th></tr></thead><tbody>
+          <tr><td>Rendimentos tributáveis</td><td class="n num">${money(renda)}</td><td class="n num">${money(renda)}</td></tr>
+          <tr><td>Deduções</td><td class="n num">${money(Comp.ded)}</td><td class="n num">${money(Simp.ded)} <small>(20%, até ${money(A.simplificadoMax)})</small></td></tr>
+          <tr><td>Base de cálculo</td><td class="n num">${money(Comp.base)}</td><td class="n num">${money(Simp.base)}</td></tr>
+          <tr class="${melhor==="completa"?"best":""}"><td>Imposto devido${melhor==="completa"?" <span class=\"badge\">melhor</span>":""}</td><td class="n num"><b>${money(Comp.ir)}</b></td><td class="n num">${melhor==="simplificada"?`<b>${money(Simp.ir)}</b> <span class="badge">melhor</span>`:money(Simp.ir)}</td></tr>
+          <tr><td>Imposto retido no salário</td><td class="n num">${money(retido)}</td><td class="n num">${money(retido)}</td></tr>
+          <tr><td>${saldo>=0?"Restituição":"A pagar"}</td><td class="n num">${money(Math.abs(retido-Comp.ir))}${retido-Comp.ir<0?" a pagar":""}</td><td class="n num">${money(Math.abs(retido-Simp.ir))}${retido-Simp.ir<0?" a pagar":""}</td></tr>
+        </tbody></table></div></section>` +
+        `<section class="panel"><div class="phead"><div><h3>Como o IR do mês é calculado, faixa a faixa</h3><div class="sub">Base de ${money2(m.base)} = salário − ${m.simplif?"desconto simplificado":"previdência, dependentes e pensão"}</div></div></div><div class="tablewrap"><table><thead><tr><th>Faixa da base mensal</th><th class="n">Alíquota</th><th class="n">Parte da sua base</th><th class="n">Imposto</th></tr></thead><tbody>
+        ${porFaixa.map(f=>`<tr class="${f.parte>0&&(m.base<=f.ate)?"best":""}"><td>${f.de===0?"Até":"De "+money2(f.de)+" até"} ${fx(f.ate)}</td><td class="n num">${pct(f.a,1)}</td><td class="n num">${money2(f.parte)}</td><td class="n num">${money2(f.ir)}</td></tr>`).join("")}
+          <tr><td>Redutor de 2026${red<0.005?" <small>(só para salários até R$ 7.350)</small>":""}</td><td></td><td></td><td class="n num">${red<0.005?"—":"−"+money2(red)}</td></tr>
+          <tr><td><b>IR retido</b></td><td></td><td></td><td class="n num"><b>${money2(m.ir)}</b></td></tr>
+        </tbody></table></div></section>` +
+        chartPanel("Alíquota efetiva e marginal por salário", `Com ${dep} ${dep===1?"dependente":"dependentes"} e ${v.prev==="inss"?"INSS":"a previdência informada"}. A marginal salta entre R$ 5 mil e R$ 7.350, onde o redutor vai sumindo`, legend([["Efetiva",C.s1],["Marginal",C.s2]]), "ch") +
+        notes(["Tabela progressiva mensal em vigor desde maio de 2025, com o redutor da Lei 15.270/2025: quem ganha até R$ 5.000 por mês fica isento, e o desconto diminui até sumir em R$ 7.350. Na declaração anual, os limites equivalentes são R$ 60 mil e R$ 88,2 mil. Confira os valores vigentes.",
+          "Na fonte, vale o maior entre as deduções legais (previdência, dependentes, pensão) e o desconto simplificado mensal de R$ 607,20.",
+          "INSS do empregado pela tabela progressiva de 2025 (7,5% a 14%, até o teto). Servidores com regime próprio podem informar o valor.",
+          "Declaração completa: previdência oficial, dependentes (R$ 2.275,08 cada), saúde sem limite, educação até R$ 3.561,50 por pessoa, pensão alimentícia e PGBL até 12% da renda tributável. Simplificada: desconto de 20%, limitado a R$ 16.754,34.",
+          "Outras rendas tributáveis (aluguéis, trabalho autônomo) sem retenção na fonte pagam carnê-leão mensal; aqui o imposto delas aparece no ajuste anual.",
+          "O 13º salário tem tributação exclusiva na fonte e não entra na declaração de ajuste. Rendimentos isentos e de tributação exclusiva (poupança, LCI, dividendos até o limite, aplicações) também ficam de fora.",
+          "Alíquota efetiva: imposto pago ÷ renda. Alíquota marginal: quanto do próximo real ganho vai para o imposto. É a marginal que importa para decidir um aumento, uma hora extra ou o PGBL."]),
+      after(){ lineChart($("#ch"),{label:"Alíquota efetiva e marginal por salário", xs, series:[{name:"Efetiva",color:C.s1,values:efet},{name:"Marginal",color:C.s2,values:margS}], minTop:0.05, yFmt:x=>pct(x,0), tipFmt:x=>pct(x,1), xFmt:x=>compact(x), tipTitle:x=>`Salário de ${money(x)}`}); }
     };
   }
 });
