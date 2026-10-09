@@ -52,7 +52,8 @@ Otimização de Markowitz com Tesouro Selic/CDI, Prefixado, IPCA+, BOVA11, IVVB1
 - **BCB SGS:** Selic (432), CDI (4389 e 4391), IPCA (433 e 13522).
 - **Boletim Focus:** expectativas anuais de Selic e IPCA.
 - **Tesouro Transparente:** preços e taxas do Tesouro Direto.
-- **Yahoo Finance (yfinance):** preços mensais ajustados das ações e ETFs, e de bitcoin e ethereum em reais.
+- **Yahoo Finance (yfinance):** preços mensais ajustados das ações e ETFs, de bitcoin e ethereum em reais, e o fechamento diário do Ibovespa nos últimos 12 meses.
+- **BCB SGS 1:** dólar PTAX de venda, diário (último valor também lido ao vivo na página inicial).
 
 Para atualizar à mão: aba **Actions** → *Atualizar dados de mercado* → *Run workflow*.
 

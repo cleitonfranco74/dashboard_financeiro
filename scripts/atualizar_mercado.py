@@ -67,6 +67,39 @@ def sgs_mensal(codigo: int, inicio: date) -> pd.Series:
     return pd.Series(df["valor"].astype(float).values / 100, index=idx)
 
 
+def bolsa_cambio() -> dict:
+    """Fechamentos diários dos últimos 12 meses: Ibovespa (Yahoo) e dólar PTAX de venda (BCB, SGS 1)."""
+    out = {}
+    try:
+        import yfinance as yf
+
+        h = yf.Ticker("^BVSP").history(period="1y", interval="1d", auto_adjust=False)
+        fech = h["Close"].dropna()
+        if fech.empty:
+            raise ValueError("sem dados")
+        out["ibov"] = {"datas": [d.strftime("%Y-%m-%d") for d in fech.index], "valores": [round(float(v), 2) for v in fech]}
+        log(f"  Ibovespa: {len(fech)} dias")
+    except Exception as e:  # noqa: BLE001
+        log(f"  Ibovespa: falhou ({e})")
+    try:
+        ini = date.today() - timedelta(days=372)
+        r = sessao.get(
+            SGS.format(1),
+            params={"formato": "json", "dataInicial": ini.strftime("%d/%m/%Y"), "dataFinal": date.today().strftime("%d/%m/%Y")},
+            timeout=60,
+        )
+        r.raise_for_status()
+        js = r.json()
+        out["dolar"] = {
+            "datas": [datetime.strptime(i["data"], "%d/%m/%Y").date().isoformat() for i in js],
+            "valores": [round(float(i["valor"]), 4) for i in js],
+        }
+        log(f"  Dólar PTAX: {len(js)} dias")
+    except Exception as e:  # noqa: BLE001
+        log(f"  Dólar PTAX: falhou ({e})")
+    return out
+
+
 def focus(indicador: str) -> tuple[str, dict]:
     # O OData do BCB rejeita espaços codificados como "+", então a query é montada à mão.
     params = {
@@ -196,6 +229,10 @@ def main() -> None:
         log("BCB ok")
     except Exception as e:  # noqa: BLE001
         log(f"BCB falhou: {e}")
+
+    novo = bolsa_cambio()
+    if novo:
+        dados["bolsa"] = {**(anterior.get("bolsa") or {}), **novo}    # mantém o que falhou hoje
 
     try:
         d1, selic = focus("Selic")

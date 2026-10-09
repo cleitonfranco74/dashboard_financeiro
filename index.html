@@ -102,6 +102,24 @@ h1 em{font-style:normal;color:var(--accent)}
 .legend i{width:14px;height:3px;border-radius:2px}
 .mcard .fonte{font-size:11.5px;color:var(--muted);margin:10px 0 0}
 
+/* bolsa e câmbio */
+.bc{margin-top:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;text-align:left}
+@media (max-width:760px){.bc{grid-template-columns:minmax(0,1fr)}}
+.serie{background:linear-gradient(180deg,var(--surface),var(--bg-2));border:1px solid var(--ring);border-radius:24px;padding:clamp(16px,2.4vw,24px);box-shadow:var(--shadow);min-width:0}
+.serie .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.serie h2{font-size:13px;margin:0;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.serie .dt{font-size:12px;color:var(--muted)}
+.serie .val{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:8px 0 6px}
+.serie .val b{font-family:var(--mono);font-size:clamp(26px,3.4vw,34px);font-weight:500;letter-spacing:-.03em}
+.serie .var{display:flex;gap:6px;flex-wrap:wrap}
+.serie .var span{font-family:var(--mono);font-size:12px;border-radius:999px;padding:2px 9px;border:1px solid var(--line);color:var(--ink-2)}
+.serie .var .up{color:var(--good);border-color:color-mix(in srgb,var(--good) 40%,transparent)}
+.serie .var .dn{color:var(--s2);border-color:color-mix(in srgb,var(--s2) 40%,transparent)}
+.serie .chart{height:160px}
+.serie .tipb{position:absolute;top:0;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:5px 9px;font-size:12px;white-space:nowrap;box-shadow:var(--shadow)}
+.serie .tipb b{font-family:var(--mono);font-weight:600}
+.serie .fonte{font-size:11.5px;color:var(--muted);margin:8px 0 0}
+
 /* faixa de números */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);border-block:1px solid var(--line);margin-top:clamp(40px,6vw,72px)}
 .stats div{padding:26px 20px;text-align:center}
@@ -253,6 +271,21 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
           <p class="fonte" id="fonte">Mediana das expectativas do Boletim Focus, do Banco Central.</p>
         </div>
       </aside>
+
+      <div class="bc">
+        <section class="serie" aria-labelledby="hIbov">
+          <div class="top"><h2 id="hIbov">Ibovespa</h2><span class="dt" id="dIbov">carregando…</span></div>
+          <div class="val"><b id="vIbov">—</b><span class="var" id="xIbov"></span></div>
+          <div class="chart" id="cIbov" role="img" aria-label="Ibovespa nos últimos 12 meses"></div>
+          <p class="fonte">Fechamento diário dos últimos 12 meses, em pontos. Fonte: B3, via Yahoo Finance; atualizado todo dia útil após o pregão.</p>
+        </section>
+        <section class="serie" aria-labelledby="hDolar">
+          <div class="top"><h2 id="hDolar">Dólar (PTAX)</h2><span class="dt" id="dDolar">carregando…</span></div>
+          <div class="val"><b id="vDolar">—</b><span class="var" id="xDolar"></span></div>
+          <div class="chart" id="cDolar" role="img" aria-label="Dólar PTAX nos últimos 12 meses"></div>
+          <p class="fonte">Cotação oficial de venda do Banco Central (PTAX), em reais. Último valor lido ao vivo; histórico dos últimos 12 meses.</p>
+        </section>
+      </div>
     </section>
 
     <div class="stats" role="list">
@@ -419,6 +452,44 @@ function drawFocus(m){
   el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" aria-hidden="true">${g}</svg>`;
 }
 
+/* Série diária de 12 meses: área + linha, eixo com meses e dica ao passar o mouse. */
+function drawSerie(el, datas, vals, color, fmt){
+  if (!vals || vals.length<2){ el.innerHTML = `<p class="fonte">Série ainda não disponível.</p>`; return; }
+  const W = Math.max(260, el.clientWidth||420), H = 160, pad = {t:10,r:12,b:22,l:12};
+  let lo = Math.min(...vals), hi = Math.max(...vals); const folga = (hi-lo)*0.08 || 1; lo -= folga; hi += folga;
+  const X = k => pad.l + k*(W-pad.l-pad.r)/(vals.length-1), Y = v => pad.t + (hi-v)/(hi-lo)*(H-pad.t-pad.b);
+  const mes = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  let g = "", ult = "";
+  datas.forEach((d,k)=>{ const m = d.slice(0,7); if (m!==ult){ ult = m; const n = +d.slice(5,7)-1;
+    if (k>0 && n%3===0) g += `<line x1="${X(k)}" x2="${X(k)}" y1="${pad.t}" y2="${H-pad.b}" stroke="var(--line)"/><text x="${X(k)}" y="${H-6}" text-anchor="middle">${mes[n]}${n===0?"/"+d.slice(2,4):""}</text>`; } });
+  const linha = vals.map((v,k)=>(k?"L":"M")+X(k).toFixed(1)+","+Y(v).toFixed(1)).join("");
+  g += `<path d="${linha}L${X(vals.length-1)},${H-pad.b}L${X(0)},${H-pad.b}Z" fill="${color}" opacity=".10"/>`;
+  g += `<path d="${linha}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>`;
+  const L = vals.length-1;
+  g += `<circle cx="${X(L)}" cy="${Y(vals[L])}" r="4" fill="${color}" stroke="var(--surface)" stroke-width="2"/>`;
+  g += `<g class="hov" style="display:none"><line y1="${pad.t}" y2="${H-pad.b}" stroke="var(--axis)"/><circle r="4" fill="${color}" stroke="var(--surface)" stroke-width="2"/></g>`;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" aria-hidden="true">${g}</svg><div class="tipb" hidden></div>`;
+  const svg = el.querySelector("svg"), hov = el.querySelector(".hov"), tip = el.querySelector(".tipb");
+  const move = e => { const b = svg.getBoundingClientRect(), px = (e.clientX-b.left)*(W/b.width);
+    const k = Math.max(0, Math.min(L, Math.round((px-pad.l)/(W-pad.l-pad.r)*L)));
+    hov.style.display = ""; hov.querySelector("line").setAttribute("x1",X(k)); hov.querySelector("line").setAttribute("x2",X(k));
+    hov.querySelector("circle").setAttribute("cx",X(k)); hov.querySelector("circle").setAttribute("cy",Y(vals[k]));
+    tip.hidden = false; tip.innerHTML = `${Mercado.dataBR(datas[k])} · <b>${fmt(vals[k])}</b>`;
+    const x = X(k)/W*b.width; tip.style.left = Math.max(0, Math.min(b.width-tip.offsetWidth, x-tip.offsetWidth/2))+"px"; };
+  svg.addEventListener("mousemove", move);
+  svg.addEventListener("touchstart", e=>move(e.touches[0]), {passive:true});
+  svg.addEventListener("touchmove", e=>move(e.touches[0]), {passive:true});
+  svg.addEventListener("mouseleave", ()=>{ hov.style.display="none"; tip.hidden = true; });
+}
+function painelSerie(id, s, color, fmt, quando){
+  if (!s || !s.valores || s.valores.length<2){ $("#d"+id).textContent = "indisponível"; drawSerie($("#c"+id)); return; }
+  const v = s.valores, L = v.length-1, tag = (x, txt) => `<span class="${x>=0?"up":"dn"}">${x>=0?"+":"−"}${nf(Math.abs(x)*100)}% ${txt}</span>`;
+  $("#v"+id).textContent = fmt(v[L]);
+  $("#d"+id).textContent = quando + Mercado.dataBR(s.datas[L]);
+  $("#x"+id).innerHTML = tag(v[L]/v[L-1]-1, "no dia") + tag(v[L]/v[0]-1, "em 12 meses");
+  drawSerie($("#c"+id), s.datas, v, color, fmt);
+}
+
 Mercado.carregar().then(m=>{
   $("#iSelic").textContent = nf(m.indicadores.selic.valor)+"%";
   $("#iCdi").textContent = nf(m.indicadores.cdi.valor)+"%";
@@ -434,7 +505,12 @@ Mercado.carregar().then(m=>{
   fe.textContent = `r = (1 + ${nf(cdi*100)}%) / (1 + ${nf(ip*100)}%) − 1 = ${nf(real*100)}%`;
   tex(fe, `r = \\frac{${dec(1+cdi,4)}}{${dec(1+ip,4)}} - 1 = \\mathbf{${dec(real*100,2)}\\%}`, false);
   drawFocus(m);
-  let t; new ResizeObserver(()=>{ clearTimeout(t); t=setTimeout(()=>drawFocus(m),80); }).observe($("#focus"));
+  const bc = () => {
+    painelSerie("Ibov", m.bolsa?.ibov, "var(--accent)", v=>Math.round(v).toLocaleString("pt-BR")+" pts", "fechamento de ");
+    painelSerie("Dolar", m.bolsa?.dolar, "var(--s2)", v=>"R$ "+nf(v,4), m.dolarAoVivo ? "ao vivo · " : "");
+  };
+  bc();
+  let t; new ResizeObserver(()=>{ clearTimeout(t); t=setTimeout(()=>{ drawFocus(m); bc(); },80); }).observe($("#focus"));
 });
 })();
 </script>
