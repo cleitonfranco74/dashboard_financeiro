@@ -1246,7 +1246,109 @@ SIMS.push({
   }
 });
 
-/* ---------- 12. PGBL x VGBL ---------- */
+/* ---------- 12. Fundos imobiliários ---------- */
+SIMS.push({
+  id:"fii", nav:"Fundos imobiliários",
+  title:"Quanto rendem os fundos imobiliários e quando viro rentista?",
+  lede:"Projeta uma carteira de FIIs com aportes mensais, rendimentos isentos reinvestidos ou não, e cota corrigida pela inflação. Calcula o “número mágico”, a renda mensal ao longo do tempo e compara com o Tesouro Selic e o IPCA+.",
+  fields:[
+    {k:"inicial",label:"Investimento inicial",def:10000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:1000,pre:"R$",suf:"/mês",sobra:true},
+    {k:"anos",label:"Prazo",def:10,suf:"anos"},
+    {k:"meta",label:"Renda mensal desejada",def:3000,pre:"R$",suf:"/mês",hint:"em valores de hoje"},
+    {sect:"Fundo"},
+    {k:"preco",label:"Preço da cota",def:100,pre:"R$"},
+    {k:"dy",label:"Rendimento mensal (dividend yield)",def:0.85,suf:"% a.m.",hint:"rendimento do mês ÷ preço da cota"},
+    {k:"cresc",label:"Crescimento acima do IPCA",def:0,suf:"% a.a.",neg:true,hint:"da cota e dos rendimentos; pode ser negativo"},
+    {k:"reinv",label:"Rendimentos",def:"sim",opts:[["sim","Reinvestir"],["nao","Sacar todo mês"]]},
+    {k:"custo",label:"Custos de negociação",def:0.03,suf:"%",hint:"corretagem e emolumentos, por operação"},
+    {k:"irDiv",label:"IR sobre rendimentos",def:0,suf:"%",hint:"hoje isentos para pessoa física, nas condições da lei"},
+    {sect:"Mercado e comparação"},
+    CENARIO, UNIDADE,
+    {k:"ipca",label:"IPCA 12 meses",def:4.22,suf:"% a.a.",mkt:"ipca"},
+    {k:"selic",label:"Selic hoje",def:13.75,suf:"% a.a.",mkt:"selic"},
+    {k:"real",label:"Tesouro IPCA+",def:7,suf:"% a.a.",mkt:"real",hint:"taxa real do título de prazo parecido"},
+  ],
+  run(v){
+    const T = Math.round(v.anos*12);
+    if (!(T>=1 && T<=600)) return {error:"Informe um prazo entre 1 mês e 50 anos."};
+    if (!(v.inicial+v.aporte>0)) return {error:"Informe um investimento inicial ou um aporte mensal."};
+    if (!(v.preco>0)) return {error:"Informe o preço da cota."};
+    if (v.cresc <= -50) return {error:"O crescimento real precisa ser maior que −50% a.a."};
+    const P = paths(v), D = deflator(P.ipca, T), real = v.unid==="real", reinv = v.reinv==="sim";
+    const dy = v.dy/100, gm = aToM(v.cresc/100), cu = v.custo/100, irD = v.irDiv/100;
+    /* Simulação mensal: preço corrigido por IPCA e crescimento real; rendimento = dy × preço do mês anterior. */
+    const sim = (choque=0) => {
+      let preco = v.preco, cotas = (v.inicial+v.aporte)*(1-cu)/preco, base = v.inicial+v.aporte, sacado = 0, sacadoR = 0;
+      const pat=[cotas*preco], renda=[0], liqS=[];
+      const liquido = (pr, t) => { const venda = cotas*pr*(1-cu); return venda - Math.max(0, venda-base)*0.20; };
+      liqS.push(liquido(preco, 0));
+      for (let t=1;t<=T;t++){
+        const div = cotas*dy*preco*(1-irD);
+        preco *= (1+aToM(P.ipca(t)))*(1+gm);
+        if (reinv){ cotas += div*(1-cu)/preco; base += div; } else { sacado += div; sacadoR += div/D[t]; }
+        if (t<T && v.aporte>0){ cotas += v.aporte*(1-cu)/preco; base += v.aporte; }
+        pat.push(cotas*preco); renda.push(div); liqS.push(liquido(preco, t));
+      }
+      const venda = cotas*preco*(1+choque)*(1-cu), ir = Math.max(0, venda-base)*0.20;
+      return {pat, renda, liqS, cotas, preco, base, venda, ir, liq:venda-ir, sacado, sacadoR};
+    };
+    const r = sim();
+    const k = t => real ? 1/D[t] : 1;
+    const inv = v.inicial + v.aporte*T, invR = v.inicial + Array.from({length:T},(_,t)=>v.aporte/D[t]).reduce((a,b)=>a+b,0);
+    const total = r.liq*k(T) + (real ? r.sacadoR : r.sacado);           // venda líquida + rendimentos sacados
+    const rendaFim = r.renda[T], rendaFimR = rendaFim/D[T];
+    const magico = Math.ceil(1/(dy*(1-irD)));                             // cotas cujo rendimento compra uma cota nova
+    const patMeta = v.meta/(dy*(1-irD));                                  // patrimônio, em reais de hoje, para a renda desejada
+    const mMeta = r.renda.findIndex((x,t)=>t>0 && x/D[t] >= v.meta);
+    // Comparação com mesmos aportes
+    const base = {p0:v.inicial, pmt:v.aporte, months:T, tax:irRF};
+    const over = t => Math.max(0, P.selic(t)-0.001);
+    const sel = simInvest({...base, rate:t=>aToM(over(t)), fee:b=>Math.max(0,b-10000)*0.002/12});
+    const ipc = simInvest({...base, rate:t=>(1+aToM(P.ipca(t)))*(1+aToM(v.real/100))-1, fee:b=>b*0.002/12});
+    const fiiNet = r.liqS.map((x,t)=>x*k(t));
+    if (real){ toReal(sel, D, v.inicial, v.aporte, T); toReal(ipc, D, v.inicial, v.aporte, T); }
+    const fluxo = Array(T+1).fill(0); fluxo[0] = -(v.inicial+v.aporte);
+    for (let t=1;t<T;t++) fluxo[t] = -v.aporte/(real?D[t]:1);
+    if (!reinv) for (let t=1;t<=T;t++) fluxo[t] += r.renda[t]/(real?D[t]:1);
+    fluxo[T] += r.liq*k(T);
+    const im = irr(fluxo), irrA = im==null ? null : mToA(im);
+    const res = [
+      {name:"Fundos imobiliários", color:C.s2, net:total, irrA},
+      {name:"Tesouro IPCA+", color:C.s3, net:ipc.net, irrA:ipc.irrA},
+      {name:"Tesouro Selic", color:C.s1, net:sel.net, irrA:sel.irrA},
+    ];
+    const best = res.reduce((a,b)=>b.net>a.net?b:a), max = best.net;
+    const unid = real ? " em reais de hoje" : "";
+    const choques = [-0.3,-0.15,0,0.15].map(c=>{ const s = sim(c); const tot = s.liq*k(T) + (real ? s.sacadoR : s.sacado); return {c, tot, ir:s.ir*k(T)}; });
+    const xs = Array.from({length:T+1},(_,i)=>i);
+    return {
+      html: verdict(reinv ? "Rendimentos reinvestidos" : "Rendimentos sacados",
+          `Em ${yrs(T)}, a carteira chega a <b>${nf(r.cotas,0)} cotas</b>, que valem ${money(r.pat[T]*k(T))}${unid} e pagam <b>${money(rendaFim*k(T))}/mês</b>${real?"":` (${money(rendaFimR)} em valores de hoje)`}. ${reinv?"":`Você terá sacado ${money(real?r.sacadoR:r.sacado)} em rendimentos. `}Vendendo tudo, sobram ${money(r.liq*k(T))} após ${money(r.ir*k(T))} de IR sobre o ganho de capital.`,
+          `Para receber ${money(v.meta)}/mês em valores de hoje, são necessários cerca de <b>${money(patMeta)}</b> investidos com esse rendimento. ${mMeta>0?`Seguindo este plano, você chega lá em <b>${yrs(mMeta)}</b>.`:`No prazo simulado, a renda chega a ${money(rendaFimR)}/mês em valores de hoje.`} Número mágico: <b>${nf(magico)} cotas</b>, a partir das quais os rendimentos do mês compram uma cota nova.`) +
+        `<div class="kpis">${kpi("Renda mensal no fim", money(rendaFim*k(T)), real?"em reais de hoje":`${money(rendaFimR)} em valores de hoje`, C.s2)}${kpi("Patrimônio em cotas", money(r.pat[T]*k(T)), `${nf(r.cotas,0)} cotas a ${money(r.preco*k(T))}`)}${kpi("Retorno anual", irrA!=null?pct(irrA):"—", `líquido${real?", acima da inflação":""}, vendendo no fim`)}${kpi("Número mágico", nf(magico)+" cotas", `rendimento de ${money2(v.preco*dy)} por cota hoje`)}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>Valor líquido no fim, com os mesmos aportes</h3><div class="sub">FII vendido no fim do prazo${reinv?"":", somando os rendimentos sacados"}; títulos com IR e custódia${unid}</div></div></div><div class="bars">${res.map(x=>`<div class="bar"><span>${esc(x.name)}${x===best?` <span class="badge">melhor</span>`:""}</span><span class="track"><i style="width:${Math.max(2,x.net/max*100)}%;background:${x.color}"></i></span><span class="v">${money(x.net)}</span></div>`).join("")}</div></section>` +
+        chartPanel("Renda mensal dos fundos", `Rendimentos recebidos em cada mês${unid}`, legend([["Rendimentos do mês",C.s2],["Renda desejada",C.ink,true]]), "ch") +
+        chartPanel("Valor líquido se vender em cada mês", `FII sem os rendimentos sacados; Tesouro com IR e custódia${unid}`, legend([["Fundos imobiliários",C.s2],["Tesouro IPCA+",C.s3],["Tesouro Selic",C.s1]]), "ch2") +
+        `<section class="panel"><div class="phead"><div><h3>E se o preço da cota estiver diferente na venda?</h3><div class="sub">FIIs são negociados em bolsa: o preço oscila com os juros e com o mercado imobiliário</div></div></div><div class="tablewrap"><table><thead><tr><th>Preço na venda</th><th class="n">Total líquido${reinv?"":" com rendimentos"}</th><th class="n">IR sobre o ganho</th></tr></thead><tbody>
+        ${choques.map(c=>`<tr class="${c.c===0?"best":""}"><td>${c.c===0?"Como projetado":`${c.c>0?"+":"−"}${nf(Math.abs(c.c)*100)}% em relação ao projetado`}</td><td class="n num"><b>${money(c.tot)}</b></td><td class="n num">${money(c.ir)}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
+        notes(["Rendimento do mês = dividend yield × preço da cota. Cota e rendimentos crescem com o IPCA mais o crescimento real informado, o que equivale a supor aluguéis reajustados pela inflação.",
+          "Rendimentos de FII são isentos de IR para pessoa física quando o fundo tem cotas negociadas em bolsa e pelo menos 100 cotistas, e o investidor tem menos de 10% das cotas. Mudanças na lei podem tributá-los: use o campo “IR sobre rendimentos” para testar.",
+          "Ganho de capital na venda das cotas paga 20% de IR, sem isenção para vendas pequenas. O cálculo usa o custo médio das cotas compradas.",
+          "Cotas fracionadas, para simplificar. Na prática só se compram cotas inteiras e o troco fica para o mês seguinte.",
+          "Número mágico: quantidade de cotas cujo rendimento mensal paga uma cota nova, igual a preço ÷ rendimento por cota. A partir dele, a carteira cresce sozinha, mesmo sem aportes.",
+          "FIIs não têm garantia do FGC e o preço da cota oscila. Vacância, inadimplência de inquilinos e alta de juros reduzem rendimentos e preços.",
+          "Comparação com os mesmos aportes: Tesouro Selic (Selic over, custódia acima de R$ 10 mil) e Tesouro IPCA+ (IPCA do cenário mais a taxa informada, custódia de 0,20% a.a.), com IR regressivo."]),
+      after(){
+        lineChart($("#ch"),{label:"Renda mensal dos fundos", xs, series:[{name:"Rendimentos do mês",color:C.s2,values:r.renda.map((x,t)=>t===0?null:x*k(t))},{name:"Renda desejada",color:C.ink,values:xs.map(t=>real?v.meta:v.meta*D[t])}], dashed:[1], xFmt:monthX(T), tipTitle:x=>`Mês ${x} · ${yrs(x)}`});
+        lineChart($("#ch2"),{label:"Valor líquido por mês", xs, series:[{name:"Fundos imobiliários",color:C.s2,values:fiiNet},{name:"Tesouro IPCA+",color:C.s3,values:ipc.series},{name:"Tesouro Selic",color:C.s1,values:sel.series}], xFmt:monthX(T), tipTitle:x=>`Mês ${x} · ${yrs(x)}`});
+      }
+    };
+  }
+});
+
+/* ---------- 13. PGBL x VGBL ---------- */
 SIMS.push({
   id:"previdencia", nav:"PGBL ou VGBL",
   title:"PGBL, VGBL ou investir por fora?",
