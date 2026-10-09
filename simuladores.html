@@ -332,6 +332,7 @@ const MKT_FIELDS = {
   ipca: M => ({valor:M.indicadores.ipca12.valor, hint:`IPCA 12 meses, IBGE/BCB ${Mercado.dataBR(M.indicadores.ipca12.data).slice(3)}`}),
   pre: (M,v) => { const t = Mercado.titulo(M,"Tesouro Prefixado",v.anos); return t && {valor:t.taxaCompra, hint:`Tesouro Prefixado ${t.vencimento.slice(0,4)}, taxa de ${Mercado.dataBR(M.tesouro.data)}`}; },
   real: (M,v) => { const t = Mercado.titulo(M,"Tesouro IPCA+",v.anos); return t && {valor:t.taxaCompra, hint:`Tesouro IPCA+ ${t.vencimento.slice(0,4)}, taxa de ${Mercado.dataBR(M.tesouro.data)}`}; },
+  selicTit: (M,v) => { const t = Mercado.titulo(M,"Tesouro Selic",v.anos); return t && {valor:t.taxaCompra, hint:`Tesouro Selic ${t.vencimento.slice(0,4)}, taxa de ${Mercado.dataBR(M.tesouro.data)}`}; },
   educa: (M,v) => { const t = educaTitulo(M, educaAno(v)); return t && {valor:t.taxaCompra, hint:`Tesouro Educa+ ${t.vencimento.slice(0,4)}, taxa de ${Mercado.dataBR(M.tesouro.data)}`}; },
   cdiMedio: (M,v,f) => { const m=f.hz(v); return isFinite(m) && {valor:r2(cdiEsperado(m)*100), hint:`CDI médio esperado em ${yrs(Math.round(m))}, pelo Focus`}; },
   investLiq: (M,v,f) => { const m=f.hz(v); return isFinite(m) && {valor:r2(cdiEsperado(m)*85), hint:`CDI médio esperado pelo Focus, menos 15% de IR`}; },
@@ -474,7 +475,72 @@ SIMS.push({
   }
 });
 
-/* ---------- 3. Tesouro Educa+ ---------- */
+/* ---------- 3. Tesouro Selic ---------- */
+SIMS.push({
+  id:"selic", nav:"Tesouro Selic",
+  title:"Quanto rende o Tesouro Selic?",
+  lede:"Projeta o Tesouro Selic mês a mês, com a Selic esperada pelo Focus, IR regressivo e custódia da B3. É o título indicado para a reserva de emergência, porque pode ser resgatado a qualquer dia sem perda.",
+  fields:[
+    {k:"inicial",label:"Investimento inicial",def:10000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:500,pre:"R$",suf:"/mês",sobra:true},
+    {k:"anos",label:"Prazo",def:3,suf:"anos"},
+    {k:"meta",label:"Objetivo",def:0,pre:"R$",hint:"deixe 0 para ignorar"},
+    {sect:"Taxas e projeções"},
+    CENARIO, UNIDADE,
+    {k:"selic",label:"Selic hoje",def:13.75,suf:"% a.a.",mkt:"selic"},
+    {k:"agio",label:"Taxa acima da Selic",def:0.05,suf:"% a.a.",mkt:"selicTit",hint:"taxa de compra do título"},
+    {k:"ipca",label:"IPCA 12 meses",def:4.22,suf:"% a.a.",mkt:"ipca"},
+    {k:"custodia",label:"Custódia B3",def:0.2,suf:"% a.a.",hint:"cobrada só sobre o que passa de R$ 10 mil"},
+    {k:"tr",label:"TR",def:0.15,suf:"% a.m.",hint:"usada na poupança"},
+  ],
+  run(v){
+    const months = Math.round(v.anos*12);
+    if (!(months>=1 && months<=600)) return {error:"Informe um prazo entre 1 mês e 50 anos."};
+    if (!(v.inicial+v.aporte>0)) return {error:"Informe um investimento inicial ou um aporte mensal."};
+    const P = paths(v), D = deflator(P.ipca, months), real = v.unid==="real";
+    const over = t => Math.max(0, P.selic(t)-0.001);                 // Selic over ≈ meta − 0,10 ponto
+    const cust = v.custodia/100/12, base = {p0:v.inicial, pmt:v.aporte, months, tax:irRF};
+    const ts = simInvest({...base, rate:t=>aToM((1+over(t))*(1+v.agio/100)-1), fee:b=>Math.max(0,b-10000)*cust});
+    const pp = simInvest({...base, rate:t=>poupM(P.selic(t), v.tr/100), tax:()=>0});
+    const selicMed = mediaAnual(over, months), ipcaMed = mediaAnual(P.ipca, months);
+    // Investido até o mês t: inicial mais os aportes feitos nos meses 0 a t−1 (o do mês 0 junto com o inicial).
+    const nAp = t => Math.max(1,t);
+    const inv = [], invCorr = [];
+    for (let t=0;t<=months;t++){
+      let a=0, c=0; for (let k=0;k<nAp(t);k++){ a += real ? v.aporte/D[k] : v.aporte; c += v.aporte*D[t]/D[k]; }
+      inv.push(v.inicial+a); invCorr.push(v.inicial*D[t]+c);
+    }
+    if (real){ toReal(ts, D, v.inicial, v.aporte, months); toReal(pp, D, v.inicial, v.aporte, months); }
+    /* Selic over média nos 12 meses que terminam em m. */
+    const selicAno = m => { const n=Math.min(12,m); let f=1; for (let t=m-n+1;t<=m;t++) f *= Math.pow(1+over(t),1/12); return Math.pow(f,12/n)-1; };
+    const unid = real ? " em reais de hoje" : "";
+    const ganho = ts.net - ts.invested;
+    const metaM = v.meta>0 ? ts.series.findIndex(x=>x>=v.meta) : -1;
+    const metaTxt = v.meta>0 ? (metaM>=0 ? `Você alcança o objetivo de ${money(v.meta)} em <b>${yrs(Math.max(1,metaM))}</b>.` : `O objetivo de ${money(v.meta)} não é alcançado no prazo: faltam ${money(v.meta-ts.net)}.`) : "";
+    const xs = Array.from({length:months+1},(_,i)=>i);
+    const anosTab = Array.from({length:Math.ceil(months/12)},(_,i)=>Math.min(months,(i+1)*12));
+    const series = [{name:"Tesouro Selic",color:C.s1,values:ts.series},{name:"Poupança",color:C.s4,values:pp.series},{name:"Total investido",color:C.ink,values:inv}];
+    if (!real) series.push({name:"Investido corrigido pelo IPCA",color:C.s2,values:invCorr});
+    return {
+      html: verdict("Resultado", `Em ${yrs(months)}, o Tesouro Selic vira <b>${money(ts.net)}</b> líquidos${unid}: ${money(ts.invested)} investidos e <b>${money(ganho)}</b> de rendimento, ${money(ts.net-pp.net)} a mais que a poupança.`,
+          `Rentabilidade líquida de ${ts.irrA!=null?pct(ts.irrA):"—"} ao ano${real?" acima da inflação":ts.irrA!=null?`, ou ${pct((1+ts.irrA)/(1+ipcaMed)-1)} acima do IPCA esperado`:""}. Selic média esperada no período: ${pct(selicMed)}. ${metaTxt}`) +
+        `<div class="kpis">${kpi("Valor líquido", money(ts.net), `${pct(ts.irrA??0)} a.a. líquido${real?" real":""}`, C.s1)}${kpi("Rendimento líquido", money(ganho), `sobre ${money(ts.invested)} investidos`)}${kpi("IR e custódia", money(ts.tax+ts.fee), `IR ${money(ts.tax)} · custódia ${money(ts.fee)}`)}${kpi("Poupança", money(pp.net), pp.irrA!=null?`${pct(pp.irrA)} a.a.${real?" real":""}`:"", C.s4)}</div>` +
+        chartPanel("Valor líquido se resgatado em cada mês", `Já descontados IR e custódia${unid}`, legend([["Tesouro Selic",C.s1],["Poupança",C.s4],["Total investido",C.ink,true],...(real?[]:[["Investido corrigido pelo IPCA",C.s2,true]])]), "ch") +
+        `<section class="panel"><h3>Ano a ano</h3><div class="tablewrap"><table><thead><tr><th>Ano</th><th class="n">Selic média</th><th class="n">Investido</th><th class="n">Valor líquido</th><th class="n">Rendimento líquido</th></tr></thead><tbody>
+        ${anosTab.map(m=>`<tr><td>${yrs(m)}</td><td class="n num">${pct(selicAno(m))}</td><td class="n num">${money(inv[m])}</td><td class="n num"><b>${money(ts.series[m])}</b></td><td class="n num">${money(ts.series[m]-inv[m])}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
+        notes(["O Tesouro Selic rende a Selic over, que fica cerca de 0,10 ponto abaixo da meta da Selic, mais a taxa do título. Uma taxa positiva significa compra com pequeno desconto.",
+          "Liquidez diária: o resgate cai na conta no mesmo dia útil. A marcação a mercado é mínima, por isso é o título mais usado na reserva de emergência.",
+          "IR regressivo sobre o rendimento de cada aporte: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima disso. Resgates com menos de 30 dias também pagam IOF, não incluído aqui.",
+          "Custódia da B3 de 0,20% a.a., cobrada só sobre o saldo que passa de R$ 10 mil.",
+          "Poupança: 0,5% a.m. + TR quando a Selic está acima de 8,5% a.a.; caso contrário, 70% da Selic + TR. É isenta de IR.",
+          "Cenário Focus: a Selic parte da taxa de hoje e caminha até as medianas de fim de ano do Boletim Focus. Em “Taxas constantes”, a Selic de hoje vale para todo o prazo."]),
+      after(){ lineChart($("#ch"),{label:"Valor líquido por mês", xs, series, dashed:real?[2]:[2,3], xFmt:monthX(months), tipTitle:x=>`Mês ${x} · ${yrs(x)}`}); }
+    };
+  }
+});
+
+/* ---------- 4. Tesouro Educa+ ---------- */
 /* O título acumula até 15/dez do ano do título e paga 60 parcelas mensais corrigidas pelo IPCA a partir de janeiro seguinte. */
 const educaAno = v => new Date().getFullYear() + Math.round(v.idadeFac - v.idade) - 1;   // ano do título = ano anterior ao ingresso
 function educaTitulo(M, ano){
@@ -587,7 +653,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 4. Quitação de dívidas ---------- */
+/* ---------- 5. Quitação de dívidas ---------- */
 const DEF_DEBTS = [
   {nome:"Cartão de crédito", saldo:4000, juros:12, min:400},
   {nome:"Cheque especial", saldo:2500, juros:7.5, min:150},
@@ -655,7 +721,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 5. Alugar ou financiar ---------- */
+/* ---------- 6. Alugar ou financiar ---------- */
 SIMS.push({
   id:"alugar", nav:"Alugar ou financiar",
   title:"Compensa mais alugar ou financiar o imóvel?",
@@ -720,7 +786,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 6. Consórcio ---------- */
+/* ---------- 7. Consórcio ---------- */
 SIMS.push({
   id:"consorcio", nav:"Consórcio",
   title:"Vale a pena entrar no consórcio?",
@@ -792,7 +858,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 7. CDB ---------- */
+/* ---------- 8. CDB ---------- */
 SIMS.push({
   id:"cdb", nav:"CDB",
   title:"Quanto rende o seu CDB, e ele vence a LCI?",
@@ -849,7 +915,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 8. Ações ---------- */
+/* ---------- 9. Ações ---------- */
 function mulberry(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed>>>15, 1|seed); t = t + Math.imul(t ^ t>>>7, 61|t) ^ t; return ((t ^ t>>>14)>>>0)/4294967296; }; }
 const ATIVOS = {
   acoes:{nome:"Ações", ir:.15, isencao:true},
@@ -957,7 +1023,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 9. PGBL x VGBL ---------- */
+/* ---------- 10. PGBL x VGBL ---------- */
 SIMS.push({
   id:"previdencia", nav:"PGBL ou VGBL",
   title:"PGBL, VGBL ou investir por fora?",
