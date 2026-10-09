@@ -28,10 +28,11 @@ ACOES = {
     "VALE3": "VALE3.SA",
     "WEGE3": "WEGE3.SA",
     "BBAS3": "BBAS3.SA",
-    # Criptomoedas cotadas em reais (simulador de cripto; a carteira não as usa)
-    "BTC": "BTC-BRL",
-    "ETH": "ETH-BRL",
 }
+# Criptomoedas para o simulador (a carteira não as usa). O Yahoo não cota mais
+# os pares em reais, então o preço em dólar é convertido pelo câmbio do mês.
+CRIPTO = {"BTC": "BTC-USD", "ETH": "ETH-USD"}
+DOLAR = "BRL=X"
 TESOURO_CSV = (
     "https://www.tesourotransparente.gov.br/ckan/dataset/df56aa42-484a-4a59-8184-7676580c81e3/"
     "resource/796d2059-14e9-44e3-80c9-2d9e30b405c1/download/PrecoTaxaTesouroDireto.csv"
@@ -156,6 +157,35 @@ def acoes(inicio: date) -> dict:
     return out
 
 
+def cripto(inicio: date) -> dict:
+    import yfinance as yf
+
+    def mensal(ticker: str) -> pd.Series:
+        h = yf.Ticker(ticker).history(start=inicio.isoformat(), interval="1mo", auto_adjust=True)
+        if h.empty:
+            raise ValueError(f"{ticker} sem dados")
+        fech = h["Close"].dropna()
+        fech.index = fech.index.strftime("%Y-%m")
+        return fech[~fech.index.duplicated(keep="last")]
+
+    out = {}
+    try:
+        dolar = mensal(DOLAR)
+    except Exception as e:  # noqa: BLE001
+        log(f"  câmbio: falhou ({e})")
+        return out
+    for nome, ticker in CRIPTO.items():
+        try:
+            em_reais = (mensal(ticker) * dolar).dropna()
+            ret = em_reais.pct_change().dropna()
+            ret = ret[ret.index < date.today().strftime("%Y-%m")]
+            out[nome] = ret
+            log(f"  {nome}: {len(ret)} meses (em reais)")
+        except Exception as e:  # noqa: BLE001
+            log(f"  {nome}: falhou ({e})")
+    return out
+
+
 def main() -> None:
     anterior = json.loads(SAIDA.read_text(encoding="utf-8")) if SAIDA.exists() else {}
     dados = dict(anterior)
@@ -190,6 +220,9 @@ def main() -> None:
     except Exception as e:  # noqa: BLE001
         log(f"Tesouro falhou: {e}")
     for nome, s in acoes(inicio).items():
+        series[nome] = s
+        nomes[nome] = nome
+    for nome, s in cripto(inicio).items():
         series[nome] = s
         nomes[nome] = nome
 
