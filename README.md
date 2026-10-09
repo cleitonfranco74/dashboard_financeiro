@@ -18,7 +18,7 @@ Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória es
 - Dados salvos no `localStorage` do navegador.
 
 ### Simuladores (`simuladores.html`)
-Aposentadoria, Tesouro Direto, Tesouro Selic, Tesouro IPCA+, Tesouro Prefixado, Tesouro Educa+ (faculdade dos filhos), quitação de dívidas, alugar ou financiar, consórcio, CDB e LCI/LCA, ações, dividendos, fundos imobiliários, criptomoedas, PGBL/VGBL, previdência privada e imposto de renda.
+Aposentadoria, Tesouro Direto, Tesouro Selic, Tesouro IPCA+, Tesouro Prefixado, Tesouro Educa+ (faculdade dos filhos), quitação de dívidas, alugar ou financiar, consórcio, financiamento de veículos, CDB e LCI/LCA, ações, dividendos, fundos imobiliários, criptomoedas, PGBL/VGBL, previdência privada e imposto de renda.
 - **Dados ao vivo:** Selic, CDI, IPCA 12 meses e Focus, direto das APIs do Banco Central. As taxas de Prefixado e IPCA+ vêm do título do Tesouro com vencimento mais próximo do prazo.
 - **Cenário Focus:** a Selic e o IPCA seguem mês a mês a trajetória esperada pelo mercado, e não uma taxa fixa.
 - **Valores em reais de hoje:** opção de descontar a inflação esperada.
@@ -26,6 +26,7 @@ Aposentadoria, Tesouro Direto, Tesouro Selic, Tesouro IPCA+, Tesouro Prefixado, 
 - **Tesouro Selic:** projeção mês a mês com a Selic do Focus, objetivo opcional, tabela ano a ano e comparação com a poupança e com o investido corrigido pelo IPCA.
 - **Tesouro IPCA+:** ganho real garantido no vencimento e o risco de vender antes: marcação a mercado para cada taxa de venda, comparada ao Tesouro Selic.
 - **Tesouro Prefixado:** valor nominal garantido no vencimento, ganho real conforme a inflação, Selic e inflação de equilíbrio contra o Tesouro Selic e o IPCA+, e marcação a mercado na venda antecipada.
+- **Financiar veículo:** parcela do CDC com IOF e tarifas, CET, saldo devedor contra a depreciação, custo mensal de ter o carro e comparação com juntar e comprar à vista.
 - **CDB e LCI/LCA:** pós-fixado, prefixado ou IPCA+, taxas de empate em cada prazo, limite do FGC e carência da LCI/LCA.
 - **Dividendos:** renda mensal de ações pagadoras, yield on cost, IR sobre JCP e dividendos, preço-teto de Bazin e preço justo pelo modelo de Gordon.
 - **Imposto de renda:** IR retido no salário pela tabela de 2026 (com o redutor), INSS, declaração completa × simplificada, efeito do PGBL e alíquotas efetiva e marginal faixa a faixa.
