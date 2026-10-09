@@ -1537,6 +1537,113 @@ SIMS.push({
   }
 });
 
+/* ---------- 14. Previdência privada ---------- */
+/* IR mensal pela tabela progressiva (desde maio/2025), com desconto simplificado e o redutor de 2026 (Lei 15.270/2025). */
+function irMensal(x){
+  const b = Math.max(0, x-607.20);
+  const t = b<=2428.80 ? 0 : b<=2826.65 ? b*.075-182.16 : b<=3751.05 ? b*.15-394.16 : b<=4664.68 ? b*.225-675.49 : b*.275-908.73;
+  const red = x<=5000 ? 312.89 : x<=7350 ? 978.62-0.133145*x : 0;
+  return Math.max(0, t-Math.max(0,red));
+}
+SIMS.push({
+  id:"prevprivada", nav:"Previdência privada",
+  title:"Quanto a previdência privada vai pagar por mês, e em qual tabela de IR?",
+  lede:"Simula o plano do primeiro aporte ao último mês de renda: o efeito das taxas, a restituição do PGBL e a renda líquida na tabela progressiva e na regressiva. Valores em reais de hoje.",
+  fields:[
+    {k:"idade",label:"Idade hoje",def:35,suf:"anos"},
+    {k:"idadeApos",label:"Começar a receber aos",def:60,suf:"anos"},
+    {k:"anosRenda",label:"Receber a renda por",def:25,suf:"anos"},
+    {k:"saldo",label:"Saldo atual no plano",def:0,pre:"R$"},
+    {k:"aporte",label:"Contribuição mensal",def:1000,pre:"R$",suf:"/mês",sobra:true},
+    {k:"plano",label:"Tipo de plano",def:"pgbl",opts:[["pgbl","PGBL"],["vgbl","VGBL"]]},
+    {sect:"Imposto de renda"},
+    {k:"rendaAnual",label:"Renda bruta tributável hoje",def:120000,pre:"R$",suf:"/ano",hint:"define o limite de 12% do PGBL"},
+    {k:"aliq",label:"Sua alíquota hoje",def:"27.5",opts:[["27.5","27,5% (declaração completa)"],["22.5","22,5%"],["15","15%"],["7.5","7,5%"],["0","Simplificada ou isento"]],when:["plano","pgbl"]},
+    {k:"restit",label:"Restituição do PGBL",def:"reinveste",opts:[["reinveste","Reinvisto no plano"],["gasta","Gasto"]],when:["plano","pgbl"]},
+    {k:"outra",label:"Outra renda na aposentadoria",def:4000,pre:"R$",suf:"/mês",hint:"INSS e outras rendas tributáveis"},
+    {sect:"Plano"},
+    {k:"ret",label:"Retorno bruto acima da inflação",def:5,suf:"% a.a.",hint:"antes da taxa de administração"},
+    {k:"adm",label:"Taxa de administração",def:1.5,suf:"% a.a."},
+    {k:"carreg",label:"Taxa de carregamento",def:0,suf:"%",hint:"cobrada sobre cada contribuição"},
+    {k:"admBaixa",label:"Plano de baixo custo",def:0.5,suf:"% a.a.",hint:"para comparar o efeito das taxas"},
+  ],
+  run(v){
+    if (!(v.idadeApos>v.idade)) return {error:"A idade de início da renda precisa ser maior que a idade atual."};
+    if (!(v.anosRenda>=1 && v.anosRenda<=50)) return {error:"Informe de 1 a 50 anos de renda."};
+    if (!(v.saldo+v.aporte>0)) return {error:"Informe um saldo atual ou uma contribuição mensal."};
+    if (v.carreg>=100) return {error:"A taxa de carregamento precisa ser menor que 100%."};
+    const N = Math.round((v.idadeApos-v.idade)*12), M = Math.round(v.anosRenda*12);
+    if (N>720) return {error:"Use um prazo de acumulação de até 60 anos."};
+    const pgbl = v.plano==="pgbl", aliq = pgbl ? parseFloat(v.aliq)/100 : 0;
+    const restAno = pgbl ? Math.min(12*v.aporte, 0.12*v.rendaAnual)*aliq : 0;
+    const reinvRest = pgbl && v.restit==="reinveste" && restAno>0;
+    const rB = aToM(v.ret/100);
+    /* Plano com lotes (um por contribuição) para o IR regressivo. Tudo em reais de hoje. */
+    const plano = adm => {
+      const f = (1+rB)*(1-adm/100/12), lots = [], saldoS = [];
+      const add = (a, s) => { if (a>0) lots.push({s, v:a*(1-v.carreg/100), a}); };
+      add(v.saldo, -120); add(v.aporte, 0);                                     // saldo atual tratado como aporte antigo (10 anos)
+      const tot = () => lots.reduce((x,l)=>x+l.v,0); saldoS.push(tot());
+      for (let t=1;t<=N;t++){
+        for (const l of lots) l.v *= f;
+        if (t<N) add(v.aporte, t);
+        if (reinvRest && t%12===4) add(restAno, t);                             // restituição em maio do ano seguinte, aprox.
+        saldoS.push(tot());
+      }
+      const B = tot(), i = f-1, W = i>0 ? B*i/(1-Math.pow(1+i,-M)) : B/M;
+      /* Fase de renda: saque W por mês, tirado dos lotes mais antigos primeiro. */
+      const brutoR=[], baseR=[], regR=[]; let irReg=0, irProg=0;
+      for (let k=1;k<=M;k++){
+        for (const l of lots) l.v *= f;
+        let falta = W, base = 0, imp = 0;
+        for (const l of lots){
+          if (falta<=1e-9) break; if (l.v<=1e-9) continue;
+          const tira = Math.min(falta, l.v), frac = tira/l.v;
+          const princ = l.a*frac, ganho = Math.max(0, tira-princ);
+          const b = pgbl ? tira : ganho;
+          base += b; imp += b*irPrev((N+k-l.s)/12);
+          l.v -= tira; l.a -= princ; falta -= tira;
+        }
+        const prog = irMensal(base+v.outra) - irMensal(v.outra);
+        brutoR.push(W); baseR.push(base); regR.push(W-imp);
+        irReg += imp; irProg += prog;
+      }
+      const progR = brutoR.map((w,k)=>w-(irMensal(baseR[k]+v.outra)-irMensal(v.outra)));
+      return {saldoS, B, W, regR, progR, irReg, irProg};
+    };
+    const P = plano(v.adm), L = plano(v.admBaixa);
+    const media = a => a.reduce((x,y)=>x+y,0)/a.length;
+    const mReg = media(P.regR), mProg = media(P.progR), melhor = mReg>=mProg ? "regressiva" : "progressiva";
+    const aportado = v.saldo + v.aporte*N, custoTaxas = L.B - P.B;
+    const xs = Array.from({length:N+1},(_,t)=>v.idade+t/12);
+    const anos = [1,5,10,15,20,25,30,40,50].filter(y=>y<=v.anosRenda);
+    return {
+      html: verdict(`Tabela ${melhor}`,
+          `Aos ${nf(v.idadeApos)} anos, o plano terá <b>${money(P.B)}</b> em valores de hoje, que pagam <b>${money(P.W)}/mês</b> brutos por ${yrs(M)}. Líquido, isso dá em média <b>${money(Math.max(mReg,mProg))}/mês</b> na tabela ${melhor}, contra ${money(Math.min(mReg,mProg))} na ${melhor==="regressiva"?"progressiva":"regressiva"}.`,
+          `As taxas pesam: com ${nf(v.adm,2)}% a.a. de administração${v.carreg>0?` e ${nf(v.carreg,1)}% de carregamento`:""}, você chega com ${money(custoTaxas)} a menos que num plano de ${nf(v.admBaixa,2)}% a.a., uma renda ${money(L.W-P.W)}/mês menor.${pgbl?(restAno>0?` O PGBL devolve cerca de ${money(restAno)} por ano no IR${reinvRest?", reinvestidos no plano":""}.`:" Sem declaração completa, o PGBL não dá dedução: avalie o VGBL."):""}`) +
+        `<div class="kpis">${kpi(`Saldo aos ${nf(v.idadeApos)}`, money(P.B), `${money(aportado)} contribuídos`, C.s1)}${kpi("Renda líquida média", money(Math.max(mReg,mProg))+"/mês", `tabela ${melhor}; bruta ${money(P.W)}`, C.s2)}${kpi("Custo das taxas", money(custoTaxas), `saldo a menos que no plano de ${nf(v.admBaixa,2)}%`)}${kpi("IR na fase de renda", money(Math.min(P.irReg,P.irProg)), `regressiva ${money(P.irReg)} · progressiva ${money(P.irProg)}`)}</div>` +
+        chartPanel("Saldo do plano até a aposentadoria", "Seu plano e um plano de baixo custo, com as mesmas contribuições, em reais de hoje", legend([["Seu plano",C.s1],[`Taxa de ${nf(v.admBaixa,2)}%`,C.s3,true]]), "ch") +
+        chartPanel("Renda líquida mensal na aposentadoria", `Saque bruto de ${money(P.W)}/mês, em reais de hoje, já somada à outra renda de ${money(v.outra)} para o cálculo da progressiva`, legend([["Tabela regressiva",C.s2],["Tabela progressiva",C.s4]]), "ch2") +
+        `<section class="panel"><div class="phead"><div><h3>Renda líquida por ano de aposentadoria</h3><div class="sub">Média mensal em cada ano, em reais de hoje</div></div></div><div class="tablewrap"><table><thead><tr><th>Ano da renda</th><th>Idade</th><th class="n">Regressiva</th><th class="n">Progressiva</th></tr></thead><tbody>
+        ${anos.map(y=>{ const a=(y-1)*12, b=Math.min(M,y*12); const rg=media(P.regR.slice(a,b)), pg=media(P.progR.slice(a,b)); return `<tr><td>${y}º</td><td>${nf(v.idadeApos+y-1)} anos</td><td class="n num">${rg>=pg?`<b>${money(rg)}</b>`:money(rg)}</td><td class="n num">${pg>rg?`<b>${money(pg)}</b>`:money(pg)}</td></tr>`; }).join("")}
+        </tbody></table></div></section>` +
+        `<section class="panel"><h3>Tabela regressiva da previdência</h3><div class="tablewrap"><table><thead><tr><th>Tempo de cada contribuição no plano</th><th class="n">Até 2 anos</th><th class="n">2–4</th><th class="n">4–6</th><th class="n">6–8</th><th class="n">8–10</th><th class="n">Acima de 10</th></tr></thead><tbody><tr><td>Alíquota de IR</td><td class="n num">35%</td><td class="n num">30%</td><td class="n num">25%</td><td class="n num">20%</td><td class="n num">15%</td><td class="n num">10%</td></tr></tbody></table></div></section>` +
+        notes(["Valores em reais de hoje: o retorno é acima da inflação e a contribuição é corrigida pela inflação todo mês. As faixas da tabela progressiva também são tratadas como corrigidas pela inflação, o que na prática nem sempre acontece.",
+          "Renda por prazo certo: o saldo é consumido em parcelas iguais até o fim do prazo, com o dinheiro ainda rendendo. Rendas vitalícias de seguradora não foram simuladas.",
+          "Tabela regressiva: cada contribuição paga de 35% a 10% conforme o tempo no plano. Os saques saem das contribuições mais antigas primeiro. A escolha da tabela é definitiva: pode ser feita até o primeiro resgate ou recebimento da renda.",
+          "Tabela progressiva: o benefício soma-se à outra renda tributável (como o INSS) e paga o IR mensal da tabela de 2026, com desconto simplificado e o redutor para rendas até R$ 7.350. Há retenção de 15% na fonte com ajuste na declaração anual. Aposentados acima de 65 anos têm parcela isenta extra, não incluída.",
+          "PGBL: IR sobre o valor total resgatado; dedução de até 12% da renda bruta tributável para quem faz a declaração completa e contribui para a previdência oficial. VGBL: IR só sobre o rendimento, sem dedução.",
+          "O saldo atual é tratado como contribuição feita há 10 anos, já na menor alíquota da tabela regressiva.",
+          "Taxa de administração cobrada sobre o saldo todo ano; taxa de carregamento descontada de cada contribuição. Planos com taxas menores podem receber o saldo por portabilidade, sem IR."]),
+      after(){
+        lineChart($("#ch"),{label:"Saldo do plano", xs, series:[{name:"Seu plano",color:C.s1,values:P.saldoS},{name:`Taxa de ${nf(v.admBaixa,2)}%`,color:C.s3,values:L.saldoS}], dashed:[1], xFmt:x=>`${nf(x)}`, tipTitle:x=>`${yrs(Math.round(x*12))} de idade`});
+        const xr = Array.from({length:M},(_,k)=>v.idadeApos+(k+1)/12);
+        lineChart($("#ch2"),{label:"Renda líquida mensal", xs:xr, series:[{name:"Tabela regressiva",color:C.s2,values:P.regR},{name:"Tabela progressiva",color:C.s4,values:P.progR}], xFmt:x=>`${nf(x)}`, tipTitle:x=>`${yrs(Math.round(x*12))} de idade`});
+      }
+    };
+  }
+});
+
 /* ================= shell ================= */
 const store = {
   get(k){ try { return JSON.parse(localStorage.getItem(k)||"null"); } catch { return null; } },
