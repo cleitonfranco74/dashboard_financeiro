@@ -351,6 +351,8 @@ const MKT_FIELDS = {
   pre: (M,v) => { const t = Mercado.titulo(M,"Tesouro Prefixado",v.anos); return t && {valor:t.taxaCompra, hint:`Tesouro Prefixado ${t.vencimento.slice(0,4)}, taxa de ${Mercado.dataBR(M.tesouro.data)}`}; },
   real: (M,v) => { const t = Mercado.titulo(M,"Tesouro IPCA+",v.anos); return t && {valor:t.taxaCompra, hint:`Tesouro IPCA+ ${t.vencimento.slice(0,4)}, taxa de ${Mercado.dataBR(M.tesouro.data)}`}; },
   selicTit: (M,v) => { const t = Mercado.titulo(M,"Tesouro Selic",v.anos); return t && {valor:t.taxaCompra, hint:`Tesouro Selic ${t.vencimento.slice(0,4)}, taxa de ${Mercado.dataBR(M.tesouro.data)}`}; },
+  dolar: M => { const s = M.bolsa?.dolar; return s?.valores?.length ? {valor:s.valores[s.valores.length-1], hint:`PTAX de venda, BCB ${Mercado.dataBR(s.datas[s.datas.length-1])}`} : null; },
+  volDolar: () => { const x = volDolar(); return x && {valor:r2(x*100), hint:"oscilação do dólar PTAX nos últimos 12 meses"}; },
   educa: (M,v) => { const t = educaTitulo(M, educaAno(v)); return t && {valor:t.taxaCompra, hint:`Tesouro Educa+ ${t.vencimento.slice(0,4)}, taxa de ${Mercado.dataBR(M.tesouro.data)}`}; },
   cdiMedio: (M,v,f) => { const m=f.hz(v); return isFinite(m) && {valor:r2(cdiEsperado(m)*100), hint:`CDI médio esperado em ${yrs(Math.round(m))}, pelo Focus`}; },
   investLiq: (M,v,f) => { const m=f.hz(v); return isFinite(m) && {valor:r2(cdiEsperado(m)*85), hint:`CDI médio esperado pelo Focus, menos 15% de IR`}; },
@@ -2031,6 +2033,79 @@ SIMS.push({
           "O 13º salário tem tributação exclusiva na fonte e não entra na declaração de ajuste. Rendimentos isentos e de tributação exclusiva (poupança, LCI, dividendos até o limite, aplicações) também ficam de fora.",
           "Alíquota efetiva: imposto pago ÷ renda. Alíquota marginal: quanto do próximo real ganho vai para o imposto. É a marginal que importa para decidir um aumento, uma hora extra ou o PGBL."]),
       after(){ lineChart($("#ch"),{label:"Alíquota efetiva e marginal por salário", xs, series:[{name:"Efetiva",color:C.s1,values:efet},{name:"Marginal",color:C.s2,values:margS}], minTop:0.05, yFmt:x=>pct(x,0), tipFmt:x=>pct(x,1), xFmt:x=>compact(x), tipTitle:x=>`Salário de ${money(x)}`}); }
+    };
+  }
+});
+
+/* ---------- 20. Câmbio e viagem ---------- */
+const FORMAS_CAMBIO = [
+  {k:"cc",  nome:"Cartão de crédito", color:C.s2, obs:"cotação do dia do pagamento da fatura ou da compra, conforme o banco"},
+  {k:"pre", nome:"Cartão pré-pago", color:C.s4, obs:"cotação travada na recarga"},
+  {k:"conta", nome:"Conta global", color:C.s1, obs:"conta em moeda estrangeira com cartão de débito"},
+  {k:"esp", nome:"Dinheiro em espécie", color:C.s3, obs:"casa de câmbio ou banco"},
+];
+/* Volatilidade anual do dólar pelos retornos diários dos últimos 12 meses. */
+const volDolar = () => { const v = MKT?.bolsa?.dolar?.valores; if (!v || v.length<60) return null;
+  const r = v.slice(1).map((x,i)=>Math.log(x/v[i])), m = r.reduce((a,b)=>a+b,0)/r.length;
+  return Math.sqrt(r.reduce((a,b)=>a+(b-m)**2,0)/(r.length-1)*252); };
+SIMS.push({
+  id:"cambio", nav:"Câmbio e viagem",
+  title:"Qual a forma mais barata de levar dinheiro para a viagem?",
+  lede:"Compara cartão de crédito, cartão pré-pago, conta global e dinheiro em espécie pelo custo total em reais, com spread e IOF. Mostra o risco do câmbio até a viagem e quanto guardar por mês.",
+  fields:[
+    {k:"moeda",label:"Moeda",def:"USD",opts:[["USD","Dólar americano"],["EUR","Euro"],["OUT","Outra"]]},
+    {k:"gasto",label:"Gastos na viagem",def:3000,suf:"na moeda",hint:"hospedagem, passeios, compras"},
+    {k:"cotUSD",label:"Dólar comercial",def:5.0,pre:"R$",mkt:"dolar",when:["moeda","USD"]},
+    {k:"cotOUT",label:"Cotação comercial",def:5.8,pre:"R$",when:["moeda","EUR"],hint:"euro comercial do dia"},
+    {k:"cotX",label:"Cotação comercial",def:1,pre:"R$",when:["moeda","OUT"]},
+    {k:"meses",label:"Meses até a viagem",def:6,suf:"meses"},
+    {sect:"Spread sobre a cotação comercial"},
+    {k:"spcc",label:"Cartão de crédito",def:5,suf:"%",hint:"veja o “dólar turismo do cartão” do seu banco"},
+    {k:"sppre",label:"Cartão pré-pago",def:4,suf:"%"},
+    {k:"spconta",label:"Conta global",def:1.5,suf:"%"},
+    {k:"spesp",label:"Dinheiro em espécie",def:6,suf:"%",hint:"casas de câmbio variam bastante"},
+    {sect:"IOF"},
+    {k:"iofCartao",label:"Cartões e conta global",def:3.5,suf:"%",hint:"confira a alíquota vigente"},
+    {k:"iofEsp",label:"Compra de espécie",def:3.5,suf:"%"},
+    {sect:"Planejamento"},
+    {k:"rend",label:"Rendimento líquido até a viagem",def:10,suf:"% a.a.",mkt:"investLiq",hz:v=>Math.max(1,v.meses)},
+    {k:"vol",label:"Volatilidade da moeda",def:15,suf:"% a.a.",mkt:"volDolar",hint:"oscilação típica em um ano"},
+  ],
+  run(v){
+    const cot = v.moeda==="USD" ? v.cotUSD : v.moeda==="EUR" ? v.cotOUT : v.cotX, simb = v.moeda==="USD" ? "US$" : v.moeda==="EUR" ? "€" : "";
+    if (!(cot>0)) return {error:"Informe a cotação comercial da moeda."};
+    if (!(v.gasto>0)) return {error:"Informe quanto pretende gastar na viagem."};
+    const n = Math.round(v.meses);
+    const sp = {cc:v.spcc, pre:v.sppre, conta:v.spconta, esp:v.spesp}, iof = {cc:v.iofCartao, pre:v.iofCartao, conta:v.iofCartao, esp:v.iofEsp};
+    const res = FORMAS_CAMBIO.map(f=>{ const vet = cot*(1+sp[f.k]/100)*(1+iof[f.k]/100); return {...f, vet, total:vet*v.gasto, extra:(vet/cot-1)}; });
+    const best = res.reduce((a,b)=>b.total<a.total?b:a), worst = res.reduce((a,b)=>b.total>a.total?b:a), max = worst.total;
+    const base = cot*v.gasto;
+    // Risco cambial: preço da moeda daqui a n meses (sem tendência, volatilidade informada)
+    const t = Math.max(n,1)/12, sd = v.vol/100*Math.sqrt(t), z = 1.2816;
+    const cenas = [["Moeda cai (10% dos casos)",Math.exp(-z*sd)],["Moeda estável",1],["Moeda sobe (10% dos casos)",Math.exp(z*sd)]];
+    // Planejamento: quanto guardar por mês para pagar a viagem pela forma mais barata, hoje
+    const r = aToM(v.rend/100), alvo = best.total;
+    const mensal = n<1 ? alvo : (r>0 ? alvo*r/(Math.pow(1+r,n)-1) : alvo/n);
+    const fmtM = x => (simb?simb+" ":"") + x.toLocaleString("pt-BR",{maximumFractionDigits:0});
+    return {
+      html: verdict(`${best.nome} sai mais barato`,
+          `Para gastar ${fmtM(v.gasto)}, você paga <b>${money(best.total)}</b> usando ${best.nome.toLowerCase()} (${money2(best.vet)} por unidade), contra ${money(worst.total)} com ${worst.nome.toLowerCase()}: <b>${money(worst.total-best.total)}</b> de diferença. Na cotação comercial, seriam ${money(base)}.`,
+          `${n>0?`Até a viagem, em ${yrs(n)}, a moeda pode oscilar: em 1 de cada 10 cenários, a mesma viagem custa mais de ${money(best.total*Math.exp(z*sd))}. Comprar aos poucos (preço médio) ou travar o câmbio com antecedência reduz esse risco. Para juntar ${money(alvo)} até lá, guarde <b>${money(mensal)}/mês</b>.`:"Para quem viaja agora, o que pesa é o spread e o IOF de cada forma de pagamento."}`) +
+        `<div class="kpis">${res.map(f=>kpi(f.nome, money(f.total), `${money2(f.vet)} por unidade · +${pct(f.extra,1)} sobre a comercial`, f.color, f===best)).join("")}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>Custo total em reais</h3><div class="sub">Cotação comercial de ${money2(cot)} + spread + IOF</div></div></div><div class="bars">${res.map(f=>`<div class="bar"><span>${esc(f.nome)}${f===best?` <span class="badge">melhor</span>`:""}</span><span class="track"><i style="width:${Math.max(2,f.total/max*100)}%;background:${f.color}"></i></span><span class="v">${money(f.total)}</span></div>`).join("")}</div></section>` +
+        `<section class="panel"><div class="phead"><div><h3>Como se forma o valor efetivo total (VET)</h3><div class="sub">Quanto você paga, em reais, por unidade da moeda</div></div></div><div class="tablewrap"><table><thead><tr><th>Forma</th><th class="n">Comercial</th><th class="n">Spread</th><th class="n">IOF</th><th class="n">VET</th><th>Observação</th></tr></thead><tbody>
+        ${res.map(f=>`<tr class="${f===best?"best":""}"><td><span class="sw" style="background:${f.color}"></span>${f.nome}</td><td class="n num">${money2(cot)}</td><td class="n num">${pct(sp[f.k]/100,1)}</td><td class="n num">${pct(iof[f.k]/100,1)}</td><td class="n num"><b>${money2(f.vet)}</b></td><td>${f.obs}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
+        (n>0 ? `<section class="panel"><div class="phead"><div><h3>E se a moeda mudar até a viagem?</h3><div class="sub">Custo da viagem pela forma mais barata, com volatilidade de ${nf(v.vol,0)}% a.a. em ${yrs(n)}</div></div></div><div class="tablewrap"><table><thead><tr><th>Cenário</th><th class="n">Cotação comercial</th><th class="n">Custo da viagem</th><th class="n">Diferença</th></tr></thead><tbody>
+        ${cenas.map(([nm,f])=>`<tr class="${f===1?"best":""}"><td>${nm}</td><td class="n num">${money2(cot*f)}</td><td class="n num"><b>${money(best.total*f)}</b></td><td class="n num">${f===1?"—":(f>1?"+":"−")+money(Math.abs(best.total*(f-1)))}</td></tr>`).join("")}
+        </tbody></table></div></section>` : "") +
+        notes(["VET (valor efetivo total): cotação comercial × (1 + spread) × (1 + IOF). É o número que o banco ou a casa de câmbio deve informar antes da operação; use-o para comparar.",
+          "IOF: desde 2025, compras com cartão de crédito, débito e pré-pago no exterior, remessas para conta própria e compra de moeda em espécie pagam a mesma alíquota (3,5% na data deste simulador). As regras mudam por decreto: confira a vigente.",
+          "Cartão de crédito: a conversão usa a cotação do dia do pagamento da fatura ou do dia da compra, conforme o banco. Se a moeda subir até lá, você paga mais.",
+          "Conta global: costuma ter spread menor e permite comprar a moeda aos poucos antes da viagem, fazendo preço médio. Verifique tarifas de saque em caixas eletrônicos no exterior.",
+          "Dinheiro em espécie: útil para pequenas despesas, mas tem spread maior e risco de perda ou roubo. Em viagens internacionais, valores acima de R$ 10 mil devem ser declarados à Receita Federal.",
+          "Cenários de câmbio: oscilação sem tendência, com a volatilidade informada (preenchida pela oscilação do dólar PTAX nos últimos 12 meses). A faixa cobre 80% dos casos.",
+          "Planejamento: valor mensal a investir até a viagem para juntar o custo de hoje pela forma mais barata, ao rendimento líquido informado."]),
     };
   }
 });
