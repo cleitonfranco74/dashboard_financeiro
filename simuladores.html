@@ -1125,13 +1125,13 @@ SIMS.push({
     const pc = aToM(v.inflCarro/100);
     let b = v.entrada, mJunta = null;
     for (let k=1;k<=600;k++){ b = b*(1+rm) + pmt; if (b >= v.preco*Math.pow(1+pc,k)){ mJunta = k; break; } }
-    const pesoRenda = pmt/v.renda;
+    const pesoRenda = pmt/v.renda, pesada = Math.round(pesoRenda*1000)/1000 > 0.3;
     const anosTab = linhas;
     const xs = Array.from({length:n+1},(_,k)=>k);
     return {
-      html: verdict(pesoRenda>0.3 ? "Parcela pesada" : "Resultado",
+      html: verdict(pesada ? "Parcela pesada" : "Resultado",
           `A parcela fica em <b>${money2(pmt)}</b> por ${nf(n)} meses. Você paga <b>${money(total+v.entrada)}</b> por um carro de ${money(v.preco)}: ${money(juros)} de juros, ${money(iof)} de IOF e ${money(v.tarifas+seg)} de tarifas${seg>0?" e seguro":""}. O custo efetivo total é de <b>${cetM!=null?pct(cetM)+" a.m."+` (${pct(cetA,1)} a.a.)`:"—"}</b>, contra ${nf(v.taxa,2)}% a.m. anunciados.`,
-          `${pesoRenda>0.3?`A parcela consome ${pct(pesoRenda,1)} da renda, acima dos 30% que costumam ser o limite prudente. `:`A parcela consome ${pct(pesoRenda,0)} da renda. `}${negativo>1?`Até o mês ${negativo}, a dívida é maior que o valor do carro: se precisar vender, o dinheiro não quita o financiamento. `:""}${mJunta?`Investindo a entrada e o mesmo valor da parcela, você compraria à vista em <b>${yrs(mJunta)}</b>${mJunta<n?`, antes de terminar de pagar o financiamento`:""}.`:""}`) +
+          `${pesada?`A parcela consome ${pct(pesoRenda,1)} da renda, acima dos 30% que costumam ser o limite prudente. `:`A parcela consome ${pct(pesoRenda,0)} da renda. `}${negativo>1?`Até o mês ${negativo}, a dívida é maior que o valor do carro: se precisar vender, o dinheiro não quita o financiamento. `:""}${mJunta?`Investindo a entrada e o mesmo valor da parcela, você compraria à vista em <b>${yrs(mJunta)}</b>${mJunta<n?`, antes de terminar de pagar o financiamento`:""}.`:""}`) +
         `<div class="kpis">${kpi("Parcela", money2(pmt), `${nf(n)}× · ${pct(pesoRenda,0)} da renda`, C.s1)}${kpi("CET", cetM!=null?pct(cetM)+" a.m.":"—", cetA!=null?`${pct(cetA,1)} a.a., com IOF e tarifas`:"")}${kpi("Juros + IOF + tarifas", money(juros+iof+v.tarifas+seg), `${pct((juros+iof+v.tarifas+seg)/liberado,0)} do valor financiado`, C.s2)}${kpi("Custo mensal do carro", money(custoMes), `parcela + IPVA + seguro + uso`)}</div>` +
         chartPanel("Dívida × valor do carro", "Saldo devedor do financiamento e valor de mercado do veículo a cada mês", legend([["Saldo devedor",C.s2],["Valor do carro",C.s1]]), "ch") +
         `<section class="panel"><div class="phead"><div><h3>Quanto o carro custa por mês</h3><div class="sub">Média no prazo do financiamento</div></div></div><div class="tablewrap"><table><thead><tr><th>Item</th><th class="n">Por mês</th><th>O que é</th></tr></thead><tbody>
