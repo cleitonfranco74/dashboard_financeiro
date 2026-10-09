@@ -18,7 +18,14 @@ Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória es
 - Dados salvos no `localStorage` do navegador.
 
 ### Simuladores (`simuladores.html`)
-Aposentadoria, Tesouro Direto, Tesouro Selic, Tesouro IPCA+, Tesouro Prefixado, Tesouro Educa+ (faculdade dos filhos), quitação de dívidas, alugar ou financiar, consórcio, financiamento de veículos, financiamento imobiliário, CDB e LCI/LCA, ações, dividendos, fundos imobiliários, criptomoedas, PGBL/VGBL, previdência privada, imposto de renda, câmbio para viagem, passagens aéreas e orçamento de viagem.
+22 simuladores em 5 grupos, com navegação em dois níveis (grupo e simulador):
+- **Tesouro Direto:** comparar títulos, Tesouro Selic, IPCA+, Prefixado e Educa+ (faculdade dos filhos).
+- **Investimentos:** CDB e LCI/LCA, ações, dividendos, fundos imobiliários e criptomoedas.
+- **Aposentadoria e impostos:** aposentadoria, previdência privada, PGBL ou VGBL e imposto de renda.
+- **Crédito e moradia:** quitar dívidas, financiar veículo, financiar imóvel, alugar ou financiar e consórcio.
+- **Viagem:** orçamento de viagem, passagens aéreas e câmbio.
+
+Links como `simuladores.html#ipca` abrem direto o simulador, já no grupo certo.
 - **Dados ao vivo:** Selic, CDI, IPCA 12 meses e Focus, direto das APIs do Banco Central. As taxas de Prefixado e IPCA+ vêm do título do Tesouro com vencimento mais próximo do prazo.
 - **Cenário Focus:** a Selic e o IPCA seguem mês a mês a trajetória esperada pelo mercado, e não uma taxa fixa.
 - **Valores em reais de hoje:** opção de descontar a inflação esperada.

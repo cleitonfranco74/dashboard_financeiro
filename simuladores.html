@@ -48,7 +48,13 @@ header.top{display:flex;flex-direction:column;gap:4px}
 .eyebrow{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
 h1{font-size:28px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.02em;text-wrap:balance}
 
-nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);padding-block:8px;margin-block:-8px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
+.navsim{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);padding-block:8px;margin-block:-8px;display:flex;flex-direction:column;gap:8px}
+nav.grupos{display:flex;gap:4px;overflow-x:auto;scrollbar-width:thin;border-bottom:1px solid var(--line)}
+nav.grupos button{flex:none;border:0;border-bottom:2px solid transparent;background:none;color:var(--ink-2);padding:8px 12px 9px;margin-bottom:-1px;font-weight:600;font-size:14px;white-space:nowrap}
+nav.grupos button:hover{color:var(--ink)}
+nav.grupos button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+nav.grupos button small{font-weight:500;color:var(--muted);margin-left:4px;font-size:11.5px}
+nav.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
 nav.tabs button{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);padding:8px 14px;border-radius:999px;font-weight:500;font-size:13.5px;white-space:nowrap}
 nav.tabs button:hover{color:var(--ink);background:var(--surface-2)}
 nav.tabs button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
@@ -172,7 +178,10 @@ details.prem[open] summary{margin-bottom:8px}
     <nav style="display:flex;gap:14px;flex-wrap:wrap;font-size:13.5px;font-weight:600"><a href="index.html" style="color:var(--accent);text-decoration:none">← Início</a><a href="livro-caixa.html" style="color:var(--accent);text-decoration:none">Livro-Caixa</a><a href="carteira.html" style="color:var(--accent);text-decoration:none">Carteira</a></nav>
   </header>
   <div class="mkt" id="mkt" aria-live="polite"><span class="st"><i></i>Buscando Selic, CDI, IPCA e Focus no Banco Central…</span></div>
-  <nav class="tabs" id="tabs" role="tablist" aria-label="Simuladores"></nav>
+  <div class="navsim">
+    <nav class="grupos" id="grupos" role="tablist" aria-label="Grupos de simuladores"></nav>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="Simuladores do grupo"></nav>
+  </div>
   <main id="main"></main>
 </div>
 
@@ -442,7 +451,7 @@ SIMS.push({
 
 /* ---------- 2. Tesouro Direto ---------- */
 SIMS.push({
-  id:"tesouro", nav:"Tesouro Direto",
+  id:"tesouro", nav:"Comparar títulos",
   title:"Qual título do Tesouro rende mais no seu prazo?",
   lede:"Compara Tesouro Selic, Prefixado e IPCA+ levados até o vencimento, já descontados IR regressivo e taxa de custódia da B3, contra a poupança.",
   fields:[
@@ -2451,14 +2460,34 @@ function compute(sim){
   r.after && r.after();
 }
 
+/* Navegação em dois níveis: grupos e, abaixo, os simuladores do grupo. */
+const GRUPOS = [
+  {id:"g-tesouro", nome:"Tesouro Direto", sims:["tesouro","selic","ipca","prefixado","educa"]},
+  {id:"g-invest", nome:"Investimentos", sims:["cdb","acoes","dividendos","fii","cripto"]},
+  {id:"g-apos", nome:"Aposentadoria e impostos", sims:["aposentadoria","prevprivada","previdencia","ir"]},
+  {id:"g-credito", nome:"Crédito e moradia", sims:["dividas","veiculo","imovel","alugar","consorcio"]},
+  {id:"g-viagem", nome:"Viagem", sims:["viagem","voos","cambio"]},
+];
+{ const soltos = SIMS.filter(s=>!GRUPOS.some(g=>g.sims.includes(s.id))).map(s=>s.id);   // nenhum simulador fica de fora
+  if (soltos.length) GRUPOS.push({id:"g-outros", nome:"Outros", sims:soltos}); }
+const grupoDe = id => GRUPOS.find(g=>g.sims.includes(id)) || GRUPOS[0];
+let grupoAtual = null;
+function desenhaTabs(g){
+  grupoAtual = g;
+  document.querySelectorAll("#grupos button").forEach(b=>b.setAttribute("aria-selected", b.dataset.g===g.id));
+  $("#tabs").innerHTML = g.sims.map(id=>SIMS.find(s=>s.id===id)).filter(Boolean).map(s=>`<button role="tab" data-id="${s.id}" aria-selected="false">${s.nav}</button>`).join("");
+}
 function select(id, push=true){
-  const sim = SIMS.find(s=>s.id===id) || SIMS[0];
+  const sim = SIMS.find(s=>s.id===id) || SIMS[0], g = grupoDe(sim.id);
+  if (g!==grupoAtual) desenhaTabs(g);
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.id===sim.id));
   renderSim(sim);
-  store.set("sim:last", sim.id);
+  store.set("sim:last", sim.id); store.set("grupo:"+g.id, sim.id);
   if (push){ try { history.replaceState(null,"","#"+sim.id); } catch {} }
 }
-$("#tabs").innerHTML = SIMS.map(s=>`<button role="tab" data-id="${s.id}" aria-selected="false">${s.nav}</button>`).join("");
+$("#grupos").innerHTML = GRUPOS.map(g=>`<button role="tab" data-g="${g.id}" aria-selected="false">${g.nome}<small>${g.sims.length}</small></button>`).join("");
+$("#grupos").addEventListener("click", e=>{ const b=e.target.closest("button"); if (!b) return; const g = GRUPOS.find(x=>x.id===b.dataset.g);
+  const ultimo = store.get("grupo:"+g.id); select(g.sims.includes(ultimo) ? ultimo : g.sims[0]); b.scrollIntoView({block:"nearest",inline:"nearest"}); });
 $("#tabs").addEventListener("click", e=>{ const b=e.target.closest("button"); if (b){ select(b.dataset.id); b.scrollIntoView({block:"nearest",inline:"nearest"}); } });
 window.addEventListener("hashchange", ()=>{ const h=location.hash.slice(1); if (h && h!==current?.id) select(h,false); });
 select(location.hash.slice(1) || store.get("sim:last") || SIMS[0].id, false);
