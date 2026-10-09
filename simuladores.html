@@ -1159,7 +1159,105 @@ SIMS.push({
   }
 });
 
-/* ---------- 11. CDB e LCI/LCA ---------- */
+/* ---------- 11. Financiamento imobiliário ---------- */
+SIMS.push({
+  id:"imovel", nav:"Financiar imóvel",
+  title:"Como fica o financiamento do imóvel: SAC ou Price, e vale amortizar?",
+  lede:"Simula o contrato mês a mês, com juros, correção pela TR, seguros obrigatórios e taxa de administração. Compara SAC e Price, mostra o CET, a renda exigida pelo banco e quanto as amortizações extras economizam.",
+  fields:[
+    {k:"valor",label:"Valor do imóvel",def:500000,pre:"R$"},
+    {k:"entrada",label:"Entrada em dinheiro",def:80000,pre:"R$"},
+    {k:"fgts",label:"FGTS na entrada",def:20000,pre:"R$",hint:"imóvel residencial, dentro das regras do SFH"},
+    {k:"custos",label:"ITBI e cartório",def:4,suf:"% do valor",hint:"pagos à vista, fora do financiamento"},
+    {k:"prazo",label:"Prazo",def:30,suf:"anos"},
+    {k:"sistema",label:"Sistema de amortização",def:"SAC",opts:[["SAC","SAC (parcelas decrescentes)"],["Price","Price (parcelas fixas)"]],wide:true},
+    {k:"renda",label:"Renda bruta familiar",def:18000,pre:"R$",suf:"/mês"},
+    {sect:"Taxas do contrato"},
+    {k:"taxa",label:"Juros efetivos",def:11.5,suf:"% a.a."},
+    {k:"tr",label:"TR",def:1.5,suf:"% a.a.",hint:"corrige o saldo devedor todo mês"},
+    {k:"mip",label:"Seguro MIP",def:0.025,suf:"% a.m.",hint:"sobre o saldo; morte e invalidez, sobe com a idade"},
+    {k:"dfi",label:"Seguro DFI",def:0.007,suf:"% a.m.",hint:"sobre o valor do imóvel; danos físicos"},
+    {k:"adm",label:"Taxa de administração",def:25,pre:"R$",suf:"/mês"},
+    {sect:"Amortizações extras"},
+    {k:"extra",label:"Valor por ano",def:10000,pre:"R$",suf:"/ano",hint:"13º, FGTS a cada 2 anos, bônus"},
+    {k:"modo",label:"Usar para reduzir",def:"prazo",opts:[["prazo","o prazo"],["parcela","a parcela"]]},
+  ],
+  run(v){
+    const n = Math.round(v.prazo*12), fin = v.valor - v.entrada - v.fgts;
+    if (!(v.valor>0)) return {error:"Informe o valor do imóvel."};
+    if (!(fin>0)) return {error:"Entrada e FGTS já cobrem o imóvel: não há o que financiar."};
+    if (!(n>=12 && n<=420)) return {error:"Informe um prazo entre 1 e 35 anos."};
+    const i = aToM(v.taxa/100), tr = aToM(v.tr/100), mip = v.mip/100, dfi = v.dfi/100;
+    /* Contrato mês a mês. A amortização (SAC) ou a parcela (Price) é recalculada sobre o saldo corrigido pela TR e o prazo restante.
+     * Amortização extra anual: "prazo" encurta o prazo restante mantendo a amortização/parcela; "parcela" mantém o prazo. */
+    const contrato = (sis, extra=0, modo="prazo") => {
+      let S = fin, rem = n, t = 0, juros = 0, seg = 0, pagoExtra = 0, ult = 0;
+      const parc = [], saldo = [S], fl = [fin];
+      while (S>0.01 && rem>0){
+        t++; S *= 1+tr;
+        const j = S*i;
+        const am = sis==="SAC" ? S/rem : (i>0 ? S*i/(1-Math.pow(1+i,-rem)) : S/rem) - j;
+        ult = sis==="SAC" ? am : am + j;                                          // amortização (SAC) ou parcela (Price) do mês
+        const s = S*mip + v.valor*dfi + v.adm, p = j + am + s;
+        S = Math.max(0, S-am); juros += j; seg += s; rem--;
+        let e = 0;
+        if (extra>0 && t%12===0 && S>0.01){
+          e = Math.min(extra, S); S -= e; pagoExtra += e;
+          if (modo==="prazo" && S>0.01) rem = Math.max(1, sis==="SAC" ? Math.ceil(S/ult - 1e-9) : Math.ceil(-Math.log(1 - Math.min(0.999999, S*i/ult))/Math.log(1+i) - 1e-9));
+          if (S<=0.01) rem = 0;
+        }
+        parc.push(p); saldo.push(S); fl.push(-(p+e));
+      }
+      const cm = irr(fl);
+      return {parc, saldo, meses:t, juros, seg, pagoExtra, total:parc.reduce((a,b)=>a+b,0)+pagoExtra, cetA: cm==null ? null : mToA(cm)};
+    };
+    const SAC = contrato("SAC"), PRI = contrato("Price"), base = v.sistema==="SAC" ? SAC : PRI;
+    const plano = v.extra>0 ? contrato(v.sistema, v.extra, v.modo) : base;
+    const outroModo = v.extra>0 ? contrato(v.sistema, v.extra, v.modo==="prazo"?"parcela":"prazo") : null;
+    const ltv = fin/v.valor, aVista = v.entrada + v.valor*v.custos/100;
+    const p1 = base.parc[0], rendaMin = p1/0.30, compromete = p1/v.renda;
+    const economia = base.juros + base.seg - (plano.juros + plano.seg);
+    const anos = []; for (let a=1; a<=Math.ceil(n/12); a++){ const k = a*12-1; if (k>=base.parc.length) break; if (a===1||a%5===0||k+12>=base.parc.length) anos.push(a); }
+    const linha = (c, a) => { const k = a*12-1; return k<c.parc.length ? money(c.parc[k]) : "quitado"; };
+    return {
+      html: verdict(compromete>0.30 ? "Renda insuficiente" : "Resultado",
+          `Financiando ${money(fin)} (${pct(ltv,0)} do imóvel) em ${nf(v.prazo)} anos pelo ${v.sistema}, a primeira parcela é de <b>${money(p1)}</b>${v.sistema==="SAC"?` e cai até ${money(base.parc[base.parc.length-1])} na última`:""}. No total, você paga <b>${money(base.juros)}</b> de juros e ${money(base.seg)} de seguros e taxas. CET de <b>${base.cetA!=null?pct(base.cetA,2):"—"} ao ano</b>, contra ${nf(v.taxa,2)}% de juros anunciados.`,
+          `${compromete>0.30?`A primeira parcela consome ${pct(compromete,1)} da renda: os bancos costumam limitar a 30%, o que exige renda de pelo menos ${money(rendaMin)}. `:`A primeira parcela usa ${pct(compromete,0)} da renda (limite usual: 30%). `}Para fechar o negócio, você precisa de ${money(aVista)} à vista, entre entrada e ITBI/cartório, além de ${money(v.fgts)} do FGTS.${v.extra>0?` Amortizando ${money(v.extra)} por ano para ${v.modo==="prazo"?"reduzir o prazo":"reduzir a parcela"}, você economiza <b>${money(economia)}</b>${v.modo==="prazo"?` e quita em <b>${yrs(plano.meses)}</b> em vez de ${yrs(base.meses)}`:""}.`:""}`) +
+        `<div class="kpis">${kpi("1ª parcela", money(p1), `${v.sistema}, com seguros e taxa`, C.s1)}${kpi("Juros totais", money(base.juros), `${pct(base.juros/fin,0)} do valor financiado`, C.s2)}${kpi("CET", base.cetA!=null?pct(base.cetA,2)+" a.a.":"—", "juros + TR + seguros + taxa")}${kpi("Renda mínima", money(rendaMin), "para a 1ª parcela caber em 30%")}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>SAC × Price</h3><div class="sub">Mesmo valor, prazo e taxas, sem amortizações extras</div></div></div><div class="tablewrap"><table><thead><tr><th>Item</th><th class="n">SAC</th><th class="n">Price</th></tr></thead><tbody>
+          <tr><td>Primeira parcela</td><td class="n num">${money(SAC.parc[0])}</td><td class="n num">${money(PRI.parc[0])}</td></tr>
+          <tr><td>Última parcela</td><td class="n num">${money(SAC.parc[SAC.parc.length-1])}</td><td class="n num">${money(PRI.parc[PRI.parc.length-1])}</td></tr>
+          <tr><td>Renda mínima (30%)</td><td class="n num">${money(SAC.parc[0]/0.3)}</td><td class="n num">${money(PRI.parc[0]/0.3)}</td></tr>
+          <tr><td>Juros totais</td><td class="n num"><b>${money(SAC.juros)}</b></td><td class="n num"><b>${money(PRI.juros)}</b></td></tr>
+          <tr><td>Seguros e taxas</td><td class="n num">${money(SAC.seg)}</td><td class="n num">${money(PRI.seg)}</td></tr>
+          <tr><td>Total pago</td><td class="n num">${money(SAC.total)}</td><td class="n num">${money(PRI.total)}</td></tr>
+          <tr><td>CET</td><td class="n num">${SAC.cetA!=null?pct(SAC.cetA,2):"—"}</td><td class="n num">${PRI.cetA!=null?pct(PRI.cetA,2):"—"}</td></tr>
+        </tbody></table></div></section>` +
+        chartPanel("Parcela mês a mês", `Com TR de ${nf(v.tr,1)}% a.a. corrigindo o saldo${v.extra>0?`; “seu plano” inclui ${money(v.extra)}/ano de amortização extra`:""}`, legend([["SAC",C.s1],["Price",C.s2],...(v.extra>0?[["Seu plano",C.s3,true]]:[])]), "ch") +
+        (v.extra>0 ? `<section class="panel"><div class="phead"><div><h3>Amortização extra: reduzir o prazo ou a parcela?</h3><div class="sub">${money(v.extra)} por ano, no ${v.sistema}</div></div></div><div class="tablewrap"><table><thead><tr><th>Opção</th><th class="n">Quitação</th><th class="n">Juros + seguros</th><th class="n">Economia</th></tr></thead><tbody>
+          <tr><td>Sem amortizar</td><td class="n num">${yrs(base.meses)}</td><td class="n num">${money(base.juros+base.seg)}</td><td class="n num">—</td></tr>
+          ${[[v.modo,plano],[v.modo==="prazo"?"parcela":"prazo",outroModo]].sort((a,b)=>a[0]<b[0]?1:-1).map(([m,c])=>`<tr class="${m===v.modo?"best":""}"><td>Reduzir ${m==="prazo"?"o prazo":"a parcela"}</td><td class="n num">${yrs(c.meses)}</td><td class="n num">${money(c.juros+c.seg)}</td><td class="n num"><b>${money(base.juros+base.seg-c.juros-c.seg)}</b></td></tr>`).join("")}
+        </tbody></table></div></section>` : "") +
+        `<section class="panel"><div class="phead"><div><h3>Parcela e saldo ao longo do contrato</h3><div class="sub">${v.sistema}, sem amortizações extras</div></div></div><div class="tablewrap"><table><thead><tr><th>Ano</th><th class="n">Parcela do último mês</th><th class="n">Saldo devedor</th>${v.extra>0?`<th class="n">Parcela no seu plano</th>`:""}</tr></thead><tbody>
+        ${anos.map(a=>`<tr><td>${a}º</td><td class="n num">${linha(base,a)}</td><td class="n num">${money(base.saldo[Math.min(a*12, base.saldo.length-1)])}</td>${v.extra>0?`<td class="n num">${linha(plano,a)}</td>`:""}</tr>`).join("")}
+        </tbody></table></div></section>` +
+        notes(["SAC: amortização constante e juros sobre o saldo, então as parcelas começam altas e caem. Price: parcela de juros + amortização constante, que começa mais baixa, mas paga mais juros no total.",
+          "TR: corrige o saldo devedor todo mês antes dos juros. Com a Selic alta, a TR fica positiva e faz a parcela e o saldo subirem um pouco ao longo do tempo. Na Price, a parcela é recalculada sobre o saldo corrigido.",
+          "Seguros obrigatórios: MIP (morte e invalidez permanente), cobrado sobre o saldo e conforme a idade do mais velho, e DFI (danos físicos), sobre o valor do imóvel. Os percentuais variam por banco; use os da sua proposta.",
+          "CET: taxa anual que iguala o valor financiado a tudo o que é pago (parcelas, seguros, taxa de administração e amortizações extras). O banco é obrigado a informá-lo.",
+          "Limites usuais: financiamento de até 80% do valor no SFH/SFI e parcela de até 30% da renda bruta. Cada banco tem sua política.",
+          "Amortização extra: reduzir o prazo mantém a amortização (SAC) ou a parcela (Price) e quita antes, economizando mais juros; reduzir a parcela mantém o prazo e alivia o orçamento. O FGTS pode ser usado a cada 2 anos.",
+          "ITBI (em geral 2% a 3%) e registro em cartório são pagos à vista e não entram no financiamento. Use a aba “Alugar ou financiar” para comparar com morar de aluguel."]),
+      after(){
+        const m = Math.max(SAC.parc.length, PRI.parc.length), xs = Array.from({length:m},(_,k)=>k+1);
+        const pad = a => xs.map((_,k)=>k<a.length ? a[k] : null);
+        lineChart($("#ch"),{label:"Parcela mês a mês", xs, series:[{name:"SAC",color:C.s1,values:pad(SAC.parc)},{name:"Price",color:C.s2,values:pad(PRI.parc)},...(v.extra>0?[{name:"Seu plano",color:C.s3,values:pad(plano.parc)}]:[])], dashed:v.extra>0?[2]:[], xFmt:x=>`${nf(x/12,0)}a`, tipTitle:x=>`Mês ${x} · ${yrs(x)}`});
+      }
+    };
+  }
+});
+
+/* ---------- 12. CDB e LCI/LCA ---------- */
 const TIPOS_RF = {
   pos:  {nome:"pós-fixado", unid:"% do CDI", fmt:x=>`${nf(x,1)}% do CDI`},
   pre:  {nome:"prefixado", unid:"% a.a.", fmt:x=>`${nf(x,2)}% a.a.`},
@@ -1249,7 +1347,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 12. Ações ---------- */
+/* ---------- 13. Ações ---------- */
 function mulberry(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed>>>15, 1|seed); t = t + Math.imul(t ^ t>>>7, 61|t) ^ t; return ((t ^ t>>>14)>>>0)/4294967296; }; }
 const ATIVOS = {
   acoes:{nome:"Ações", ir:.15, isencao:true},
@@ -1357,7 +1455,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 13. Dividendos ---------- */
+/* ---------- 14. Dividendos ---------- */
 SIMS.push({
   id:"dividendos", nav:"Dividendos",
   title:"Quanto de renda as ações pagadoras de dividendos podem gerar?",
@@ -1478,7 +1576,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 14. Fundos imobiliários ---------- */
+/* ---------- 15. Fundos imobiliários ---------- */
 SIMS.push({
   id:"fii", nav:"Fundos imobiliários",
   title:"Quanto rendem os fundos imobiliários e quando viro rentista?",
@@ -1580,7 +1678,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 15. Criptomoedas ---------- */
+/* ---------- 16. Criptomoedas ---------- */
 const CRIPTO_IR = {
   br:   {nome:"Exchange no Brasil", ir:.15, isencao:true},
   ext:  {nome:"Exchange no exterior", ir:.15, isencao:false},
@@ -1686,7 +1784,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 16. PGBL x VGBL ---------- */
+/* ---------- 17. PGBL x VGBL ---------- */
 SIMS.push({
   id:"previdencia", nav:"PGBL ou VGBL",
   title:"PGBL, VGBL ou investir por fora?",
@@ -1754,7 +1852,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 17. Previdência privada ---------- */
+/* ---------- 18. Previdência privada ---------- */
 SIMS.push({
   id:"prevprivada", nav:"Previdência privada",
   title:"Quanto a previdência privada vai pagar por mês, e em qual tabela de IR?",
@@ -1854,7 +1952,7 @@ SIMS.push({
   }
 });
 
-/* ---------- 18. Imposto de renda ---------- */
+/* ---------- 19. Imposto de renda ---------- */
 SIMS.push({
   id:"ir", nav:"Imposto de renda",
   title:"Quanto de imposto de renda eu pago, e qual declaração compensa?",
