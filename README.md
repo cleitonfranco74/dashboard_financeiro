@@ -18,11 +18,12 @@ Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória es
 - Dados salvos no `localStorage` do navegador.
 
 ### Simuladores (`simuladores.html`)
-Aposentadoria, Tesouro Direto, quitação de dívidas, alugar ou financiar, consórcio, CDB, ações e PGBL/VGBL.
+Aposentadoria, Tesouro Direto, Tesouro Educa+ (faculdade dos filhos), quitação de dívidas, alugar ou financiar, consórcio, CDB, ações e PGBL/VGBL.
 - **Dados ao vivo:** Selic, CDI, IPCA 12 meses e Focus, direto das APIs do Banco Central. As taxas de Prefixado e IPCA+ vêm do título do Tesouro com vencimento mais próximo do prazo.
 - **Cenário Focus:** a Selic e o IPCA seguem mês a mês a trajetória esperada pelo mercado, e não uma taxa fixa.
 - **Valores em reais de hoje:** opção de descontar a inflação esperada.
 - **Taxas de equilíbrio:** Selic média que empata Prefixado × Selic e inflação implícita que empata IPCA+ × Prefixado.
+- **Tesouro Educa+:** aporte mensal para que as 60 parcelas do título paguem Medicina, Odontologia, Direito ou outro curso, com a taxa do Educa+ do ano certo.
 - **Ações:** cenários sorteados de blocos de 12 meses da história real do BOVA11.
 - **Sobra do Livro-Caixa:** a sobra média entra como aporte com um clique.
 
