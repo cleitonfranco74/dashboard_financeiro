@@ -18,7 +18,7 @@ Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória es
 - Dados salvos no `localStorage` do navegador.
 
 ### Calculadoras (`calculadoras.html`)
-35 calculadoras em 3 grupos, abertas a partir de uma vitrine em cartões, como no Investidor Sardinha. Links como `calculadoras.html#clt-pj` abrem direto a calculadora.
+35 calculadoras em 3 grupos (contas com resposta exata), abertas a partir de uma vitrine em cartões, como no Investidor Sardinha. Links como `calculadoras.html#clt-pj` abrem direto a calculadora.
 - **Financeiras:** primeiro milhão com carteiras sugeridas, juros compostos, juros simples, poupança × Selic, rentabilidade (bruta, líquida e real), viver de renda, reserva de emergência, CDB, comparador de renda fixa, marcação a mercado, comparador de ações (dados em `data/acoes.json`, gerado por `scripts/atualizar_acoes.py`), preço-teto, número mágico, à vista ou parcelado, juros do Pix parcelado e simulador de amortização (SAC ou Price, TR ou IPCA, aportes extras para reduzir prazo ou parcela). Aposentadoria e aluguel × financiamento abrem os simuladores.
 - **Trabalhistas:** CLT vs PJ, calculadora PJ (MEI, Simples III e V, Simples híbrido e Lucro Presumido, com cenário da reforma tributária de 2027 a 2033), produtor rural PF ou PJ (livro-caixa, Lucro Presumido e Lucro Real, com Funrural), salário líquido, custo de funcionário, férias, férias proporcionais, 13º, INSS, FGTS com saque-aniversário, horas extras, seguro-desemprego, isenção do IR 2026 e rescisão.
 - **Utilitárias:** contador de dias, dias úteis com feriados nacionais, carro a combustão × elétrico, custos fixos (regra 50-30-20) e comparador de cartões de crédito.
@@ -28,8 +28,14 @@ Todas as páginas usam o mesmo visual escuro com destaque verde-limão e a mesma
 
 Cada calculadora, cada simulador, o Livro-Caixa e a Carteira trazem abaixo dos resultados um **Como usar** (passo a passo), um **Entenda** (os conceitos por trás da conta) e **Perguntas frequentes**. Os textos ficam em `assets/guias.js`, compartilhado pelas duas páginas.
 
+### Calculadoras e simuladores: qual é qual
+- **Calculadora**: conta com regra fixa e resposta exata (tabelas de INSS e IR, CLT, datas, fórmulas). Fica em `calculadoras.html`.
+- **Simulador**: projeção no tempo com premissas sobre o futuro (juros do Focus, inflação, cenários). Fica em `simuladores.html`.
+- As ferramentas são definidas em dois motores compartilhados: `assets/calc-lib.js` (estilos em `assets/calc.css`, escopo `.calc-ui`) e `assets/sim-lib.js` (estilos em `assets/sim.css`, escopo `.sim-ui`). As duas páginas carregam os dois, então qualquer ferramenta pode aparecer em qualquer uma.
+- `assets/ferramentas.js` define em que página cada ferramenta mora, os links “Veja também” e o redirecionamento de endereços antigos (por exemplo, `calculadoras.html#milhao` abre `simuladores.html#milhao`).
+
 ### Simuladores (`simuladores.html`)
-22 simuladores em 5 grupos, abertos a partir de uma vitrine em cartões, com navegação em dois níveis (grupo e simulador):
+22 simuladores em 4 grupos, abertos a partir de uma vitrine em cartões, com navegação em dois níveis (grupo e simulador). Além dos listados abaixo, ficam aqui primeiro milhão, viver de renda, amortização e carro a combustão × elétrico. Imposto de renda, câmbio, passagens e orçamento de viagem ficam nas Calculadoras:
 - **Tesouro Direto:** comparar títulos, Tesouro Selic, IPCA+, Prefixado e Educa+ (faculdade dos filhos).
 - **Investimentos:** CDB e LCI/LCA, ações, dividendos, fundos imobiliários e criptomoedas.
 - **Aposentadoria e impostos:** aposentadoria, previdência privada, PGBL ou VGBL e imposto de renda.

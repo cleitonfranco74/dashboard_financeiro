@@ -1,0 +1,2290 @@
+/* Motor dos simuladores: definições, cálculos e formulário. Usado por simuladores.html e calculadoras.html. */
+(() => {
+/* ================= helpers ================= */
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const brl = new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
+const brl0 = new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
+const money = v => (v<0?"−":"") + brl0.format(Math.abs(v));
+const money2 = v => (v<0?"−":"") + brl.format(Math.abs(v));
+const pct = (v,d=2) => (v*100).toLocaleString("pt-BR",{minimumFractionDigits:0,maximumFractionDigits:d}) + "%";
+const nf = (v,d=0) => v.toLocaleString("pt-BR",{maximumFractionDigits:d});
+const aToM = r => Math.pow(1+r,1/12)-1;
+const mToA = r => Math.pow(1+r,12)-1;
+function parseNum(s){
+  s = String(s).replace(/[R$%\s]/g,"").replace(/\u2212/g,"-");
+  if (!s) return NaN;
+  if (s.includes(",")) s = s.replace(/\./g,"").replace(",",".");
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g,"");
+  return Number(s);
+}
+const fmtIn = v => typeof v==="number" ? v.toLocaleString("pt-BR",{maximumFractionDigits:4}) : v;
+function yrs(m){ const a=Math.floor(m/12), r=m%12; return (a?`${a} ${a===1?"ano":"anos"}`:"") + (a&&r?" e ":"") + (r||!a?`${r} ${r===1?"mês":"meses"}`:""); }
+const irRF = m => m<=6 ? .225 : m<=12 ? .20 : m<=24 ? .175 : .15;       // renda fixa, prazo em meses
+const irPrev = y => y<=2 ? .35 : y<=4 ? .30 : y<=6 ? .25 : y<=8 ? .20 : y<=10 ? .15 : .10; // previdência regressiva
+/* Imposto de renda da pessoa física: tabela progressiva (desde maio/2025) e redutor de 2026 (Lei 15.270/2025).
+ * Todos os valores ficam aqui para serem revisados quando a lei mudar. */
+const IRPF = {
+  mes: {faixas:[[2428.80,0,0],[2826.65,.075,182.16],[3751.05,.15,394.16],[4664.68,.225,675.49],[Infinity,.275,908.73]],
+        simplificado:607.20, dependente:189.59, red:{ate:5000, max:312.89, fim:7350, a:978.62, b:0.133145}},
+  ano: {faixas:[[29145.60,0,0],[33919.80,.075,2185.92],[45012.60,.15,4729.92],[55976.16,.225,8105.88],[Infinity,.275,10904.76]],
+        simplificadoPct:.20, simplificadoMax:16754.34, dependente:2275.08, educacao:3561.50, pgbl:.12,
+        red:{ate:60000, max:2694.15, fim:88200, a:8429.73, b:0.095575}},
+  inss: [[1518.00,.075],[2793.88,.09],[4190.83,.12],[8157.41,.14]],      // tabela de 2025 do empregado
+};
+const irTabela = (base, faixas) => { const f = faixas.find(([lim])=>base<=lim); return Math.max(0, base*f[1]-f[2]); };
+/* Redutor: zera o imposto até o primeiro limite e diminui linearmente até o segundo. Calculado sobre os rendimentos tributáveis. */
+const irRedutor = (renda, r) => renda<=r.ate ? r.max : renda<=r.fim ? Math.max(0, r.a-r.b*renda) : 0;
+const irMesBase = (base, renda) => Math.max(0, irTabela(base, IRPF.mes.faixas) - irRedutor(renda, IRPF.mes.red));
+const irAnoBase = (base, renda) => Math.max(0, irTabela(base, IRPF.ano.faixas) - irRedutor(renda, IRPF.ano.red));
+const inssMes = s => { let c=0, ant=0; for (const [lim,a] of IRPF.inss){ if (s>ant) c += (Math.min(s,lim)-ant)*a; ant=lim; } return c; };
+/* IR mensal de quem só tem o desconto simplificado (usado na renda da previdência). */
+const irMensal = x => irMesBase(Math.max(0, x-IRPF.mes.simplificado), x);
+function poupM(selicA, trM){ return selicA>0.085 ? 0.005+trM : aToM(0.7*selicA)+trM; }
+function irr(flows){
+  const npv = r => { let s=0; for (let i=0;i<flows.length;i++) s += flows[i]/Math.pow(1+r,i); return s; };
+  let lo=-0.5, hi=1, flo=npv(lo), fhi=npv(hi);   // −50% a.m. já basta e evita estouro numérico em prazos longos
+  if (!isFinite(flo)||!isFinite(fhi)||flo*fhi>0) return null;
+  for (let i=0;i<120;i++){ const mid=(lo+hi)/2, f=npv(mid); if (f*flo>0){lo=mid;flo=f;} else hi=mid; }
+  return (lo+hi)/2;
+}
+/* Investimento com aportes mensais; cada aporte tem sua própria idade para o IR regressivo. */
+function simInvest({p0=0, pmt=0, months, rate, fee, tax}){
+  const cs=[]; let feeTot=0;
+  const netNow = t => { let s=0; for (const c of cs){ const g=c.v-c.a; s += c.v - (g>0 ? g*tax(t-c.t) : 0); } return s; };
+  if (p0>0) cs.push({a:p0,v:p0,t:0});
+  if (pmt>0) cs.push({a:pmt,v:pmt,t:0});
+  const series=[netNow(0)];
+  for (let t=1;t<=months;t++){
+    const r = rate(t); let tot=0;
+    for (const c of cs){ c.v *= 1+r; tot += c.v; }
+    const f = fee ? fee(tot) : 0;
+    if (f>0 && tot>0){ const k=1-f/tot; for (const c of cs) c.v *= k; feeTot += f; }
+    series.push(netNow(t));
+    if (pmt>0 && t<months) cs.push({a:pmt,v:pmt,t});
+  }
+  const gross = cs.reduce((a,c)=>a+c.v,0), invested = cs.reduce((a,c)=>a+c.a,0), net = series[months];
+  const flows = Array(months+1).fill(0); flows[0] = -(p0+pmt); for (let t=1;t<months;t++) flows[t] = -pmt; flows[months] += net;
+  const im = irr(flows);
+  return {series, gross, invested, fee:feeTot, tax:gross-net, net, irrA: im===null?null:mToA(im)};
+}
+
+/* ================= charts ================= */
+function niceTicks(min, max, n=5){
+  if (max===min){ max = min + 1; }
+  const raw=(max-min)/n, mag=Math.pow(10,Math.floor(Math.log10(raw))), nr=raw/mag;
+  const step=(nr<=1?1:nr<=2?2:nr<=2.5?2.5:nr<=5?5:10)*mag;
+  const lo=Math.floor(min/step)*step, hi=Math.ceil(max/step)*step, out=[];
+  for (let v=lo; v<=hi+step/2; v+=step) out.push(Math.round(v*1e6)/1e6);
+  return out;
+}
+function compact(v){
+  const a=Math.abs(v), s=v<0?"−":"";
+  if (a>=1e6) return s+nf(a/1e6,a>=1e7?0:1)+" mi";
+  if (a>=1e3) return s+nf(a/1e3,a>=1e4?0:1)+" mil";
+  return s+nf(a);
+}
+const charts = new Map();
+function lineChart(el, spec){ charts.set(el, spec); drawLine(el, spec); }
+function drawLine(el, spec){
+  const {xs, series, xFmt, tipTitle, height=270, yFmt=compact, dashed=[]} = spec;
+  const W = Math.max(280, el.clientWidth||640), H = height, m={t:14,r:14,b:30,l:58};
+  const all = series.flatMap(s=>s.values.filter(v=>v!=null&&isFinite(v)));
+  const ticks = niceTicks(Math.min(0,...all), Math.max(spec.minTop ?? 1,...all), 5);
+  const y0=ticks[0], y1=ticks[ticks.length-1];
+  const x0=xs[0], x1=xs[xs.length-1]||1;
+  const X = v => m.l + (v-x0)/((x1-x0)||1)*(W-m.l-m.r);
+  const Y = v => m.t + (y1-v)/((y1-y0)||1)*(H-m.t-m.b);
+  let g="";
+  if (spec.band){
+    const {lo, hi, color} = spec.band;
+    const top = xs.map((x,i)=>`${X(x).toFixed(1)},${Y(hi[i]).toFixed(1)}`), bot = xs.map((x,i)=>`${X(x).toFixed(1)},${Y(lo[i]).toFixed(1)}`).reverse();
+    g += `<polygon points="${top.concat(bot).join(" ")}" fill="${color}" opacity=".13"/>`;
+  }
+  for (const t of ticks){
+    g += `<line x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(${t===0?"--axis":"--line"})"/>`;
+    g += `<text class="tn" x="${m.l-8}" y="${Y(t)+3.5}" text-anchor="end">${yFmt(t)}</text>`;
+  }
+  const xt = niceTicks(x0, x1, Math.max(3, Math.min(8, Math.floor((W-m.l)/80)))).filter(v=>v>=x0&&v<=x1);
+  for (const t of xt) g += `<text x="${X(t)}" y="${H-9}" text-anchor="middle">${xFmt(t)}</text>`;
+  series.forEach((s,si)=>{
+    let d="", pen=false;
+    s.values.forEach((v,i)=>{ if (v==null||!isFinite(v)){pen=false;return;} d += (pen?"L":"M")+X(xs[i]).toFixed(1)+","+Y(v).toFixed(1); pen=true; });
+    const dash = dashed.includes(si) ? ` stroke-dasharray="6 5"` : "";
+    g += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"${dash}/>`;
+    let li=s.values.length-1; while (li>=0 && (s.values[li]==null||!isFinite(s.values[li]))) li--;
+    if (li>=0 && !dashed.includes(si)) g += `<circle cx="${X(xs[li])}" cy="${Y(s.values[li])}" r="4" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`;
+  });
+  g += `<g class="hov" style="display:none"><line class="cx" y1="${m.t}" y2="${H-m.b}" stroke="var(--axis)"/>${series.map(s=>`<circle r="4.5" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`).join("")}</g>`;
+  g += `<rect class="ov" x="${m.l}" y="0" width="${W-m.l-m.r}" height="${H}" fill="transparent"/>`;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${esc(spec.label||"Gráfico")}">${g}</svg><div class="tip" hidden></div>`;
+  const svg=$("svg",el), tip=$(".tip",el), hov=$(".hov",el), dots=hov.querySelectorAll("circle");
+  const move = e => {
+    const b = svg.getBoundingClientRect(), px = (e.clientX-b.left)*(W/b.width);
+    const xv = x0 + (px-m.l)/(W-m.l-m.r)*(x1-x0);
+    let i=0, best=Infinity; xs.forEach((x,k)=>{ const d=Math.abs(x-xv); if (d<best){best=d;i=k;} });
+    hov.style.display=""; const cx=X(xs[i]); $(".cx",hov).setAttribute("x1",cx); $(".cx",hov).setAttribute("x2",cx);
+    series.forEach((s,k)=>{ const v=s.values[i]; if (v==null||!isFinite(v)){dots[k].style.display="none";return;} dots[k].style.display=""; dots[k].setAttribute("cx",cx); dots[k].setAttribute("cy",Y(v)); });
+    tip.hidden=false;
+    tip.innerHTML = `<div class="t">${esc(tipTitle(xs[i]))}</div>` + series.map(s=>`<div class="r"><span><i style="background:${s.color}"></i>${esc(s.name)}</span><span class="num">${s.values[i]==null||!isFinite(s.values[i])?"—":(spec.tipFmt||money)(s.values[i])}</span></div>`).join("");
+    const lx = (cx/W)*b.width; let x = lx+14; if (x+tip.offsetWidth > b.width) x = lx-tip.offsetWidth-14;
+    tip.style.left = Math.max(0,x)+"px"; tip.style.top = "8px";
+  };
+  const ov=$(".ov",el);
+  ov.addEventListener("mousemove", move);
+  ov.addEventListener("touchstart", e=>move(e.touches[0]), {passive:true});
+  ov.addEventListener("touchmove", e=>move(e.touches[0]), {passive:true});
+  ov.addEventListener("mouseleave", ()=>{ tip.hidden=true; hov.style.display="none"; });
+}
+let rsT; new ResizeObserver(()=>{ clearTimeout(rsT); rsT=setTimeout(()=>{ for (const [el,spec] of charts) if (el.isConnected) drawLine(el,spec); else charts.delete(el); },80); }).observe(document.body);
+
+const legend = items => `<div class="legend">${items.map(([n,c,d])=>`<span><i style="background:${d?`repeating-linear-gradient(90deg,${c} 0 4px,transparent 4px 7px)`:c}"></i>${esc(n)}</span>`).join("")}</div>`;
+const kpi = (lbl, val, hint="", color="", win=false) => `<div class="kpi${win?" win":""}"><div class="lbl">${color?`<i style="background:${color}"></i>`:""}${lbl}${win?` <span class="badge">melhor</span>`:""}</div><div class="val">${val}</div>${hint?`<div class="hint">${hint}</div>`:""}</div>`;
+const verdict = (tag, main, extra="", err=false) => `<div class="verdict${err?" err":""}"><span class="tag">${tag}</span><p>${main}</p>${extra?`<p>${extra}</p>`:""}</div>`;
+const chartPanel = (title, sub, leg, id) => `<section class="panel"><div class="phead"><div><h3>${title}</h3><div class="sub">${sub}</div></div>${leg}</div><div class="chart" id="${id}"></div></section>`;
+const notes = list => `<section class="panel"><details class="prem"><summary>Premissas e regras usadas</summary><ul class="notes">${list.map(n=>`<li>${n}</li>`).join("")}</ul></details></section>`;
+const C = {s1:"var(--s1)", s2:"var(--s2)", s3:"var(--s3)", s4:"var(--s4)", ink:"var(--ink-2)"};
+const monthX = n => v => n>36 ? `${nf(v/12,1)}a` : `m${nf(v)}`;
+
+/* ================= simuladores ================= */
+/* ================= mercado ================= */
+let MKT = null;                                   // dados do Banco Central / Tesouro, quando carregados
+const mediaAnual = (path, n) => Mercado.mediaAnual(path, n);
+const CENARIO = {k:"cenario",label:"Cenário de juros",def:"focus",opts:[["focus","Focus do Banco Central"],["constante","Taxas constantes"]]};
+const UNIDADE = {k:"unid",label:"Mostrar valores",def:"nominal",opts:[["nominal","Nominais"],["real","Em reais de hoje"]]};
+function paths(v){
+  const focus = !!MKT && v.cenario!=="constante";
+  const selicHoje = v.selic ?? (v.cdi!=null ? v.cdi+0.10 : MKT?.indicadores.selic.valor ?? 13.75);
+  const ipcaC = (v.ipca ?? MKT?.indicadores.ipca12.valor ?? 4.5)/100;
+  return {
+    focus,
+    selic: focus ? Mercado.selicPath(MKT, selicHoje) : ()=>selicHoje/100,
+    ipca: focus ? Mercado.ipcaPath(MKT) : ()=>ipcaC,
+  };
+}
+function deflator(ipca, m){ const D=[1]; for (let t=1;t<=m;t++) D.push(D[t-1]*(1+aToM(ipca(t)))); return D; }
+function toReal(r, D, p0, pmt, m){
+  r.series = r.series.map((x,t)=>x/D[t]);
+  const k = 1/D[m];
+  r.net*=k; r.gross*=k; r.fee*=k; r.tax*=k;
+  r.invested = p0 + Array.from({length:m},(_,t)=>pmt/D[t]).reduce((a,b)=>a+b,0);
+  if (r.irrA!=null) r.irrA = (1+r.irrA)/Math.pow(D[m],12/m)-1;
+}
+const r2 = x => Math.round(x*100)/100;
+const cdiEsperado = months => { const s = Mercado.selicPath(MKT, MKT.indicadores.selic.valor); return mediaAnual(t=>s(t)-0.001, Math.max(1,months)); };
+/* Campos preenchidos com dados de mercado enquanto o usuário não os altera. */
+const MKT_FIELDS = {
+  selic: M => ({valor:M.indicadores.selic.valor, hint:`Meta Selic, BCB ${Mercado.dataBR(M.indicadores.selic.data)}`}),
+  cdi: M => ({valor:M.indicadores.cdi.valor, hint:`CDI, BCB ${Mercado.dataBR(M.indicadores.cdi.data)}`}),
+  ipca: M => ({valor:M.indicadores.ipca12.valor, hint:`IPCA 12 meses, IBGE/BCB ${Mercado.dataBR(M.indicadores.ipca12.data).slice(3)}`}),
+  pre: (M,v) => { const t = Mercado.titulo(M,"Tesouro Prefixado",v.anos); return t && {valor:t.taxaCompra, hint:`Tesouro Prefixado ${t.vencimento.slice(0,4)}, taxa de ${Mercado.dataBR(M.tesouro.data)}`}; },
+  real: (M,v) => { const t = Mercado.titulo(M,"Tesouro IPCA+",v.anos); return t && {valor:t.taxaCompra, hint:`Tesouro IPCA+ ${t.vencimento.slice(0,4)}, taxa de ${Mercado.dataBR(M.tesouro.data)}`}; },
+  selicTit: (M,v) => { const t = Mercado.titulo(M,"Tesouro Selic",v.anos); return t && {valor:t.taxaCompra, hint:`Tesouro Selic ${t.vencimento.slice(0,4)}, taxa de ${Mercado.dataBR(M.tesouro.data)}`}; },
+  dolar: M => { const s = M.bolsa?.dolar; return s?.valores?.length ? {valor:s.valores[s.valores.length-1], hint:`PTAX de venda, BCB ${Mercado.dataBR(s.datas[s.datas.length-1])}`} : null; },
+  volDolar: () => { const x = volDolar(); return x && {valor:r2(x*100), hint:"oscilação do dólar PTAX nos últimos 12 meses"}; },
+  educa: (M,v) => { const t = educaTitulo(M, educaAno(v)); return t && {valor:t.taxaCompra, hint:`Tesouro Educa+ ${t.vencimento.slice(0,4)}, taxa de ${Mercado.dataBR(M.tesouro.data)}`}; },
+  cdiMedio: (M,v,f) => { const m=f.hz(v); return isFinite(m) && {valor:r2(cdiEsperado(m)*100), hint:`CDI médio esperado em ${yrs(Math.round(m))}, pelo Focus`}; },
+  investLiq: (M,v,f) => { const m=f.hz(v); return isFinite(m) && {valor:r2(cdiEsperado(m)*85), hint:`CDI médio esperado pelo Focus, menos 15% de IR`}; },
+};
+/* Sobra média dos últimos 3 meses fechados do Livro-Caixa (mesmo navegador). */
+const SOBRA = (()=>{ try {
+  const tx = JSON.parse(localStorage.getItem("lc:tx")||"[]"); if (!Array.isArray(tx) || !tx.length) return null;
+  const cur = new Date().toISOString().slice(0,7), byM = {};
+  for (const t of tx){ const k=String(t.date).slice(0,7); if (k>=cur) continue; byM[k]=(byM[k]||0)+(t.kind==="receita"?1:-1)*(+t.amount||0); }
+  const ks = Object.keys(byM).sort().slice(-3); if (!ks.length) return null;
+  const avg = ks.reduce((a,k)=>a+byM[k],0)/ks.length;
+  return avg>0 ? {valor:Math.round(avg), meses:ks.length} : null;
+} catch { return null; } })();
+
+const SIMS = [];
+
+/* ---------- 1. Aposentadoria ---------- */
+SIMS.push({
+  id:"aposentadoria", nav:"Aposentadoria",
+  title:"Quanto preciso juntar para me aposentar?",
+  lede:"Tudo em valores de hoje: use retornos reais (acima da inflação) e a renda que você gostaria de ter com o poder de compra atual.",
+  fields:[
+    {k:"idade",label:"Idade atual",def:35,suf:"anos"},
+    {k:"idadeApos",label:"Aposentar aos",def:65,suf:"anos"},
+    {k:"ate",label:"Planejar até",def:90,suf:"anos"},
+    {k:"patrimonio",label:"Já investido",def:50000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:1500,pre:"R$",wide:true,sobra:true},
+    {sect:"Renda na aposentadoria"},
+    {k:"renda",label:"Renda desejada",def:8000,pre:"R$",suf:"/mês"},
+    {k:"inss",label:"INSS estimado",def:3000,pre:"R$",suf:"/mês"},
+    {sect:"Rentabilidade real"},
+    {k:"retAcc",label:"Até aposentar",def:5,suf:"% a.a.",hint:"acima da inflação"},
+    {k:"retApos",label:"Depois",def:4,suf:"% a.a.",hint:"carteira mais conservadora"},
+  ],
+  run(v){
+    if (!(v.idadeApos>v.idade)) return {error:"A idade de aposentadoria precisa ser maior que a idade atual."};
+    if (!(v.ate>v.idadeApos)) return {error:"“Planejar até” precisa ser maior que a idade de aposentadoria."};
+    const r1=aToM(v.retAcc/100), r2=aToM(v.retApos/100);
+    const n1=Math.round((v.idadeApos-v.idade)*12), n2=Math.round((v.ate-v.idadeApos)*12);
+    const g1=Math.pow(1+r1,n1);
+    const fv = v.patrimonio*g1 + (r1? v.aporte*(g1-1)/r1 : v.aporte*n1);
+    const need = Math.max(0, v.renda - v.inss);
+    const ann = r2 ? (1-Math.pow(1+r2,-n2))/r2 : n2;
+    const capNeed = need*ann;
+    const capPerp = r2 ? need/r2 : Infinity;
+    const pmtReq = Math.max(0, (capNeed - v.patrimonio*g1) * (r1 ? r1/(g1-1) : 1/n1));
+    const rendaPossivel = fv/ann + v.inss;
+    const path = pmt => { const out=[]; let b=v.patrimonio, esg=null;
+      for (let t=0;t<=n1+n2;t++){
+        if (t%12===0) out.push(Math.max(0,b));
+        if (t===n1+n2) break;
+        if (t<n1){ b = b*(1+r1)+pmt; } else { b = b*(1+r2)-need; if (b<0 && esg===null) esg = v.idade + (t+1)/12; }
+      } return {out, esg}; };
+    const A = path(v.aporte), B = path(pmtReq);
+    const xs = A.out.map((_,i)=>v.idade+i);
+    const ok = fv >= capNeed - 1;
+    const main = ok
+      ? `Seu plano cobre a renda desejada. Aos ${v.idadeApos} você terá cerca de <b>${money(fv)}</b>, o bastante para ${money(v.renda)}/mês (com o INSS) até os ${v.ate}.`
+      : `Faltam <b>${money(capNeed-fv)}</b>. Para ter ${money(v.renda)}/mês até os ${v.ate}, aporte <b>${money(pmtReq)}/mês</b> em vez de ${money(v.aporte)}.`;
+    const extra = ok
+      ? `Com o que vai acumular, dá para retirar até ${money(rendaPossivel)}/mês. Para viver só dos rendimentos, sem consumir o principal, seriam necessários ${money(capPerp)}.`
+      : `Mantendo o aporte atual, a renda possível é de ${money(rendaPossivel)}/mês (com o INSS)${A.esg?`; na renda desejada, o dinheiro acaba por volta dos ${Math.floor(A.esg)} anos`:""}.`;
+    return {
+      html: verdict(ok?"Plano no caminho":"Plano abaixo da meta", main, extra) +
+        `<div class="kpis">${kpi(`Patrimônio aos ${v.idadeApos}`, money(fv), "em valores de hoje", C.s1)}${kpi("Necessário", money(capNeed), `para ${money(need)}/mês além do INSS`)}${kpi("Aporte necessário", money(pmtReq)+"/mês", `hoje: ${money(v.aporte)}/mês`, C.s2)}${kpi("Renda possível", money(rendaPossivel)+"/mês","incluindo o INSS")}</div>` +
+        chartPanel("Patrimônio ao longo da vida", "Acumulação até a aposentadoria e consumo depois, em valores de hoje", legend([["Seu plano",C.s1],["Plano necessário",C.s2]]), "ch") +
+        notes(["Retornos reais (descontada a inflação), então todos os valores estão no poder de compra de hoje.",
+          "Aportes mensais no fim de cada mês; na aposentadoria, retirada mensal igual à renda desejada menos o INSS.",
+          "Impostos não calculados à parte: informe a rentabilidade já líquida de IR e taxas.",
+          `“Necessário” consome o patrimônio até os ${v.ate} anos. Viver só de renda exigiria ${money(capPerp)}.`]),
+      after(){ lineChart($("#ch"),{label:"Patrimônio por idade", xs, series:[{name:"Seu plano",color:C.s1,values:A.out},{name:"Plano necessário",color:C.s2,values:B.out}], xFmt:v=>`${nf(v)}`, tipTitle:x=>`${nf(x)} anos`}); }
+    };
+  }
+});
+
+/* ---------- 2. Tesouro Direto ---------- */
+SIMS.push({
+  id:"tesouro", nav:"Comparar títulos",
+  title:"Qual título do Tesouro rende mais no seu prazo?",
+  lede:"Compara Tesouro Selic, Prefixado e IPCA+ levados até o vencimento, já descontados IR regressivo e taxa de custódia da B3, contra a poupança.",
+  fields:[
+    {k:"inicial",label:"Investimento inicial",def:10000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:500,pre:"R$",sobra:true},
+    {k:"anos",label:"Prazo",def:5,suf:"anos",wide:true},
+    {sect:"Taxas e projeções"},
+    CENARIO, UNIDADE,
+    {k:"selic",label:"Selic hoje",def:13.75,suf:"% a.a.",mkt:"selic"},
+    {k:"ipca",label:"IPCA 12 meses",def:4.22,suf:"% a.a.",mkt:"ipca"},
+    {k:"pre",label:"Taxa do Prefixado",def:13.9,suf:"% a.a.",mkt:"pre"},
+    {k:"real",label:"IPCA+ (taxa real)",def:7.6,suf:"% a.a.",mkt:"real"},
+    {k:"custodia",label:"Custódia B3",def:0.2,suf:"% a.a."},
+    {k:"tr",label:"TR",def:0.15,suf:"% a.m.",hint:"usada na poupança"},
+  ],
+  run(v){
+    const months = Math.round(v.anos*12);
+    if (!(months>=1 && months<=600)) return {error:"Informe um prazo entre 1 mês e 50 anos."};
+    if (!(v.inicial+v.aporte>0)) return {error:"Informe um investimento inicial ou um aporte mensal."};
+    const P = paths(v), D = deflator(P.ipca, months), real = v.unid==="real";
+    const cust = v.custodia/100/12;
+    const base = {p0:v.inicial, pmt:v.aporte, months, tax:irRF};
+    const selicRun = S => simInvest({...base, rate:S, fee:b=>Math.max(0,b-10000)*cust});
+    const res = [
+      {name:"Tesouro Selic", color:C.s1, ...selicRun(t=>aToM(P.selic(t)))},
+      {name:"Tesouro Prefixado", color:C.s2, ...simInvest({...base, rate:()=>aToM(v.pre/100), fee:b=>b*cust})},
+      {name:"Tesouro IPCA+", color:C.s3, ...simInvest({...base, rate:t=>(1+aToM(P.ipca(t)))*(1+aToM(v.real/100))-1, fee:b=>b*cust})},
+      {name:"Poupança", color:C.s4, ...simInvest({...base, rate:t=>poupM(P.selic(t), v.tr/100), tax:()=>0})},
+    ];
+    // Taxas de equilíbrio (sempre em termos nominais)
+    const preNet = res[1].net;
+    let lo=0, hi=0.6; for (let i=0;i<50;i++){ const mid=(lo+hi)/2; if (selicRun(()=>aToM(mid)).net < preNet) lo=mid; else hi=mid; }
+    const selicEq = (lo+hi)/2, selicMed = mediaAnual(P.selic, months), ipcaMed = mediaAnual(P.ipca, months);
+    const infImp = (1+v.pre/100)/(1+v.real/100)-1;
+    const infl = D[months];
+    if (real) res.forEach(r=>toReal(r, D, v.inicial, v.aporte, months));
+    const best = res.reduce((a,b)=>b.net>a.net?b:a);
+    const poup = res[3];
+    const xs = Array.from({length:months+1},(_,i)=>i);
+    const unid = real ? " em reais de hoje" : "";
+    return {
+      html: verdict("Resultado", `Em ${yrs(months)}, o <b>${best.name}</b> entrega mais: <b>${money(best.net)}</b> líquidos${unid}, ${money(best.net-poup.net)} a mais que a poupança.`,
+          `Rentabilidade líquida de ${best.irrA!=null?pct(best.irrA):"—"} ao ano${real?" acima da inflação":best.irrA!=null?`, ou ${pct((1+best.irrA)/(1+ipcaMed)-1)} acima do IPCA esperado`:""}. Cenário: ${P.focus?"Selic e IPCA seguindo o Focus mês a mês":"taxas constantes"}.`) +
+        `<div class="kpis">${res.map(r=>kpi(r.name, money(r.net), r.irrA!=null?`${pct(r.irrA)} a.a. líquido${real?" real":""}`:"", r.color, r===best)).join("")}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>Taxas de equilíbrio</h3><div class="sub">O que precisa acontecer para cada título vencer o outro</div></div></div><div class="tablewrap"><table><thead><tr><th>Comparação</th><th class="n">Equilíbrio</th><th class="n">${P.focus?"Focus espera":"Você supôs"}</th><th>Leitura</th></tr></thead><tbody>
+          <tr><td>Prefixado × Selic</td><td class="n num">Selic média ${pct(selicEq)}</td><td class="n num">${pct(selicMed)}</td><td>${selicMed<selicEq?"Prefixado tende a ganhar: a Selic esperada está abaixo do equilíbrio.":"Selic tende a ganhar: a Selic esperada está acima do equilíbrio."}</td></tr>
+          <tr><td>IPCA+ × Prefixado</td><td class="n num">Inflação ${pct(infImp)}</td><td class="n num">${pct(ipcaMed)}</td><td>${ipcaMed>infImp?"IPCA+ tende a ganhar: a inflação esperada supera a implícita.":"Prefixado tende a ganhar: a inflação esperada está abaixo da implícita. O IPCA+ protege se a inflação surpreender."}</td></tr>
+        </tbody></table></div></section>` +
+        chartPanel("Valor líquido se resgatado em cada mês", `Já descontados IR e custódia${unid}`, legend(res.map(r=>[r.name,r.color])), "ch") +
+        `<section class="panel"><h3>Detalhamento no vencimento</h3><div class="tablewrap"><table><thead><tr><th>Título</th><th class="n">Investido</th><th class="n">Bruto</th><th class="n">Custódia</th><th class="n">IR</th><th class="n">Líquido</th><th class="n">Poder de compra hoje</th></tr></thead><tbody>
+        ${res.map(r=>`<tr class="${r===best?"best":""}"><td><span class="sw" style="background:${r.color}"></span>${r.name}</td><td class="n num">${money(r.invested)}</td><td class="n num">${money(r.gross+r.fee)}</td><td class="n num">${money(r.fee)}</td><td class="n num">${money(r.tax)}</td><td class="n num"><b>${money(r.net)}</b></td><td class="n num">${money(real?r.net:r.net/infl)}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
+        notes(["IR regressivo sobre o rendimento de cada aporte: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima disso. Poupança é isenta.",
+          "Custódia da B3 de 0,20% a.a. sobre o saldo; no Tesouro Selic, cobrada só sobre o que passa de R$ 10 mil.",
+          "Prefixado e IPCA+ assumem que você leva o título até o vencimento. Vender antes expõe à marcação a mercado, que pode dar lucro ou prejuízo.",
+          "Poupança: 0,5% a.m. + TR quando a Selic está acima de 8,5% a.a.; caso contrário, 70% da Selic + TR.",
+          "Cenário Focus: a Selic parte da taxa de hoje e caminha até as medianas de fim de ano do Boletim Focus; o IPCA de cada ano é a mediana do Focus. CDI = Selic − 0,10 ponto.",
+          "Taxas do Prefixado e do IPCA+ preenchidas com o título do Tesouro de vencimento mais próximo do prazo, pela taxa de compra do último dia disponível.",
+          "Equilíbrio Prefixado × Selic: Selic média constante que faria o Tesouro Selic render o mesmo que o Prefixado, com os mesmos custos. Inflação implícita = (1 + prefixado) ÷ (1 + IPCA+) − 1."]),
+      after(){ lineChart($("#ch"),{label:"Valor líquido por mês", xs, series:res.map(r=>({name:r.name,color:r.color,values:r.series})), xFmt:monthX(months), tipTitle:x=>`Mês ${x} · ${yrs(x)}`}); }
+    };
+  }
+});
+
+/* ---------- 3. Tesouro Selic ---------- */
+SIMS.push({
+  id:"selic", nav:"Tesouro Selic",
+  title:"Quanto rende o Tesouro Selic?",
+  lede:"Projeta o Tesouro Selic mês a mês, com a Selic esperada pelo Focus, IR regressivo e custódia da B3. É o título indicado para a reserva de emergência, porque pode ser resgatado a qualquer dia sem perda.",
+  fields:[
+    {k:"inicial",label:"Investimento inicial",def:10000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:500,pre:"R$",suf:"/mês",sobra:true},
+    {k:"anos",label:"Prazo",def:3,suf:"anos"},
+    {k:"meta",label:"Objetivo",def:0,pre:"R$",hint:"deixe 0 para ignorar"},
+    {sect:"Taxas e projeções"},
+    CENARIO, UNIDADE,
+    {k:"selic",label:"Selic hoje",def:13.75,suf:"% a.a.",mkt:"selic"},
+    {k:"agio",label:"Taxa acima da Selic",def:0.05,suf:"% a.a.",mkt:"selicTit",hint:"taxa de compra do título"},
+    {k:"ipca",label:"IPCA 12 meses",def:4.22,suf:"% a.a.",mkt:"ipca"},
+    {k:"custodia",label:"Custódia B3",def:0.2,suf:"% a.a.",hint:"cobrada só sobre o que passa de R$ 10 mil"},
+    {k:"tr",label:"TR",def:0.15,suf:"% a.m.",hint:"usada na poupança"},
+  ],
+  run(v){
+    const months = Math.round(v.anos*12);
+    if (!(months>=1 && months<=600)) return {error:"Informe um prazo entre 1 mês e 50 anos."};
+    if (!(v.inicial+v.aporte>0)) return {error:"Informe um investimento inicial ou um aporte mensal."};
+    const P = paths(v), D = deflator(P.ipca, months), real = v.unid==="real";
+    const over = t => Math.max(0, P.selic(t)-0.001);                 // Selic over ≈ meta − 0,10 ponto
+    const cust = v.custodia/100/12, base = {p0:v.inicial, pmt:v.aporte, months, tax:irRF};
+    const ts = simInvest({...base, rate:t=>aToM((1+over(t))*(1+v.agio/100)-1), fee:b=>Math.max(0,b-10000)*cust});
+    const pp = simInvest({...base, rate:t=>poupM(P.selic(t), v.tr/100), tax:()=>0});
+    const selicMed = mediaAnual(over, months), ipcaMed = mediaAnual(P.ipca, months);
+    // Investido até o mês t: inicial mais os aportes feitos nos meses 0 a t−1 (o do mês 0 junto com o inicial).
+    const nAp = t => Math.max(1,t);
+    const inv = [], invCorr = [];
+    for (let t=0;t<=months;t++){
+      let a=0, c=0; for (let k=0;k<nAp(t);k++){ a += real ? v.aporte/D[k] : v.aporte; c += v.aporte*D[t]/D[k]; }
+      inv.push(v.inicial+a); invCorr.push(v.inicial*D[t]+c);
+    }
+    if (real){ toReal(ts, D, v.inicial, v.aporte, months); toReal(pp, D, v.inicial, v.aporte, months); }
+    /* Selic over média nos 12 meses que terminam em m. */
+    const selicAno = m => { const n=Math.min(12,m); let f=1; for (let t=m-n+1;t<=m;t++) f *= Math.pow(1+over(t),1/12); return Math.pow(f,12/n)-1; };
+    const unid = real ? " em reais de hoje" : "";
+    const ganho = ts.net - ts.invested;
+    const metaM = v.meta>0 ? ts.series.findIndex(x=>x>=v.meta) : -1;
+    const metaTxt = v.meta>0 ? (metaM>=0 ? `Você alcança o objetivo de ${money(v.meta)} em <b>${yrs(Math.max(1,metaM))}</b>.` : `O objetivo de ${money(v.meta)} não é alcançado no prazo: faltam ${money(v.meta-ts.net)}.`) : "";
+    const xs = Array.from({length:months+1},(_,i)=>i);
+    const anosTab = Array.from({length:Math.ceil(months/12)},(_,i)=>Math.min(months,(i+1)*12));
+    const series = [{name:"Tesouro Selic",color:C.s1,values:ts.series},{name:"Poupança",color:C.s4,values:pp.series},{name:"Total investido",color:C.ink,values:inv}];
+    if (!real) series.push({name:"Investido corrigido pelo IPCA",color:C.s2,values:invCorr});
+    return {
+      html: verdict("Resultado", `Em ${yrs(months)}, o Tesouro Selic vira <b>${money(ts.net)}</b> líquidos${unid}: ${money(ts.invested)} investidos e <b>${money(ganho)}</b> de rendimento, ${money(ts.net-pp.net)} a mais que a poupança.`,
+          `Rentabilidade líquida de ${ts.irrA!=null?pct(ts.irrA):"—"} ao ano${real?" acima da inflação":ts.irrA!=null?`, ou ${pct((1+ts.irrA)/(1+ipcaMed)-1)} acima do IPCA esperado`:""}. Selic média esperada no período: ${pct(selicMed)}. ${metaTxt}`) +
+        `<div class="kpis">${kpi("Valor líquido", money(ts.net), `${pct(ts.irrA??0)} a.a. líquido${real?" real":""}`, C.s1)}${kpi("Rendimento líquido", money(ganho), `sobre ${money(ts.invested)} investidos`)}${kpi("IR e custódia", money(ts.tax+ts.fee), `IR ${money(ts.tax)} · custódia ${money(ts.fee)}`)}${kpi("Poupança", money(pp.net), pp.irrA!=null?`${pct(pp.irrA)} a.a.${real?" real":""}`:"", C.s4)}</div>` +
+        chartPanel("Valor líquido se resgatado em cada mês", `Já descontados IR e custódia${unid}`, legend([["Tesouro Selic",C.s1],["Poupança",C.s4],["Total investido",C.ink,true],...(real?[]:[["Investido corrigido pelo IPCA",C.s2,true]])]), "ch") +
+        `<section class="panel"><h3>Ano a ano</h3><div class="tablewrap"><table><thead><tr><th>Ano</th><th class="n">Selic média</th><th class="n">Investido</th><th class="n">Valor líquido</th><th class="n">Rendimento líquido</th></tr></thead><tbody>
+        ${anosTab.map(m=>`<tr><td>${yrs(m)}</td><td class="n num">${pct(selicAno(m))}</td><td class="n num">${money(inv[m])}</td><td class="n num"><b>${money(ts.series[m])}</b></td><td class="n num">${money(ts.series[m]-inv[m])}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
+        notes(["O Tesouro Selic rende a Selic over, que fica cerca de 0,10 ponto abaixo da meta da Selic, mais a taxa do título. Uma taxa positiva significa compra com pequeno desconto.",
+          "Liquidez diária: o resgate cai na conta no mesmo dia útil. A marcação a mercado é mínima, por isso é o título mais usado na reserva de emergência.",
+          "IR regressivo sobre o rendimento de cada aporte: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima disso. Resgates com menos de 30 dias também pagam IOF, não incluído aqui.",
+          "Custódia da B3 de 0,20% a.a., cobrada só sobre o saldo que passa de R$ 10 mil.",
+          "Poupança: 0,5% a.m. + TR quando a Selic está acima de 8,5% a.a.; caso contrário, 70% da Selic + TR. É isenta de IR.",
+          "Cenário Focus: a Selic parte da taxa de hoje e caminha até as medianas de fim de ano do Boletim Focus. Em “Taxas constantes”, a Selic de hoje vale para todo o prazo."]),
+      after(){ lineChart($("#ch"),{label:"Valor líquido por mês", xs, series, dashed:real?[2]:[2,3], xFmt:monthX(months), tipTitle:x=>`Mês ${x} · ${yrs(x)}`}); }
+    };
+  }
+});
+
+/* ---------- 4. Tesouro IPCA+ ---------- */
+SIMS.push({
+  id:"ipca", nav:"Tesouro IPCA+",
+  title:"Quanto rende o Tesouro IPCA+ e quanto arrisco se vender antes?",
+  lede:"Levado até o vencimento, o IPCA+ garante a taxa real contratada. Vendido antes, ele vale o preço de mercado do dia, que sobe quando os juros caem e cai quando os juros sobem.",
+  fields:[
+    {k:"inicial",label:"Investimento inicial",def:10000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:300,pre:"R$",suf:"/mês",sobra:true},
+    {k:"anos",label:"Prazo até o vencimento",def:10,suf:"anos"},
+    {k:"venda",label:"Vender antes, em",def:3,suf:"anos"},
+    {k:"choque",label:"Variação da taxa até a venda",def:1,suf:"pontos",neg:true,hint:"positivo: juros sobem e o título cai"},
+    {sect:"Taxas e projeções"},
+    CENARIO, UNIDADE,
+    {k:"real",label:"Taxa do IPCA+",def:7,suf:"% a.a.",mkt:"real",hint:"juro real, acima do IPCA"},
+    {k:"ipca",label:"IPCA 12 meses",def:4.22,suf:"% a.a.",mkt:"ipca"},
+    {k:"selic",label:"Selic hoje",def:13.75,suf:"% a.a.",mkt:"selic",hint:"para comparar com o Tesouro Selic"},
+    {k:"custodia",label:"Custódia B3",def:0.2,suf:"% a.a."},
+  ],
+  run(v){
+    const T = Math.round(v.anos*12), K = Math.round(v.venda*12);
+    if (!(T>=1 && T<=600)) return {error:"Informe um prazo entre 1 mês e 50 anos."};
+    if (!(K>=1 && K<=T)) return {error:"A venda antecipada precisa acontecer entre o primeiro mês e o vencimento."};
+    if (!(v.inicial+v.aporte>0)) return {error:"Informe um investimento inicial ou um aporte mensal."};
+    const choque = v.choque;
+    if (v.real+choque <= -50) return {error:"A taxa na venda ficou baixa demais. Use uma variação menor."};
+    const P = paths(v), D = deflator(P.ipca, T), real = v.unid==="real";
+    const rm = aToM(v.real/100), cust = 1-v.custodia/100/12;
+    /* Lotes: inicial + aporte no mês 0 e um aporte por mês até o vencimento; todos comprados à mesma taxa real. */
+    const lots = [{s:0, a:v.inicial+v.aporte}]; for (let s=1;s<T;s++) if (v.aporte>0) lots.push({s, a:v.aporte});
+    /* Valor líquido no mês t, vendendo à taxa real y (decimal a.a.). y = taxa de compra dá o valor na curva. */
+    const valor = (t, y) => {
+      const ym = aToM(y); let bruto=0, ir=0, inv=0;
+      for (const l of lots){
+        if (l.s>0 && l.s>=t) break;
+        const vencR = l.a/D[l.s]*Math.pow(1+rm, T-l.s);           // valor no vencimento, em reais de hoje
+        const nom = vencR/Math.pow(1+ym, T-t)*Math.pow(cust, t-l.s)*D[t];
+        bruto += nom; inv += real ? l.a/D[l.s] : l.a; const g = nom-l.a; if (g>0) ir += g*irRF(t-l.s);
+      }
+      const k = real ? 1/D[t] : 1;
+      return {bruto:bruto*k, ir:ir*k, liq:(bruto-ir)*k, inv};
+    };
+    const r = v.real/100, y = (v.real+choque)/100;
+    const venc = valor(T, r), curvaK = valor(K, r), vendaK = valor(K, y);
+    const over = t => Math.max(0, P.selic(t)-0.001);
+    const sel = simInvest({p0:v.inicial, pmt:v.aporte, months:T, rate:t=>aToM(over(t)), fee:b=>Math.max(0,b-10000)*v.custodia/100/12, tax:irRF});
+    if (real) toReal(sel, D, v.inicial, v.aporte, T);
+    /* Retorno anual equivalente de uma venda no mês t; rf = fluxos em reais de hoje (liq já na unidade mostrada). */
+    const irrAt = (t, liq, rf=real) => {
+      const f = Array(t+1).fill(0); f[0] = -(v.inicial+v.aporte);
+      for (let s=1;s<t;s++) f[s] = -(rf ? v.aporte/D[s] : v.aporte);
+      f[t] += rf && !real ? liq/D[t] : liq;
+      const im = irr(f); return im==null ? null : mToA(im);
+    };
+    const irrV = irrAt(T, venc.liq), irrK = irrAt(K, vendaK.liq), realLiq = irrAt(T, venc.liq, true);
+    const unid = real ? " em reais de hoje" : "";
+    const dif = vendaK.liq - curvaK.liq;
+    const xs = Array.from({length:T+1},(_,i)=>i);
+    const sAlta = Math.max(1, Math.abs(choque)), serie = yy => xs.map(t=>valor(t,yy).liq);
+    const choques = [-2,-1,0,1,2].map(d=>({d, ...valor(K,(v.real+d)/100)}));
+    if (!choques.some(c=>Math.abs(c.d-choque)<1e-9)) choques.push({d:choque, ...valor(K,y)}), choques.sort((a,b)=>a.d-b.d);
+    const pts = d => `${nf(Math.abs(d),2)} ${Math.abs(d)===1?"ponto":"pontos"}`;
+    const sinal = x => (x<0?"−":"+")+money(Math.abs(x));
+    const ptxt = d => (d>0?"+":d<0?"−":"") + nf(Math.abs(d),2) + (Math.abs(d)===1?" ponto":" pontos");
+    return {
+      html: verdict("Resultado",
+          `Levado até o vencimento em ${yrs(T)}, o Tesouro IPCA+ vira <b>${money(venc.liq)}</b> líquidos${unid}, para ${money(venc.inv)} investidos. Isso dá <b>${realLiq!=null?pct(realLiq):"—"} ao ano acima da inflação</b>, já descontados IR e custódia.`,
+          `Se vender em ${yrs(K)} e a taxa tiver ${choque>0?`subido ${pts(choque)}`:choque<0?`caído ${pts(choque)}`:"ficado igual"}, você recebe <b>${money(vendaK.liq)}</b>${unid}, ${Math.abs(dif)<1?"o mesmo valor da curva":`${dif>0?`${money(dif)} a mais`:`${money(-dif)} a menos`} que o valor na curva (${money(curvaK.liq)})`}. ${Math.abs(dif)<1?"":dif<0?"É a marcação a mercado: quem não precisa vender antes não realiza essa perda.":"Juros em queda valorizam o título antes do vencimento."}`) +
+        `<div class="kpis">${kpi("No vencimento", money(venc.liq), `${irrV!=null?pct(irrV):"—"} a.a. líquido${real?" real":""}`, C.s3)}${kpi(`Venda em ${yrs(K)}`, money(vendaK.liq), `taxa de ${nf(v.real+choque,2)}% · ${irrK!=null?pct(irrK):"—"} a.a.${real?" real":""}`, dif<0?C.s2:C.s1)}${kpi("Marcação a mercado", sinal(dif), "diferença para a curva na venda")}${kpi("Tesouro Selic", money(sel.net), `mesmo prazo e aportes · ${sel.irrA!=null?pct(sel.irrA):"—"} a.a.${real?" real":""}`, C.ink)}</div>` +
+        chartPanel("Valor líquido se resgatado em cada mês", `IPCA+ na curva (taxa sem mudança) e Tesouro Selic com os mesmos aportes${unid}`, legend([["IPCA+ na curva",C.s3],["Tesouro Selic",C.ink]]), "ch") +
+        chartPanel("Ganho ou perda da marcação a mercado", `Diferença para a curva se vender em cada mês, com a taxa ${pts(sAlta)} acima ou abaixo da de compra. Some no vencimento${unid}`, legend([[`Taxa ${ptxt(-sAlta)}`,C.s1],[`Taxa ${ptxt(sAlta)}`,C.s2]]), "ch2") +
+        `<section class="panel"><div class="phead"><div><h3>Venda em ${yrs(K)}: quanto você recebe para cada taxa</h3><div class="sub">Taxa de compra de ${nf(v.real,2)}% + IPCA. Valores líquidos${unid}</div></div></div><div class="tablewrap"><table><thead><tr><th>Taxa na venda</th><th class="n">Valor líquido</th><th class="n">Diferença para a curva</th><th class="n">Retorno anual${real?" real":""}</th></tr></thead><tbody>
+        ${choques.map(c=>{ const im = irrAt(K,c.liq); return `<tr class="${Math.abs(c.d-choque)<1e-9?"best":""}"><td>${nf(v.real+c.d,2)}% <small>(${c.d?ptxt(c.d):"sem mudança"})</small></td><td class="n num"><b>${money(c.liq)}</b></td><td class="n num">${c.d?sinal(c.liq-curvaK.liq):"—"}</td><td class="n num">${im!=null?pct(im):"—"}</td></tr>`; }).join("")}
+        </tbody></table></div></section>` +
+        notes(["Rendimento: IPCA do período mais a taxa real contratada. Levado até o vencimento, o ganho real é garantido, seja qual for a inflação.",
+          "Venda antecipada: o Tesouro recompra pelo preço de mercado, que é o valor do vencimento descontado pela taxa do dia da venda. Quanto mais longo o título, maior a oscilação para a mesma mudança de taxa (duration).",
+          "Todos os aportes são comprados à mesma taxa. Na prática, cada compra trava a taxa do dia. A taxa de recompra do Tesouro costuma ficar uns 0,1 ponto acima da de compra, o que não foi incluído.",
+          "IR regressivo sobre o ganho nominal de cada aporte: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima disso. Inflação também paga IR, por isso o ganho real líquido fica abaixo da taxa contratada.",
+          "Custódia da B3 de 0,20% a.a. sobre o saldo.",
+          "IPCA: Focus mês a mês no cenário Focus, ou o IPCA de 12 meses constante. Tesouro Selic: Selic over (meta − 0,10 ponto) com o mesmo cenário.",
+          "Taxa preenchida com o Tesouro IPCA+ (sem juros semestrais) de vencimento mais próximo do prazo. A versão com juros semestrais paga cupons e tem IR antecipado, não simulada aqui."]),
+      after(){
+        const curva = serie(r), alta = serie((v.real+sAlta)/100), queda = serie((v.real-sAlta)/100);
+        lineChart($("#ch"),{label:"Valor líquido do IPCA+ e do Tesouro Selic por mês", xs, series:[{name:"IPCA+ na curva",color:C.s3,values:curva},{name:"Tesouro Selic",color:C.ink,values:sel.series}], xFmt:monthX(T), tipTitle:x=>`Mês ${x} · ${yrs(x)}`});
+        lineChart($("#ch2"),{label:"Marcação a mercado por mês de venda", xs, series:[{name:`Taxa ${ptxt(-sAlta)}`,color:C.s1,values:queda.map((x,i)=>x-curva[i])},{name:`Taxa ${ptxt(sAlta)}`,color:C.s2,values:alta.map((x,i)=>x-curva[i])}], xFmt:monthX(T), tipTitle:x=>`Venda no mês ${x} · ${yrs(x)}`});
+      }
+    };
+  }
+});
+
+/* ---------- 5. Tesouro Prefixado ---------- */
+SIMS.push({
+  id:"prefixado", nav:"Tesouro Prefixado",
+  title:"Vale a pena travar a taxa no Tesouro Prefixado?",
+  lede:"O Prefixado paga um valor nominal conhecido no vencimento. O ganho real depende da inflação até lá, e quem vende antes recebe o preço de mercado do dia.",
+  fields:[
+    {k:"inicial",label:"Investimento inicial",def:10000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:300,pre:"R$",suf:"/mês",sobra:true},
+    {k:"anos",label:"Prazo até o vencimento",def:5,suf:"anos"},
+    {k:"venda",label:"Vender antes, em",def:2,suf:"anos"},
+    {k:"choque",label:"Variação da taxa até a venda",def:1,suf:"pontos",neg:true,hint:"positivo: juros sobem e o título cai"},
+    {sect:"Taxas e projeções"},
+    CENARIO, UNIDADE,
+    {k:"pre",label:"Taxa do Prefixado",def:13.5,suf:"% a.a.",mkt:"pre"},
+    {k:"real",label:"IPCA+ do mesmo prazo",def:7,suf:"% a.a.",mkt:"real",hint:"para a inflação implícita"},
+    {k:"ipca",label:"IPCA 12 meses",def:4.22,suf:"% a.a.",mkt:"ipca"},
+    {k:"selic",label:"Selic hoje",def:13.75,suf:"% a.a.",mkt:"selic"},
+    {k:"custodia",label:"Custódia B3",def:0.2,suf:"% a.a."},
+  ],
+  run(v){
+    const T = Math.round(v.anos*12), K = Math.round(v.venda*12), choque = v.choque;
+    if (!(T>=1 && T<=600)) return {error:"Informe um prazo entre 1 mês e 50 anos."};
+    if (!(K>=1 && K<=T)) return {error:"A venda antecipada precisa acontecer entre o primeiro mês e o vencimento."};
+    if (!(v.inicial+v.aporte>0)) return {error:"Informe um investimento inicial ou um aporte mensal."};
+    if (v.pre+choque <= -50) return {error:"A taxa na venda ficou baixa demais. Use uma variação menor."};
+    const P = paths(v), D = deflator(P.ipca, T), real = v.unid==="real", k = t => real ? 1/D[t] : 1;
+    const pm = aToM(v.pre/100), cust = 1-v.custodia/100/12;
+    const lots = [{s:0, a:v.inicial+v.aporte}]; for (let s=1;s<T;s++) if (v.aporte>0) lots.push({s, a:v.aporte});
+    /* Valor nominal líquido no mês t, vendendo à taxa y (decimal a.a.). y = taxa de compra dá o valor na curva. */
+    const valor = (t, y) => {
+      const ym = aToM(y); let bruto=0, ir=0, inv=0;
+      for (const l of lots){
+        if (l.s>0 && l.s>=t) break;
+        const nom = l.a*Math.pow(1+pm, T-l.s)/Math.pow(1+ym, T-t)*Math.pow(cust, t-l.s);
+        bruto += nom; inv += l.a; const g = nom-l.a; if (g>0) ir += g*irRF(t-l.s);
+      }
+      return {bruto, ir, liq:bruto-ir, inv};
+    };
+    /* Retorno anual de fluxos com aportes nominais fixos; defl(t) converte para reais de hoje (1 = nominal). */
+    const irrAt = (t, liq, defl=()=>1) => {
+      const f = Array(t+1).fill(0); f[0] = -(v.inicial+v.aporte);
+      for (let s=1;s<t;s++) f[s] = -v.aporte/defl(s);
+      f[t] += liq/defl(t);
+      const im = irr(f); return im==null ? null : mToA(im);
+    };
+    const r = v.pre/100, y = (v.pre+choque)/100;
+    const venc = valor(T, r), curvaK = valor(K, r), vendaK = valor(K, y);
+    const over = t => Math.max(0, P.selic(t)-0.001);
+    const selRun = rate => simInvest({p0:v.inicial, pmt:v.aporte, months:T, rate, fee:b=>Math.max(0,b-10000)*v.custodia/100/12, tax:irRF});
+    const sel = selRun(t=>aToM(over(t)));
+    // Selic média constante que empata com o Prefixado no vencimento
+    let lo=0, hi=0.6; for (let i=0;i<50;i++){ const mid=(lo+hi)/2; if (selRun(()=>aToM(mid)).net < venc.liq) lo=mid; else hi=mid; }
+    const selicEq = (lo+hi)/2, selicMed = mediaAnual(over, T), ipcaMed = mediaAnual(P.ipca, T);
+    const infImp = (1+v.pre/100)/(1+v.real/100)-1;
+    const irrV = irrAt(T, venc.liq), realLiq = irrAt(T, venc.liq, t=>D[t]), irrK = irrAt(K, vendaK.liq, real?t=>D[t]:undefined);
+    const selShow = {...sel, series:[...sel.series]}; if (real) toReal(selShow, D, v.inicial, v.aporte, T);
+    const unid = real ? " em reais de hoje" : "", dif = (vendaK.liq-curvaK.liq)*k(K);
+    const xs = Array.from({length:T+1},(_,i)=>i);
+    const sAlta = Math.max(1, Math.abs(choque)), serie = yy => xs.map(t=>valor(t,yy).liq*k(t));
+    const pts = d => `${nf(Math.abs(d),2)} ${Math.abs(d)===1?"ponto":"pontos"}`;
+    const ptxt = d => (d>0?"+":d<0?"−":"") + pts(d);
+    const sinal = x => (x<0?"−":"+")+money(Math.abs(x));
+    const choques = [-2,-1,0,1,2].map(d=>({d, ...valor(K,(v.pre+d)/100)}));
+    if (!choques.some(c=>Math.abs(c.d-choque)<1e-9)) choques.push({d:choque, ...valor(K,y)}), choques.sort((a,b)=>a.d-b.d);
+    /* Ganho real conforme a inflação média até o vencimento, contra o IPCA+ do mesmo prazo. */
+    const infls = [...new Set([3,4.5,6,8].map(x=>x/100).concat([r2(ipcaMed*100)/100, r2(infImp*100)/100]))].sort((a,b)=>a-b);
+    const cenInf = infls.map(pi=>{
+      const Dp = t => Math.pow(1+pi, t/12);
+      const ip = simInvest({p0:v.inicial, pmt:v.aporte, months:T, rate:()=>(1+aToM(pi))*(1+aToM(v.real/100))-1, fee:b=>b*v.custodia/100/12, tax:irRF});
+      return {pi, pre:irrAt(T, venc.liq, Dp), ipca:irrAt(T, ip.net, Dp), poder:venc.liq/Dp(T)};
+    });
+    const tagPi = pi => Math.abs(pi-r2(ipcaMed*100)/100)<1e-9 ? " <small>Focus</small>" : Math.abs(pi-r2(infImp*100)/100)<1e-9 ? " <small>implícita</small>" : "";
+    return {
+      html: verdict("Resultado",
+          `No vencimento, em ${yrs(T)}, você recebe <b>${money(venc.liq*k(T))}</b> líquidos${unid}, para ${money(real ? lots.reduce((a,l)=>a+l.a/D[l.s],0) : venc.inv)} investidos. ${real?`O valor nominal de ${money(venc.liq)} já está garantido`:"Esse valor nominal já está garantido"}; com a inflação esperada, o ganho é de <b>${realLiq!=null?pct(realLiq):"—"} ao ano acima do IPCA</b>.`,
+          `O Prefixado ganha do Tesouro Selic se a Selic média ficar abaixo de <b>${pct(selicEq)}</b> (${P.focus?"o Focus espera":"você supôs"} ${pct(selicMed)}) e ganha do IPCA+ se a inflação média ficar abaixo de <b>${pct(infImp)}</b> (${P.focus?"o Focus espera":"você supôs"} ${pct(ipcaMed)}). Se vender em ${yrs(K)} com a taxa ${choque>0?`${pts(choque)} mais alta`:choque<0?`${pts(choque)} mais baixa`:"igual"}, recebe ${money(vendaK.liq*k(K))}${Math.abs(dif)<1?", o mesmo da curva":`, ${sinal(dif)} em relação à curva`}.`) +
+        `<div class="kpis">${kpi("No vencimento", money(venc.liq*k(T)), `${irrV!=null?pct(irrV):"—"} a.a. líquido nominal`, C.s2)}${kpi("Ganho real esperado", realLiq!=null?pct(realLiq)+" a.a.":"—", `com IPCA médio de ${pct(ipcaMed)}`)}${kpi(`Venda em ${yrs(K)}`, money(vendaK.liq*k(K)), `taxa de ${nf(v.pre+choque,2)}% · ${irrK!=null?pct(irrK):"—"} a.a.${real?" real":""}`, dif<0?C.s2:C.s1)}${kpi("Tesouro Selic", money(selShow.net), `mesmo prazo e aportes${unid}`, C.ink)}</div>` +
+        chartPanel("Valor líquido se resgatado em cada mês", `Prefixado na curva (taxa sem mudança) e Tesouro Selic com os mesmos aportes${unid}`, legend([["Prefixado na curva",C.s2],["Tesouro Selic",C.ink]]), "ch") +
+        `<section class="panel"><div class="phead"><div><h3>Quanto sobra acima da inflação</h3><div class="sub">O valor nominal é o mesmo em todas as linhas; muda o poder de compra. Comparação com o IPCA+ de ${nf(v.real,2)}%</div></div></div><div class="tablewrap"><table><thead><tr><th>Inflação média</th><th class="n">Prefixado: ganho real</th><th class="n">IPCA+: ganho real</th><th class="n">Poder de compra no vencimento</th><th>Melhor</th></tr></thead><tbody>
+        ${cenInf.map(c=>`<tr class="${c.pre>=c.ipca?"best":""}"><td>${pct(c.pi)}${tagPi(c.pi)}</td><td class="n num">${c.pre!=null?pct(c.pre):"—"}</td><td class="n num">${c.ipca!=null?pct(c.ipca):"—"}</td><td class="n num">${money(c.poder)}</td><td>${Math.abs(c.pre-c.ipca)<0.0002?"Empate":c.pre>c.ipca?"Prefixado":"IPCA+"}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
+        chartPanel("Ganho ou perda da marcação a mercado", `Diferença para a curva se vender em cada mês, com a taxa ${pts(sAlta)} acima ou abaixo da de compra. Some no vencimento${unid}`, legend([[`Taxa ${ptxt(-sAlta)}`,C.s1],[`Taxa ${ptxt(sAlta)}`,C.s2]]), "ch2") +
+        `<section class="panel"><div class="phead"><div><h3>Venda em ${yrs(K)}: quanto você recebe para cada taxa</h3><div class="sub">Taxa de compra de ${nf(v.pre,2)}% a.a. Valores líquidos${unid}</div></div></div><div class="tablewrap"><table><thead><tr><th>Taxa na venda</th><th class="n">Valor líquido</th><th class="n">Diferença para a curva</th><th class="n">Retorno anual${real?" real":""}</th></tr></thead><tbody>
+        ${choques.map(c=>{ const im = irrAt(K, c.liq, real?t=>D[t]:undefined); return `<tr class="${Math.abs(c.d-choque)<1e-9?"best":""}"><td>${nf(v.pre+c.d,2)}% <small>(${c.d?ptxt(c.d):"sem mudança"})</small></td><td class="n num"><b>${money(c.liq*k(K))}</b></td><td class="n num">${c.d?sinal((c.liq-curvaK.liq)*k(K)):"—"}</td><td class="n num">${im!=null?pct(im):"—"}</td></tr>`; }).join("")}
+        </tbody></table></div></section>` +
+        notes(["Levado até o vencimento, o Prefixado paga exatamente a taxa contratada em reais. O que não se sabe é quanto esse dinheiro vai comprar: se a inflação surpreender para cima, o ganho real encolhe.",
+          "Equilíbrio com o Tesouro Selic: Selic média constante que faria o Tesouro Selic, com os mesmos aportes e custos, render o mesmo que o Prefixado.",
+          "Inflação implícita = (1 + prefixado) ÷ (1 + IPCA+) − 1. Abaixo dela, o Prefixado ganha do IPCA+; acima, perde.",
+          "Venda antecipada: o Tesouro recompra pelo valor de face descontado pela taxa do dia da venda. Juros em alta derrubam o preço; em queda, valorizam. A diferença some no vencimento.",
+          "Todos os aportes são comprados à mesma taxa. Na prática, cada compra trava a taxa do dia. A taxa de recompra costuma ficar um pouco acima da de compra, o que não foi incluído.",
+          "IR regressivo sobre o ganho de cada aporte: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima disso. Custódia da B3 de 0,20% a.a. sobre o saldo.",
+          "Taxas preenchidas com o Tesouro Prefixado e o Tesouro IPCA+ (sem juros semestrais) de vencimento mais próximo do prazo. O Prefixado com juros semestrais não é simulado aqui."]),
+      after(){
+        const curva = serie(r), alta = serie((v.pre+sAlta)/100), queda = serie((v.pre-sAlta)/100);
+        lineChart($("#ch"),{label:"Valor líquido do Prefixado e do Tesouro Selic por mês", xs, series:[{name:"Prefixado na curva",color:C.s2,values:curva},{name:"Tesouro Selic",color:C.ink,values:selShow.series}], xFmt:monthX(T), tipTitle:x=>`Mês ${x} · ${yrs(x)}`});
+        lineChart($("#ch2"),{label:"Marcação a mercado por mês de venda", xs, series:[{name:`Taxa ${ptxt(-sAlta)}`,color:C.s1,values:queda.map((x,i)=>x-curva[i])},{name:`Taxa ${ptxt(sAlta)}`,color:C.s2,values:alta.map((x,i)=>x-curva[i])}], xFmt:monthX(T), tipTitle:x=>`Venda no mês ${x} · ${yrs(x)}`});
+      }
+    };
+  }
+});
+
+/* ---------- 6. Tesouro Educa+ ---------- */
+/* O título acumula até 15/dez do ano do título e paga 60 parcelas mensais corrigidas pelo IPCA a partir de janeiro seguinte. */
+const educaAno = v => new Date().getFullYear() + Math.round(v.idadeFac - v.idade) - 1;   // ano do título = ano anterior ao ingresso
+function educaTitulo(M, ano){
+  const lista = (M.tesouro?.titulos || []).filter(t => t.tipo==="Tesouro Educa+" && t.taxaCompra>0);
+  if (!lista.length) return null;
+  return lista.reduce((a,b)=>Math.abs(+b.vencimento.slice(0,4)-ano) < Math.abs(+a.vencimento.slice(0,4)-ano) ? b : a);
+}
+const CURSOS = [
+  {k:"med", nome:"Medicina", anos:6, color:C.s1},
+  {k:"odo", nome:"Odontologia", anos:5, color:C.s2},
+  {k:"dir", nome:"Direito", anos:5, color:C.s3},
+  {k:"out", nome:"Outro curso", color:C.s4},
+];
+SIMS.push({
+  id:"educa", nav:"Tesouro Educa+",
+  title:"Quanto investir por mês para pagar a faculdade do meu filho?",
+  lede:"Calcula o aporte mensal no Tesouro Educa+ para que as 60 parcelas do título paguem Medicina, Odontologia, Direito ou outro curso. Valores em reais de hoje.",
+  fields:[
+    {k:"idade",label:"Idade do filho hoje",def:6,suf:"anos"},
+    {k:"idadeFac",label:"Entra na faculdade com",def:18,suf:"anos"},
+    {k:"inicial",label:"Já investido para isso",def:0,pre:"R$"},
+    {k:"aporte",label:"Aporte que cabe no orçamento",def:1000,pre:"R$",suf:"/mês",sobra:true},
+    {sect:"Mensalidade hoje em faculdade particular"},
+    {k:"med",label:"Medicina · 6 anos",def:11000,pre:"R$",suf:"/mês"},
+    {k:"odo",label:"Odontologia · 5 anos",def:3800,pre:"R$",suf:"/mês"},
+    {k:"dir",label:"Direito · 5 anos",def:1800,pre:"R$",suf:"/mês"},
+    {k:"out",label:"Outro curso",def:0,pre:"R$",suf:"/mês",hint:"deixe 0 para ignorar"},
+    {k:"outAnos",label:"Duração do outro curso",def:4,suf:"anos"},
+    {k:"vida",label:"Moradia e despesas",def:0,pre:"R$",suf:"/mês",hint:"se for estudar em outra cidade; vale para todos os cursos"},
+    {sect:"Título e inflação"},
+    {k:"educa",label:"Taxa do Educa+",def:6.9,suf:"% a.a.",mkt:"educa",hint:"juro real, acima do IPCA"},
+    {k:"reajuste",label:"Mensalidade sobe acima do IPCA",def:1,suf:"% a.a.",hint:"mensalidades costumam subir mais que a inflação"},
+    CENARIO,
+    {k:"ipca",label:"IPCA 12 meses",def:4.22,suf:"% a.a.",mkt:"ipca",hint:"usado no IR, que incide sobre o ganho nominal"},
+    {k:"custodia",label:"Custódia B3",def:0,suf:"% a.a.",hint:"informe se a taxa se aplicar ao seu caso"},
+  ],
+  run(v){
+    if (!(v.idadeFac>v.idade)) return {error:"A idade de entrada na faculdade precisa ser maior que a idade atual."};
+    const hoje = new Date(), Y0 = hoje.getFullYear(), M0 = hoje.getMonth();
+    const anoTit = educaAno(v), ingresso = anoTit+1;
+    const n = (anoTit-Y0)*12 + (11-M0);                       // meses de aportes até a conversão (dezembro do ano do título)
+    if (n<1) return {error:`Para entrar na faculdade em ${ingresso}, o Educa+ ${anoTit} já não aceita aportes. Use um prazo maior.`};
+    if (n>600) return {error:"Informe um prazo de até 50 anos."};
+    const cursos = CURSOS.map(c=>({...c, anos:c.k==="out"?v.outAnos:c.anos, mens:v[c.k]})).filter(c=>c.mens>0 && c.anos>0);
+    if (!cursos.length) return {error:"Informe a mensalidade de pelo menos um curso."};
+    const rm = (1+aToM(v.educa/100))*(1-v.custodia/100/12)-1;  // taxa real mensal, já sem custódia
+    const disc = k => Math.pow(1+rm,-k);
+    let ann=0; for (let k=1;k<=60;k++) ann += disc(k);         // valor presente de 60 parcelas de R$ 1
+    const P = paths(v), D = deflator(P.ipca, n+60), g = v.reajuste/100;
+    const anosAte = ingresso - Y0;
+    /* Valor presente, na conversão, das mensalidades do curso em reais de hoje. */
+    for (const c of cursos){
+      c.meses = Math.round(c.anos*12); c.pv=0; c.total=0;
+      for (let k=1;k<=c.meses;k++){
+        const custo = c.mens*Math.pow(1+g, anosAte+Math.floor((k-1)/12)) + v.vida;
+        c.total += custo; c.pv += custo*disc(k);
+      }
+    }
+    /* Aporte constante em reais de hoje (corrigido pela inflação todo mês). */
+    const plano = A => {
+      let b=v.inicial, invNom=v.inicial; const bal=[b];
+      for (let t=1;t<=n;t++){ b = b*(1+rm)+A; invNom += A*D[t]; bal.push(b); }
+      const vc=b, parc=vc/ann; let pvLiq=0, ir=0;
+      for (let k=1;k<=60;k++){
+        const nom = parc*D[n+k], imp = Math.max(0, nom-invNom/60)*0.15/D[n+k];
+        ir += imp; pvLiq += (parc-imp)*disc(k);
+        b = b*(1+rm)-parc; bal.push(Math.max(0,b));
+      }
+      return {bal, vc, parc, pvLiq, ir, inv:v.inicial+A*n};
+    };
+    const base = plano(0), um = plano(1);
+    for (const c of cursos){
+      let A = 0;
+      if (base.pvLiq < c.pv){
+        let lo=0, hi=Math.max(1,(c.pv-base.pvLiq)/Math.max(1e-9,um.pvLiq-base.pvLiq))*2;
+        while (plano(hi).pvLiq < c.pv && hi<1e9) hi*=2;
+        for (let i=0;i<60;i++){ const mid=(lo+hi)/2; if (plano(mid).pvLiq < c.pv) lo=mid; else hi=mid; }
+        A = hi;
+      }
+      c.A = A; c.plano = plano(A); c.cob = plano(v.aporte).pvLiq/c.pv;
+    }
+    const seu = plano(v.aporte);
+    const t0 = MKT && educaTitulo(MKT, anoTit), anoUsado = t0 ? +t0.vencimento.slice(0,4) : null;
+    const aviso = !anoUsado || anoUsado===anoTit ? ""
+      : anoUsado>anoTit ? ` <b>Atenção:</b> o Educa+ mais curto à venda é o ${anoUsado}, que só paga a partir de ${anoUsado+1}. Para esse prazo, use o Tesouro Selic ou o IPCA+ na aba Tesouro Direto.`
+      : ` Não há Educa+ ${anoTit} à venda; a taxa sugerida é a do Educa+ ${anoUsado}.`;
+    const principal = cursos[0];
+    const cobre = cursos.filter(c=>c.cob>=0.995);
+    const xs = Array.from({length:n+61},(_,t)=>v.idade+t/12);
+    const cobTxt = c => pct(Math.min(1,Math.max(0,c.cob)),0);
+    return {
+      html: verdict(`Educa+ ${anoTit}`,
+          `Para ${principal.nome.toLowerCase()} a partir de ${ingresso}, aporte <b>${money(principal.A)}/mês</b> no Tesouro Educa+ ${anoTit} até dezembro de ${anoTit}. O título então paga <b>${money(principal.plano.parc)}/mês</b> por 5 anos, em valores de hoje.`,
+          `Com os seus ${money(v.aporte)}/mês, ${cobre.length ? `você já cobre ${cobre.map(c=>c.nome.toLowerCase()).join(", ").replace(/, ([^,]*)$/," e $1")}` : "nenhum curso fica coberto por inteiro"}${cursos.filter(c=>c.cob<0.995).length ? `; ${cursos.filter(c=>c.cob<0.995).map(c=>`${c.nome.toLowerCase()}, ${cobTxt(c)} do custo`).join("; ")}` : ""}. Faltam ${yrs(n)} de aportes.${aviso}`) +
+        `<div class="kpis">${cursos.map(c=>kpi(c.nome, money(c.A)+"/mês", `parcela de ${money(c.plano.parc)} por 60 meses · IR de ${money(c.plano.ir)}`, c.color)).join("")}</div>` +
+        chartPanel("Saldo no Educa+ por idade do filho", `Plano necessário para cada curso e o seu aporte, em reais de hoje. Acumula até dez/${anoTit} e paga de jan/${ingresso} a dez/${ingresso+4}`, legend([...cursos.map(c=>[c.nome,c.color]),["Seu aporte",C.ink,true]]), "ch") +
+        `<section class="panel"><h3>Detalhamento por curso</h3><div class="tablewrap"><table><thead><tr><th>Curso</th><th class="n">Custo do curso</th><th class="n">Saldo em dez/${anoTit}</th><th class="n">Parcela</th><th class="n">Aporte necessário</th><th class="n">Seu aporte</th></tr></thead><tbody>
+        ${cursos.map(c=>`<tr class="${c.cob>=0.995?"best":""}"><td style="white-space:nowrap"><span class="sw" style="background:${c.color}"></span>${c.nome} · ${nf(c.anos,1)} anos</td><td class="n num">${money(c.total)}</td><td class="n num">${money(c.plano.vc)}</td><td class="n num">${money(c.plano.parc)}</td><td class="n num"><b>${money(c.A)}</b></td><td class="n num">${cobTxt(c)}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
+        notes([`O Tesouro Educa+ acumula até 15 de dezembro do ano do título e paga 60 parcelas mensais, corrigidas pelo IPCA, a partir de janeiro do ano seguinte. Para entrar na faculdade em ${ingresso}, o título é o Educa+ ${anoTit}.`,
+          "Todos os valores estão em reais de hoje. O aporte é corrigido pela inflação a cada mês, e as parcelas e mensalidades também.",
+          `Custo do curso: mensalidade de hoje reajustada ${nf(v.reajuste,2)}% a.a. acima do IPCA até cada ano do curso, mais moradia e despesas.`,
+          "Cursos com mais de 5 anos, como Medicina: as 60 parcelas ficam maiores que a mensalidade, e a sobra dos primeiros anos deve ser reinvestida (por exemplo, no Tesouro Selic) para pagar o último ano. Em cursos mais curtos, as parcelas seguem depois da formatura. O cálculo iguala o valor presente das parcelas líquidas ao valor presente do curso, à taxa do título.",
+          "IR de 15% sobre o ganho nominal de cada parcela: a parcela menos 1/60 do valor investido. Aportes feitos menos de 2 anos antes do pagamento pagam alíquota maior, efeito pequeno não incluído.",
+          "Taxa do título igual para todos os aportes. Na prática, cada compra trava a taxa do dia e aportes futuros podem render mais ou menos.",
+          "Vender antes da conversão expõe à marcação a mercado: o título pode valer menos que o investido. O plano supõe levar o título até o fim.",
+          "As mensalidades sugeridas são valores aproximados de faculdades particulares. Consulte as instituições da sua região. Em universidade pública não há mensalidade, mas o campo de moradia e despesas continua valendo."]),
+      after(){ lineChart($("#ch"),{label:"Saldo no Educa+ por idade", xs, series:[...cursos.map(c=>({name:c.nome,color:c.color,values:c.plano.bal})),{name:"Seu aporte",color:C.ink,values:seu.bal}], dashed:[cursos.length], xFmt:x=>`${nf(x,1)} anos`, tipTitle:x=>`${yrs(Math.round(x*12))} de idade`}); }
+    };
+  }
+});
+
+/* ---------- 7. Quitação de dívidas ---------- */
+const DEF_DEBTS = [
+  {nome:"Cartão de crédito", saldo:4000, juros:12, min:400},
+  {nome:"Cheque especial", saldo:2500, juros:7.5, min:150},
+  {nome:"Empréstimo pessoal", saldo:8000, juros:4, min:450},
+  {nome:"Financiamento do carro", saldo:25000, juros:1.8, min:900},
+];
+function payoff(debts, budget, strategy){
+  const ds = debts.map((d,i)=>({...d, i, b:d.saldo, r:d.juros/100, done:null}));
+  const hist=[ds.reduce((a,d)=>a+d.b,0)]; let interest=0, m=0;
+  while (ds.some(d=>d.b>0.005) && m<600){
+    m++;
+    for (const d of ds) if (d.b>0){ const j=d.b*d.r; d.b+=j; interest+=j; }
+    let cash = strategy==="minimo" ? Infinity : budget;
+    for (const d of ds) if (d.b>0){ const p=Math.min(d.min, d.b, cash); d.b-=p; cash-=p; }
+    if (strategy!=="minimo"){
+      const order = ds.filter(d=>d.b>0.005).sort(strategy==="avalanche" ? (a,b)=>b.r-a.r||a.b-b.b : (a,b)=>a.b-b.b||b.r-a.r);
+      for (const d of order){ if (cash<=0) break; const p=Math.min(cash,d.b); d.b-=p; cash-=p; }
+    }
+    for (const d of ds) if (d.b<=0.005 && d.done===null){ d.b=0; d.done=m; }
+    hist.push(ds.reduce((a,d)=>a+d.b,0));
+  }
+  const ok = ds.every(d=>d.done!==null);
+  return {months: ok?m:null, interest, hist, ds};
+}
+SIMS.push({
+  id:"dividas", nav:"Quitar dívidas",
+  title:"Qual a forma mais rápida de sair das dívidas?",
+  lede:"Liste suas dívidas e quanto consegue pagar por mês no total. O simulador compara a estratégia avalanche (juros mais altos primeiro) com a bola de neve (menor saldo primeiro).",
+  fields:[
+    {k:"orcamento",label:"Quanto posso pagar por mês, no total",def:2600,pre:"R$",wide:true,hint:"Inclui as parcelas mínimas. O que sobrar vai para a dívida prioritária."},
+    {debts:true},
+  ],
+  run(v, state){
+    const debts = (state.debts||[]).map(d=>({nome:d.nome||"Dívida", saldo:parseNum(d.saldo), juros:parseNum(d.juros), min:parseNum(d.min)}));
+    if (!debts.length) return {error:"Adicione pelo menos uma dívida."};
+    const bad = debts.find(d=>!(d.saldo>0) || !(d.juros>=0) || !(d.min>0));
+    if (bad) return {error:`Confira os valores de “${esc(bad.nome)}”: saldo e parcela mínima precisam ser maiores que zero.`};
+    const sumMin = debts.reduce((a,d)=>a+d.min,0);
+    if (v.orcamento < sumMin) return {error:`O orçamento de ${money(v.orcamento)} não cobre as parcelas mínimas, que somam ${money(sumMin)}. Aumente o valor mensal ou renegocie os mínimos.`};
+    const A = payoff(debts, v.orcamento, "avalanche"), S = payoff(debts, v.orcamento, "bola"), M = payoff(debts, v.orcamento, "minimo");
+    if (!A.months) return {error:`Com ${money(v.orcamento)} por mês os juros crescem mais rápido que os pagamentos, e a dívida não termina em 50 anos. Aumente o valor mensal ou busque renegociar as taxas mais altas.`};
+    const len = Math.min(600, Math.max(A.months, S.months||0, M.months||0, 12));
+    const cut = Math.min(len, Math.max(A.months, S.months||A.months)*2, 360);
+    const xs = Array.from({length:cut+1},(_,i)=>i);
+    const pad = h => xs.map(i=>i<h.length?h[i]:0);
+    const firstS = Math.min(...S.ds.map(d=>d.done||Infinity)), firstA = Math.min(...A.ds.map(d=>d.done||Infinity));
+    const diff = S.interest - A.interest;
+    const total = debts.reduce((a,d)=>a+d.saldo,0);
+    const rowsA = [...A.ds].sort((a,b)=>a.done-b.done);
+    return {
+      html: verdict("Plano de quitação",
+          `Pagando ${money(v.orcamento)} por mês você zera ${money(total)} em dívidas em <b>${yrs(A.months)}</b> pela avalanche, com <b>${money(A.interest)}</b> de juros.`,
+          `${diff>1?`A bola de neve custa ${money(diff)} a mais em juros, mas a primeira dívida some no mês ${firstS} (avalanche: mês ${firstA}). `:"As duas estratégias custam praticamente o mesmo neste caso. "}${M.months?`Pagando só os mínimos, levaria ${yrs(M.months)} e ${money(M.interest)} de juros.`:"Pagando só os mínimos, a dívida nunca termina: os juros superam as parcelas."}`) +
+        `<div class="kpis">${kpi("Avalanche", yrs(A.months), `${money(A.interest)} de juros`, C.s1, A.interest<=S.interest)}${kpi("Bola de neve", S.months?yrs(S.months):"não quita", `${money(S.interest)} de juros`, C.s2, S.interest<A.interest)}${kpi("Só o mínimo", M.months?yrs(M.months):"não quita", M.months?`${money(M.interest)} de juros`:"juros maiores que as parcelas", C.s3)}</div>` +
+        chartPanel("Saldo devedor total", "Soma de todas as dívidas, mês a mês", legend([["Avalanche",C.s1],["Bola de neve",C.s2],["Só o mínimo",C.s3]]), "ch") +
+        `<section class="panel"><h3>Ordem de quitação na avalanche</h3><div class="tablewrap"><table><thead><tr><th>Dívida</th><th class="n">Saldo</th><th class="n">Juros</th><th class="n">Quitada em</th><th class="n">Bola de neve</th></tr></thead><tbody>
+        ${rowsA.map(d=>`<tr><td>${esc(d.nome)}</td><td class="n num">${money(d.saldo)}</td><td class="n num">${nf(d.juros,2)}% a.m. <span style="color:var(--muted)">(${pct(mToA(d.r),0)} a.a.)</span></td><td class="n num">mês ${d.done}</td><td class="n num">mês ${S.ds[d.i].done??"—"}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
+        notes(["Juros compostos mensais sobre o saldo. Cada mês paga os mínimos de todas as dívidas, e a sobra vai para a prioritária.",
+          "Quando uma dívida termina, a parcela dela passa a reforçar a próxima (efeito cascata).",
+          "Avalanche prioriza a maior taxa de juros e minimiza o custo total. Bola de neve prioriza o menor saldo e dá vitórias rápidas.",
+          "Rotativo do cartão: desde 2024 os juros e encargos totais ficam limitados a 100% do valor original da dívida. Trocar rotativo e cheque especial por um empréstimo mais barato costuma ser o primeiro passo."]),
+      after(){ lineChart($("#ch"),{label:"Saldo devedor", xs, series:[{name:"Avalanche",color:C.s1,values:pad(A.hist)},{name:"Bola de neve",color:C.s2,values:pad(S.hist)},{name:"Só o mínimo",color:C.s3,values:xs.map(i=>i<M.hist.length?M.hist[i]:(M.months?0:null))}], xFmt:monthX(cut), tipTitle:x=>`Mês ${x}`}); }
+    };
+  }
+});
+
+/* ---------- 8. Alugar ou financiar ---------- */
+SIMS.push({
+  id:"alugar", nav:"Alugar ou financiar",
+  title:"Compensa mais alugar ou financiar o imóvel?",
+  lede:"Compara o patrimônio de quem financia com o de quem aluga e investe a entrada e a diferença das parcelas. Os dois gastam o mesmo por mês; quem gasta menos investe a sobra.",
+  fields:[
+    {k:"valor",label:"Valor do imóvel",def:600000,pre:"R$",wide:true},
+    {sect:"Financiamento"},
+    {k:"entrada",label:"Entrada",def:20,suf:"%"},
+    {k:"custos",label:"ITBI e cartório",def:4,suf:"%"},
+    {k:"taxa",label:"Juros do financiamento",def:11.5,suf:"% a.a."},
+    {k:"prazo",label:"Prazo",def:30,suf:"anos"},
+    {k:"sistema",label:"Amortização",def:"SAC",opts:[["SAC","SAC"],["Price","Price"]]},
+    {k:"extras",label:"Seguros e taxas",def:150,pre:"R$",suf:"/mês"},
+    {sect:"Aluguel e mercado"},
+    {k:"aluguel",label:"Aluguel",def:2800,pre:"R$",suf:"/mês"},
+    {k:"reaj",label:"Reajuste do aluguel",def:4.5,suf:"% a.a."},
+    {k:"valoriz",label:"Valorização do imóvel",def:5,suf:"% a.a."},
+    {k:"invest",label:"Rendimento líquido",def:9.5,suf:"% a.a.",hint:"já sem IR",mkt:"investLiq",hz:v=>v.horiz*12},
+    {k:"horiz",label:"Comparar em",def:30,suf:"anos",wide:true},
+  ],
+  run(v){
+    const n = Math.round(v.prazo*12), H = Math.round(v.horiz*12);
+    if (!(n>=12 && n<=420)) return {error:"Informe um prazo de financiamento entre 1 e 35 anos."};
+    if (!(H>=12 && H<=600)) return {error:"Informe um horizonte de comparação entre 1 e 50 anos."};
+    if (!(v.entrada>=0 && v.entrada<100)) return {error:"A entrada precisa ficar entre 0% e 99%."};
+    const fin = v.valor*(1-v.entrada/100), r=aToM(v.taxa/100), iv=aToM(v.invest/100), vm=aToM(v.valoriz/100);
+    const price = r ? fin*r/(1-Math.pow(1+r,-n)) : fin/n;
+    let saldo=fin, buyInv=0, rentInv=v.valor*(v.entrada/100+v.custos/100), rent=v.aluguel, jurosTot=0, first=null, cross=null;
+    const yB=[v.valor-fin-v.valor*v.custos/100], yR=[rentInv], xs=[0];
+    let prevAhead = yB[0]>=yR[0];
+    for (let m=1;m<=H;m++){
+      let parc=0;
+      if (m<=n && saldo>0.01){
+        const j=saldo*r; const am = v.sistema==="SAC" ? fin/n : price-j;
+        parc = am+j+v.extras; saldo=Math.max(0,saldo-am); jurosTot+=j;
+      }
+      if (m===1) first=parc;
+      buyInv*=1+iv; rentInv*=1+iv;
+      const diff = parc-rent; if (diff>0) rentInv+=diff; else buyInv+=-diff;
+      if (m%12===0) rent*=1+v.reaj/100;
+      const imovel = v.valor*Math.pow(1+vm,m);
+      const pb = imovel-saldo+buyInv, pr = rentInv;
+      const ahead = pb>=pr;
+      if (cross===null && ahead && !prevAhead) cross=m;
+      prevAhead = ahead;
+      if (m%12===0 || m===H){ xs.push(m/12); yB.push(pb); yR.push(pr); }
+    }
+    const pb=yB[yB.length-1], pr=yR[yR.length-1], buyWins = pb>=pr;
+    return {
+      html: verdict(buyWins?"Financiar compensa":"Alugar compensa",
+          `Em ${yrs(H)}, quem ${buyWins?"financia":"aluga e investe"} termina com <b>${money(Math.abs(pb-pr))}</b> a mais: ${money(buyWins?pb:pr)} contra ${money(buyWins?pr:pb)}.`,
+          `A primeira parcela (${v.sistema}) é de ${money(first)}, contra ${money(v.aluguel)} de aluguel. ${cross?`O financiamento passa a ganhar a partir de ${yrs(cross)}.`:buyWins?"O financiamento fica à frente desde o início.":"No horizonte escolhido, o financiamento não alcança o aluguel."} Juros pagos ao banco: ${money(jurosTot)}.`) +
+        `<div class="kpis">${kpi("Financiando", money(pb), "imóvel − saldo devedor + investimentos", C.s1, buyWins)}${kpi("Alugando", money(pr), "investimentos acumulados", C.s2, !buyWins)}${kpi("1ª parcela", money(first), `${v.sistema}, com seguros`)}${kpi("Aluguel/valor", pct(v.aluguel/v.valor,2)+" a.m.", `aluguel de ${money(v.aluguel)}`)}</div>` +
+        chartPanel("Patrimônio de cada caminho", "Em reais nominais, ano a ano", legend([["Financiar",C.s1],["Alugar e investir",C.s2]]), "ch") +
+        notes(["Os dois cenários desembolsam o mesmo valor por mês. Se a parcela é maior que o aluguel, quem aluga investe a diferença; se é menor, quem financiou investe.",
+          "Quem aluga também investe a entrada e o que seria gasto com ITBI e cartório.",
+          "SAC: amortização constante e parcelas decrescentes. Price: parcela fixa. A TR não foi somada aos juros.",
+          "IPTU, condomínio e manutenção foram considerados iguais nos dois casos e ficaram de fora.",
+          "Use rendimento líquido de IR. Se o imóvel for vendido, também incidem corretagem e possível IR sobre ganho de capital."]),
+      after(){ lineChart($("#ch"),{label:"Patrimônio", xs, series:[{name:"Financiar",color:C.s1,values:yB},{name:"Alugar e investir",color:C.s2,values:yR}], xFmt:v=>`${nf(v)}a`, tipTitle:x=>`Ano ${nf(x,1)}`}); }
+    };
+  }
+});
+
+/* ---------- 9. Consórcio ---------- */
+SIMS.push({
+  id:"consorcio", nav:"Consórcio",
+  title:"Vale a pena entrar no consórcio?",
+  lede:"Compara três caminhos para ter o mesmo bem: consórcio, financiamento e juntar o dinheiro investindo. O custo de cada um é medido em valor presente, descontado pelo rendimento dos seus investimentos.",
+  fields:[
+    {k:"carta",label:"Valor da carta",def:100000,pre:"R$"},
+    {k:"prazo",label:"Prazo do grupo",def:80,suf:"meses"},
+    {k:"adm",label:"Taxa de administração",def:16,suf:"% total"},
+    {k:"fundo",label:"Fundo de reserva",def:2,suf:"% total"},
+    {k:"reaj",label:"Reajuste da carta",def:5,suf:"% a.a.",hint:"INCC ou IPCA"},
+    {k:"contem",label:"Contemplação prevista",def:24,suf:"º mês"},
+    {k:"lance",label:"Lance próprio",def:0,suf:"% da carta",wide:true},
+    {sect:"Alternativas"},
+    {k:"fin",label:"Juros do financiamento",def:21,suf:"% a.a."},
+    {k:"invest",label:"Rendimento líquido",def:10,suf:"% a.a.",mkt:"investLiq",hz:v=>v.prazo},
+  ],
+  run(v){
+    const n=Math.round(v.prazo), k=Math.round(v.contem);
+    if (!(n>=12 && n<=240)) return {error:"Informe um prazo de grupo entre 12 e 240 meses."};
+    if (!(k>=1 && k<=n)) return {error:`A contemplação precisa estar entre o 1º e o ${n}º mês.`};
+    const iv=aToM(v.invest/100), fee=1+(v.adm+v.fundo)/100, g=v.reaj/100;
+    const carta = t => v.carta*Math.pow(1+g, Math.floor((t-1)/12));
+    const bem = t => v.carta*Math.pow(1+g, t/12);
+    const disc = t => Math.pow(1+iv,-t);
+    const cons = kk => {
+      let F=1, frac=1/n, pv=0, total=0, first=0;
+      for (let t=1;t<=n;t++){
+        const p = frac*carta(t)*fee; if (t===1) first=p;
+        pv+=p*disc(t); total+=p; F-=frac;
+        if (t===kk){
+          const L = Math.min(v.lance/100*carta(t), Math.max(0,F)*carta(t)*fee);
+          if (L>0){ pv+=L*disc(t); total+=L; F-=L/(carta(t)*fee); }
+          pv -= carta(t)*disc(t);
+          frac = n>t ? Math.max(0,F)/(n-t) : 0;
+        }
+      }
+      return {pv, total, first};
+    };
+    const c = cons(k);
+    const rf = aToM(v.fin/100), pmtF = rf ? v.carta*rf/(1-Math.pow(1+rf,-n)) : v.carta/n;
+    let pvF=0; for (let t=1;t<=n;t++) pvF += pmtF*disc(t);
+    const costF = pvF - v.carta;
+    // juntar investindo a mesma parcela do consórcio
+    let bal=0, mInv=null;
+    for (let t=1;t<=600;t++){ bal=bal*(1+iv)+(1/n)*carta(Math.min(t,n))*fee; if (bal>=bem(t)){ mInv=t; break; } }
+    const curve = Array.from({length:n},(_,i)=>cons(i+1).pv);
+    let be=null; for (let i=0;i<n;i++){ if (curve[i]>costF){ be=i; break; } }
+    const consWins = c.pv < costF;
+    const xs = Array.from({length:n},(_,i)=>i+1);
+    const tag = mInv && mInv<=k ? "Melhor investir" : consWins ? "Consórcio compensa" : "Financiar sai mais barato";
+    const main = mInv && mInv<=k
+      ? `Investindo as mesmas parcelas você compra o bem à vista no <b>mês ${mInv}</b>, antes da contemplação prevista (mês ${k}), e sem pagar taxa de administração.`
+      : consWins
+        ? `Se for contemplado no mês ${k}, o consórcio custa <b>${money(c.pv)}</b> em valor presente, contra <b>${money(costF)}</b> do financiamento.`
+        : `Contemplado no mês ${k}, o consórcio custa <b>${money(c.pv)}</b> em valor presente, mais que os <b>${money(costF)}</b> do financiamento.`;
+    const extra = `${be===null?`O consórcio sai mais barato que financiar em qualquer mês de contemplação.`:be===0?`Mesmo contemplado no 1º mês, o consórcio fica mais caro que financiar.`:`O consórcio só é mais barato que financiar se a contemplação vier até o <b>mês ${be}</b>.`} Juntando o dinheiro, o bem sai no mês ${mInv??"—"}; financiando, sai hoje.`;
+    return {
+      html: verdict(tag, main, extra) +
+        `<div class="kpis">${kpi("Consórcio", money(c.pv), `bem no mês ${k} · parcela ${money(c.first)}`, C.s1, consWins && !(mInv && mInv<=k))}${kpi("Financiamento", money(costF), `bem hoje · parcela ${money(pmtF)}`, C.s2, !consWins && !(mInv && mInv<=k))}${kpi("Investir e comprar", money(0), mInv?`bem no mês ${mInv}`:"não alcança em 50 anos", C.s3, !!(mInv && mInv<=k))}${kpi("Total pago no consórcio", money(c.total), `financiamento: ${money(pmtF*n)}`)}</div>` +
+        chartPanel("Custo do consórcio conforme o mês de contemplação", "Custo em valor presente; abaixo da linha tracejada, o consórcio vence o financiamento", legend([["Consórcio",C.s1],["Financiamento",C.s2,true]]), "ch") +
+        notes(["Custo em valor presente = parcelas pagas trazidas a hoje pelo rendimento dos investimentos, menos o valor do bem recebido, também trazido a hoje. Comprar à vista hoje custa zero.",
+          `Parcela do consórcio: (carta × (1 + taxa de administração + fundo de reserva)) ÷ prazo, reajustada todo ano junto com a carta. Seguro prestamista não incluído.`,
+          "O lance próprio é pago no mês da contemplação e reduz as parcelas restantes. Lance embutido não foi simulado.",
+          "Financiamento pela tabela Price, de 100% do bem, no mesmo prazo do grupo. Na prática costuma haver entrada e outras tarifas (CET).",
+          "O fundo de reserva pode ser devolvido no encerramento do grupo; aqui ele entra como custo.",
+          "Ter o bem antes tem valor (deixar de pagar aluguel, usar o carro). Pese isso junto com os números."]),
+      after(){ lineChart($("#ch"),{label:"Custo por mês de contemplação", xs, series:[{name:"Consórcio",color:C.s1,values:curve},{name:"Financiamento",color:C.s2,values:xs.map(()=>costF)}], dashed:[1], xFmt:v=>`m${nf(v)}`, tipTitle:x=>`Contemplação no mês ${x}`}); }
+    };
+  }
+});
+
+/* ---------- 10. Financiamento de veículos ---------- */
+/* IOF de operação de crédito para pessoa física: 0,38% fixo + 0,0082% ao dia sobre cada amortização, até 365 dias. */
+function iofCDC(P, i, n){
+  const pmt = i>0 ? P*i/(1-Math.pow(1+i,-n)) : P/n; let s = P, iof = P*0.0038;
+  for (let k=1;k<=n;k++){ const am = pmt - s*i; s -= am; iof += am*0.000082*Math.min(30*k, 365); }
+  return iof;
+}
+SIMS.push({
+  id:"veiculo", nav:"Financiar veículo",
+  title:"Quanto custa de verdade financiar um carro?",
+  lede:"Calcula a parcela do CDC com IOF e tarifas, o custo efetivo total (CET), o saldo devedor contra o valor do carro que se desvaloriza e o custo mensal de ter o veículo. Compara com juntar o dinheiro e comprar à vista.",
+  fields:[
+    {k:"preco",label:"Preço do veículo",def:90000,pre:"R$"},
+    {k:"entrada",label:"Entrada",def:20000,pre:"R$"},
+    {k:"prazo",label:"Prazo",def:48,suf:"meses"},
+    {k:"taxa",label:"Taxa de juros",def:1.99,suf:"% a.m.",hint:"a taxa nominal anunciada"},
+    {k:"tarifas",label:"Tarifas financiadas",def:1500,pre:"R$",hint:"cadastro, registro do contrato, avaliação"},
+    {k:"seguroPrest",label:"Seguro prestamista",def:0,suf:"% do valor",hint:"opcional: venda casada é proibida"},
+    {k:"renda",label:"Renda líquida da família",def:8000,pre:"R$",suf:"/mês"},
+    {sect:"Custo de ter o carro"},
+    {k:"deprec",label:"Desvalorização",def:12,suf:"% a.a.",hint:"carro novo perde mais nos primeiros anos"},
+    {k:"ipva",label:"IPVA",def:3,suf:"% do valor/ano",hint:"varia por estado"},
+    {k:"seguro",label:"Seguro do carro",def:3500,pre:"R$",suf:"/ano"},
+    {k:"uso",label:"Combustível e manutenção",def:700,pre:"R$",suf:"/mês"},
+    {sect:"Alternativa: juntar e comprar à vista"},
+    {k:"rend",label:"Rendimento líquido",def:10,suf:"% a.a.",mkt:"investLiq",hz:v=>v.prazo},
+    {k:"inflCarro",label:"Reajuste do preço do carro",def:4,suf:"% a.a."},
+  ],
+  run(v){
+    const n = Math.round(v.prazo), i = v.taxa/100;
+    if (!(v.preco>0)) return {error:"Informe o preço do veículo."};
+    if (!(v.entrada < v.preco)) return {error:"A entrada precisa ser menor que o preço; se não for, não há o que financiar."};
+    if (!(n>=1 && n<=120)) return {error:"Informe um prazo entre 1 e 120 meses."};
+    const liberado = v.preco - v.entrada;                                        // o que vai para a concessionária
+    const baseSemIof = liberado + v.tarifas;
+    // IOF e seguro também são financiados: ponto fixo do valor total
+    let P = baseSemIof; for (let k=0;k<20;k++) P = baseSemIof + iofCDC(P, i, n) + P*v.seguroPrest/100;
+    const iof = iofCDC(P, i, n), seg = P*v.seguroPrest/100;
+    const pmt = i>0 ? P*i/(1-Math.pow(1+i,-n)) : P/n;
+    const total = pmt*n, juros = total - P;
+    const fl = [liberado, ...Array(n).fill(-pmt)], cm = irr(fl), cetM = cm, cetA = cm==null ? null : mToA(cm);
+    // Tabela e saldo contra o valor do carro
+    const dm = Math.pow(1-v.deprec/100, 1/12);
+    let s = P; const saldo=[P], carro=[v.preco], linhas=[];
+    let jA=0, aA=0;
+    for (let k=1;k<=n;k++){ const j = s*i, am = pmt-j; s = Math.max(0, s-am); jA+=j; aA+=am; saldo.push(s); carro.push(v.preco*Math.pow(dm,k));
+      if (k%12===0 || k===n){ linhas.push({ano:Math.ceil(k/12), j:jA, a:aA, s}); jA=0; aA=0; } }
+    const negativo = saldo.findIndex((x,k)=>k>0 && x<=carro[k]);                // primeiro mês em que o carro vale mais que a dívida
+    // Custo mensal de ter o carro (média no prazo)
+    const rm = aToM(v.rend/100);
+    const valorMedio = carro.reduce((a,b)=>a+b,0)/carro.length;
+    const deprecMes = (v.preco - carro[n])/n, ipvaMes = valorMedio*v.ipva/100/12, segMes = v.seguro/12;
+    const oportEntrada = v.entrada*rm;                                          // o que a entrada renderia por mês
+    const custoMes = pmt + ipvaMes + segMes + v.uso;
+    const custoEcon = (juros/n) + deprecMes + ipvaMes + segMes + v.uso + oportEntrada;
+    // Alternativa: investir entrada + parcela até juntar o preço (que sobe com o reajuste)
+    const pc = aToM(v.inflCarro/100);
+    let b = v.entrada, mJunta = null;
+    for (let k=1;k<=600;k++){ b = b*(1+rm) + pmt; if (b >= v.preco*Math.pow(1+pc,k)){ mJunta = k; break; } }
+    const pesoRenda = pmt/v.renda, pesada = Math.round(pesoRenda*1000)/1000 > 0.3;
+    const anosTab = linhas;
+    const xs = Array.from({length:n+1},(_,k)=>k);
+    return {
+      html: verdict(pesada ? "Parcela pesada" : "Resultado",
+          `A parcela fica em <b>${money2(pmt)}</b> por ${nf(n)} meses. Você paga <b>${money(total+v.entrada)}</b> por um carro de ${money(v.preco)}: ${money(juros)} de juros, ${money(iof)} de IOF e ${money(v.tarifas+seg)} de tarifas${seg>0?" e seguro":""}. O custo efetivo total é de <b>${cetM!=null?pct(cetM)+" a.m."+` (${pct(cetA,1)} a.a.)`:"—"}</b>, contra ${nf(v.taxa,2)}% a.m. anunciados.`,
+          `${pesada?`A parcela consome ${pct(pesoRenda,1)} da renda, acima dos 30% que costumam ser o limite prudente. `:`A parcela consome ${pct(pesoRenda,0)} da renda. `}${negativo>1?`Até o mês ${negativo}, a dívida é maior que o valor do carro: se precisar vender, o dinheiro não quita o financiamento. `:""}${mJunta?`Investindo a entrada e o mesmo valor da parcela, você compraria à vista em <b>${yrs(mJunta)}</b>${mJunta<n?`, antes de terminar de pagar o financiamento`:""}.`:""}`) +
+        `<div class="kpis">${kpi("Parcela", money2(pmt), `${nf(n)}× · ${pct(pesoRenda,0)} da renda`, C.s1)}${kpi("CET", cetM!=null?pct(cetM)+" a.m.":"—", cetA!=null?`${pct(cetA,1)} a.a., com IOF e tarifas`:"")}${kpi("Juros + IOF + tarifas", money(juros+iof+v.tarifas+seg), `${pct((juros+iof+v.tarifas+seg)/liberado,0)} do valor financiado`, C.s2)}${kpi("Custo mensal do carro", money(custoMes), `parcela + IPVA + seguro + uso`)}</div>` +
+        chartPanel("Dívida × valor do carro", "Saldo devedor do financiamento e valor de mercado do veículo a cada mês", legend([["Saldo devedor",C.s2],["Valor do carro",C.s1]]), "ch") +
+        `<section class="panel"><div class="phead"><div><h3>Quanto o carro custa por mês</h3><div class="sub">Média no prazo do financiamento</div></div></div><div class="tablewrap"><table><thead><tr><th>Item</th><th class="n">Por mês</th><th>O que é</th></tr></thead><tbody>
+          <tr><td>Parcela</td><td class="n num">${money(pmt)}</td><td>sai do bolso; inclui juros e amortização</td></tr>
+          <tr><td>IPVA</td><td class="n num">${money(ipvaMes)}</td><td>${nf(v.ipva,1)}% do valor do carro por ano</td></tr>
+          <tr><td>Seguro</td><td class="n num">${money(segMes)}</td><td>${money(v.seguro)} por ano</td></tr>
+          <tr><td>Combustível e manutenção</td><td class="n num">${money(v.uso)}</td><td>informado</td></tr>
+          <tr class="best"><td><b>Desembolso mensal</b></td><td class="n num"><b>${money(custoMes)}</b></td><td>o que pesa no orçamento</td></tr>
+          <tr><td>Depreciação</td><td class="n num">${money(deprecMes)}</td><td>o carro perde ${money(v.preco-carro[n])} em ${yrs(n)}</td></tr>
+          <tr><td>Rendimento perdido da entrada</td><td class="n num">${money(oportEntrada)}</td><td>custo de oportunidade a ${nf(v.rend,1)}% a.a.</td></tr>
+          <tr class="best"><td><b>Custo econômico mensal</b></td><td class="n num"><b>${money(custoEcon)}</b></td><td>juros, depreciação, impostos, seguro, uso e oportunidade</td></tr>
+        </tbody></table></div></section>` +
+        `<section class="panel"><div class="phead"><div><h3>Tabela Price, ano a ano</h3><div class="sub">Parcela fixa: no começo quase tudo é juros; no fim, quase tudo é amortização</div></div></div><div class="tablewrap"><table><thead><tr><th>Ano</th><th class="n">Juros pagos</th><th class="n">Amortização</th><th class="n">Saldo devedor</th><th class="n">Valor do carro</th></tr></thead><tbody>
+        ${anosTab.map(l=>`<tr><td>${l.ano}º</td><td class="n num">${money(l.j)}</td><td class="n num">${money(l.a)}</td><td class="n num">${money(l.s)}</td><td class="n num">${money(carro[Math.min(n,l.ano*12)])}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
+        notes(["Tabela Price (parcelas iguais), o padrão do CDC de veículos. Juros compostos sobre o saldo devedor.",
+          "IOF de crédito para pessoa física: 0,38% sobre o valor mais 0,0082% ao dia sobre cada amortização, limitado a 365 dias. Como o IOF e as tarifas costumam ser financiados, entram no valor total e pagam juros.",
+          "CET (custo efetivo total): a taxa que iguala o dinheiro que você efetivamente recebe (preço − entrada) às parcelas pagas. Inclui juros, IOF, tarifas e seguro, e o banco é obrigado a informá-lo antes da contratação.",
+          "Seguro prestamista quita a dívida em caso de morte ou invalidez. É opcional: exigir a contratação na mesma instituição é venda casada, proibida pelo Código de Defesa do Consumidor.",
+          "Amortizar antes do prazo dá direito à redução proporcional dos juros. Quitar as últimas parcelas primeiro (as mais caras em valor presente) reduz mais a dívida.",
+          "Desvalorização constante ao ano, para simplificar; na prática, o carro novo perde mais no primeiro ano.",
+          "Juntar e comprar à vista: a entrada e o valor da parcela são investidos todo mês, enquanto o preço do carro sobe pelo reajuste informado. Nesse período você fica sem o carro."]),
+      after(){ lineChart($("#ch"),{label:"Saldo devedor e valor do carro", xs, series:[{name:"Saldo devedor",color:C.s2,values:saldo},{name:"Valor do carro",color:C.s1,values:carro}], xFmt:x=>`m${nf(x)}`, tipTitle:x=>`Mês ${x}`}); }
+    };
+  }
+});
+
+/* ---------- 11. Financiamento imobiliário ---------- */
+SIMS.push({
+  id:"imovel", nav:"Financiar imóvel",
+  title:"Como fica o financiamento do imóvel: SAC ou Price, e vale amortizar?",
+  lede:"Simula o contrato mês a mês, com juros, correção pela TR, seguros obrigatórios e taxa de administração. Compara SAC e Price, mostra o CET, a renda exigida pelo banco e quanto as amortizações extras economizam.",
+  fields:[
+    {k:"valor",label:"Valor do imóvel",def:500000,pre:"R$"},
+    {k:"entrada",label:"Entrada em dinheiro",def:80000,pre:"R$"},
+    {k:"fgts",label:"FGTS na entrada",def:20000,pre:"R$",hint:"imóvel residencial, dentro das regras do SFH"},
+    {k:"custos",label:"ITBI e cartório",def:4,suf:"% do valor",hint:"pagos à vista, fora do financiamento"},
+    {k:"prazo",label:"Prazo",def:30,suf:"anos"},
+    {k:"sistema",label:"Sistema de amortização",def:"SAC",opts:[["SAC","SAC (parcelas decrescentes)"],["Price","Price (parcelas fixas)"]],wide:true},
+    {k:"renda",label:"Renda bruta familiar",def:18000,pre:"R$",suf:"/mês"},
+    {sect:"Taxas do contrato"},
+    {k:"taxa",label:"Juros efetivos",def:11.5,suf:"% a.a."},
+    {k:"tr",label:"TR",def:1.5,suf:"% a.a.",hint:"corrige o saldo devedor todo mês"},
+    {k:"mip",label:"Seguro MIP",def:0.025,suf:"% a.m.",hint:"sobre o saldo; morte e invalidez, sobe com a idade"},
+    {k:"dfi",label:"Seguro DFI",def:0.007,suf:"% a.m.",hint:"sobre o valor do imóvel; danos físicos"},
+    {k:"adm",label:"Taxa de administração",def:25,pre:"R$",suf:"/mês"},
+    {sect:"Amortizações extras"},
+    {k:"extra",label:"Valor por ano",def:10000,pre:"R$",suf:"/ano",hint:"13º, FGTS a cada 2 anos, bônus"},
+    {k:"modo",label:"Usar para reduzir",def:"prazo",opts:[["prazo","o prazo"],["parcela","a parcela"]]},
+  ],
+  run(v){
+    const n = Math.round(v.prazo*12), fin = v.valor - v.entrada - v.fgts;
+    if (!(v.valor>0)) return {error:"Informe o valor do imóvel."};
+    if (!(fin>0)) return {error:"Entrada e FGTS já cobrem o imóvel: não há o que financiar."};
+    if (!(n>=12 && n<=420)) return {error:"Informe um prazo entre 1 e 35 anos."};
+    const i = aToM(v.taxa/100), tr = aToM(v.tr/100), mip = v.mip/100, dfi = v.dfi/100;
+    /* Contrato mês a mês. A amortização (SAC) ou a parcela (Price) é recalculada sobre o saldo corrigido pela TR e o prazo restante.
+     * Amortização extra anual: "prazo" encurta o prazo restante mantendo a amortização/parcela; "parcela" mantém o prazo. */
+    const contrato = (sis, extra=0, modo="prazo") => {
+      let S = fin, rem = n, t = 0, juros = 0, seg = 0, pagoExtra = 0, ult = 0;
+      const parc = [], saldo = [S], fl = [fin];
+      while (S>0.01 && rem>0){
+        t++; S *= 1+tr;
+        const j = S*i;
+        const am = sis==="SAC" ? S/rem : (i>0 ? S*i/(1-Math.pow(1+i,-rem)) : S/rem) - j;
+        ult = sis==="SAC" ? am : am + j;                                          // amortização (SAC) ou parcela (Price) do mês
+        const s = S*mip + v.valor*dfi + v.adm, p = j + am + s;
+        S = Math.max(0, S-am); juros += j; seg += s; rem--;
+        let e = 0;
+        if (extra>0 && t%12===0 && S>0.01){
+          e = Math.min(extra, S); S -= e; pagoExtra += e;
+          if (modo==="prazo" && S>0.01) rem = Math.max(1, sis==="SAC" ? Math.ceil(S/ult - 1e-9) : Math.ceil(-Math.log(1 - Math.min(0.999999, S*i/ult))/Math.log(1+i) - 1e-9));
+          if (S<=0.01) rem = 0;
+        }
+        parc.push(p); saldo.push(S); fl.push(-(p+e));
+      }
+      const cm = irr(fl);
+      return {parc, saldo, meses:t, juros, seg, pagoExtra, total:parc.reduce((a,b)=>a+b,0)+pagoExtra, cetA: cm==null ? null : mToA(cm)};
+    };
+    const SAC = contrato("SAC"), PRI = contrato("Price"), base = v.sistema==="SAC" ? SAC : PRI;
+    const plano = v.extra>0 ? contrato(v.sistema, v.extra, v.modo) : base;
+    const outroModo = v.extra>0 ? contrato(v.sistema, v.extra, v.modo==="prazo"?"parcela":"prazo") : null;
+    const ltv = fin/v.valor, aVista = v.entrada + v.valor*v.custos/100;
+    const p1 = base.parc[0], rendaMin = p1/0.30, compromete = p1/v.renda;
+    const economia = base.juros + base.seg - (plano.juros + plano.seg);
+    const anos = []; for (let a=1; a<=Math.ceil(n/12); a++){ const k = a*12-1; if (k>=base.parc.length) break; if (a===1||a%5===0||k+12>=base.parc.length) anos.push(a); }
+    const linha = (c, a) => { const k = a*12-1; return k<c.parc.length ? money(c.parc[k]) : "quitado"; };
+    return {
+      html: verdict(compromete>0.30 ? "Renda insuficiente" : "Resultado",
+          `Financiando ${money(fin)} (${pct(ltv,0)} do imóvel) em ${nf(v.prazo)} anos pelo ${v.sistema}, a primeira parcela é de <b>${money(p1)}</b>${v.sistema==="SAC"?` e cai até ${money(base.parc[base.parc.length-1])} na última`:""}. No total, você paga <b>${money(base.juros)}</b> de juros e ${money(base.seg)} de seguros e taxas. CET de <b>${base.cetA!=null?pct(base.cetA,2):"—"} ao ano</b>, contra ${nf(v.taxa,2)}% de juros anunciados.`,
+          `${compromete>0.30?`A primeira parcela consome ${pct(compromete,1)} da renda: os bancos costumam limitar a 30%, o que exige renda de pelo menos ${money(rendaMin)}. `:`A primeira parcela usa ${pct(compromete,0)} da renda (limite usual: 30%). `}Para fechar o negócio, você precisa de ${money(aVista)} à vista, entre entrada e ITBI/cartório, além de ${money(v.fgts)} do FGTS.${v.extra>0?` Amortizando ${money(v.extra)} por ano para ${v.modo==="prazo"?"reduzir o prazo":"reduzir a parcela"}, você economiza <b>${money(economia)}</b>${v.modo==="prazo"?` e quita em <b>${yrs(plano.meses)}</b> em vez de ${yrs(base.meses)}`:""}.`:""}`) +
+        `<div class="kpis">${kpi("1ª parcela", money(p1), `${v.sistema}, com seguros e taxa`, C.s1)}${kpi("Juros totais", money(base.juros), `${pct(base.juros/fin,0)} do valor financiado`, C.s2)}${kpi("CET", base.cetA!=null?pct(base.cetA,2)+" a.a.":"—", "juros + TR + seguros + taxa")}${kpi("Renda mínima", money(rendaMin), "para a 1ª parcela caber em 30%")}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>SAC × Price</h3><div class="sub">Mesmo valor, prazo e taxas, sem amortizações extras</div></div></div><div class="tablewrap"><table><thead><tr><th>Item</th><th class="n">SAC</th><th class="n">Price</th></tr></thead><tbody>
+          <tr><td>Primeira parcela</td><td class="n num">${money(SAC.parc[0])}</td><td class="n num">${money(PRI.parc[0])}</td></tr>
+          <tr><td>Última parcela</td><td class="n num">${money(SAC.parc[SAC.parc.length-1])}</td><td class="n num">${money(PRI.parc[PRI.parc.length-1])}</td></tr>
+          <tr><td>Renda mínima (30%)</td><td class="n num">${money(SAC.parc[0]/0.3)}</td><td class="n num">${money(PRI.parc[0]/0.3)}</td></tr>
+          <tr><td>Juros totais</td><td class="n num"><b>${money(SAC.juros)}</b></td><td class="n num"><b>${money(PRI.juros)}</b></td></tr>
+          <tr><td>Seguros e taxas</td><td class="n num">${money(SAC.seg)}</td><td class="n num">${money(PRI.seg)}</td></tr>
+          <tr><td>Total pago</td><td class="n num">${money(SAC.total)}</td><td class="n num">${money(PRI.total)}</td></tr>
+          <tr><td>CET</td><td class="n num">${SAC.cetA!=null?pct(SAC.cetA,2):"—"}</td><td class="n num">${PRI.cetA!=null?pct(PRI.cetA,2):"—"}</td></tr>
+        </tbody></table></div></section>` +
+        chartPanel("Parcela mês a mês", `Com TR de ${nf(v.tr,1)}% a.a. corrigindo o saldo${v.extra>0?`; “seu plano” inclui ${money(v.extra)}/ano de amortização extra`:""}`, legend([["SAC",C.s1],["Price",C.s2],...(v.extra>0?[["Seu plano",C.s3,true]]:[])]), "ch") +
+        (v.extra>0 ? `<section class="panel"><div class="phead"><div><h3>Amortização extra: reduzir o prazo ou a parcela?</h3><div class="sub">${money(v.extra)} por ano, no ${v.sistema}</div></div></div><div class="tablewrap"><table><thead><tr><th>Opção</th><th class="n">Quitação</th><th class="n">Juros + seguros</th><th class="n">Economia</th></tr></thead><tbody>
+          <tr><td>Sem amortizar</td><td class="n num">${yrs(base.meses)}</td><td class="n num">${money(base.juros+base.seg)}</td><td class="n num">—</td></tr>
+          ${[[v.modo,plano],[v.modo==="prazo"?"parcela":"prazo",outroModo]].sort((a,b)=>a[0]<b[0]?1:-1).map(([m,c])=>`<tr class="${m===v.modo?"best":""}"><td>Reduzir ${m==="prazo"?"o prazo":"a parcela"}</td><td class="n num">${yrs(c.meses)}</td><td class="n num">${money(c.juros+c.seg)}</td><td class="n num"><b>${money(base.juros+base.seg-c.juros-c.seg)}</b></td></tr>`).join("")}
+        </tbody></table></div></section>` : "") +
+        `<section class="panel"><div class="phead"><div><h3>Parcela e saldo ao longo do contrato</h3><div class="sub">${v.sistema}, sem amortizações extras</div></div></div><div class="tablewrap"><table><thead><tr><th>Ano</th><th class="n">Parcela do último mês</th><th class="n">Saldo devedor</th>${v.extra>0?`<th class="n">Parcela no seu plano</th>`:""}</tr></thead><tbody>
+        ${anos.map(a=>`<tr><td>${a}º</td><td class="n num">${linha(base,a)}</td><td class="n num">${money(base.saldo[Math.min(a*12, base.saldo.length-1)])}</td>${v.extra>0?`<td class="n num">${linha(plano,a)}</td>`:""}</tr>`).join("")}
+        </tbody></table></div></section>` +
+        notes(["SAC: amortização constante e juros sobre o saldo, então as parcelas começam altas e caem. Price: parcela de juros + amortização constante, que começa mais baixa, mas paga mais juros no total.",
+          "TR: corrige o saldo devedor todo mês antes dos juros. Com a Selic alta, a TR fica positiva e faz a parcela e o saldo subirem um pouco ao longo do tempo. Na Price, a parcela é recalculada sobre o saldo corrigido.",
+          "Seguros obrigatórios: MIP (morte e invalidez permanente), cobrado sobre o saldo e conforme a idade do mais velho, e DFI (danos físicos), sobre o valor do imóvel. Os percentuais variam por banco; use os da sua proposta.",
+          "CET: taxa anual que iguala o valor financiado a tudo o que é pago (parcelas, seguros, taxa de administração e amortizações extras). O banco é obrigado a informá-lo.",
+          "Limites usuais: financiamento de até 80% do valor no SFH/SFI e parcela de até 30% da renda bruta. Cada banco tem sua política.",
+          "Amortização extra: reduzir o prazo mantém a amortização (SAC) ou a parcela (Price) e quita antes, economizando mais juros; reduzir a parcela mantém o prazo e alivia o orçamento. O FGTS pode ser usado a cada 2 anos.",
+          "ITBI (em geral 2% a 3%) e registro em cartório são pagos à vista e não entram no financiamento. Use a aba “Alugar ou financiar” para comparar com morar de aluguel."]),
+      after(){
+        const m = Math.max(SAC.parc.length, PRI.parc.length), xs = Array.from({length:m},(_,k)=>k+1);
+        const pad = a => xs.map((_,k)=>k<a.length ? a[k] : null);
+        lineChart($("#ch"),{label:"Parcela mês a mês", xs, series:[{name:"SAC",color:C.s1,values:pad(SAC.parc)},{name:"Price",color:C.s2,values:pad(PRI.parc)},...(v.extra>0?[{name:"Seu plano",color:C.s3,values:pad(plano.parc)}]:[])], dashed:v.extra>0?[2]:[], xFmt:x=>`${nf(x/12,0)}a`, tipTitle:x=>`Mês ${x} · ${yrs(x)}`});
+      }
+    };
+  }
+});
+
+/* ---------- 12. CDB e LCI/LCA ---------- */
+const TIPOS_RF = {
+  pos:  {nome:"pós-fixado", unid:"% do CDI", fmt:x=>`${nf(x,1)}% do CDI`},
+  pre:  {nome:"prefixado", unid:"% a.a.", fmt:x=>`${nf(x,2)}% a.a.`},
+  ipca: {nome:"IPCA+", unid:"IPCA + % a.a.", fmt:x=>`IPCA + ${nf(x,2)}%`},
+};
+SIMS.push({
+  id:"cdb", nav:"CDB e LCI/LCA",
+  title:"CDB ou LCI/LCA: qual rende mais no seu prazo?",
+  lede:"Compara um CDB, que paga IR, com uma LCI ou LCA isenta, nas versões pós-fixada, prefixada e IPCA+. Mostra a taxa de empate em cada prazo, o limite do FGC e a carência da LCI/LCA.",
+  fields:[
+    {k:"valor",label:"Valor investido",def:10000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:0,pre:"R$",sobra:true},
+    {k:"prazo",label:"Prazo",def:24,suf:"meses"},
+    {k:"tipo",label:"Tipo de remuneração",def:"pos",wide:true,opts:[["pos","Pós-fixado (% do CDI)"],["pre","Prefixado"],["ipca","IPCA+"]]},
+    {sect:"Taxas oferecidas"},
+    {k:"pcdb",label:"CDB",def:110,suf:"% do CDI",when:["tipo","pos"]},
+    {k:"plci",label:"LCI / LCA",def:92,suf:"% do CDI",when:["tipo","pos"]},
+    {k:"rcdb",label:"CDB",def:13.5,suf:"% a.a.",when:["tipo","pre"]},
+    {k:"rlci",label:"LCI / LCA",def:11.5,suf:"% a.a.",when:["tipo","pre"]},
+    {k:"icdb",label:"CDB",def:7.5,pre:"IPCA +",suf:"%",when:["tipo","ipca"]},
+    {k:"ilci",label:"LCI / LCA",def:6.2,pre:"IPCA +",suf:"%",when:["tipo","ipca"]},
+    {k:"carencia",label:"Carência da LCI/LCA",def:9,suf:"meses",hint:"prazo mínimo exigido; confira a regra vigente"},
+    {k:"nobanco",label:"Já tem neste banco",def:0,pre:"R$",hint:"para checar o limite do FGC"},
+    {sect:"Mercado"},
+    CENARIO, UNIDADE,
+    {k:"cdi",label:"CDI hoje",def:13.65,suf:"% a.a.",mkt:"cdi"},
+    {k:"selic",label:"Selic hoje",def:13.75,suf:"% a.a.",mkt:"selic"},
+    {k:"ipca",label:"IPCA 12 meses",def:4.22,suf:"% a.a.",mkt:"ipca"},
+    {k:"tr",label:"TR",def:0.15,suf:"% a.m.",hint:"usada na poupança"},
+  ],
+  run(v){
+    const months = Math.round(v.prazo);
+    if (!(months>=1 && months<=600)) return {error:"Informe um prazo entre 1 e 600 meses."};
+    if (!(v.valor+v.aporte>0)) return {error:"Informe um valor investido ou um aporte mensal."};
+    const T = TIPOS_RF[v.tipo], P = paths(v), real = v.unid==="real";
+    const cdiP = P.focus ? (()=>{ const s = Mercado.selicPath(MKT, v.cdi+0.10); return t=>s(t)-0.001; })() : ()=>v.cdi/100;
+    const over = t => Math.max(0, P.selic(t)-0.001);
+    const [xCdb, xLci] = v.tipo==="pos" ? [v.pcdb, v.plci] : v.tipo==="pre" ? [v.rcdb, v.rlci] : [v.icdb, v.ilci];
+    /* Taxa mensal de um título do tipo escolhido com parâmetro x (percentual do CDI, taxa prefixada ou taxa real). */
+    const taxa = x => v.tipo==="pos" ? t=>aToM(cdiP(t)*x/100) : v.tipo==="pre" ? ()=>aToM(x/100) : t=>(1+aToM(P.ipca(t)))*(1+aToM(x/100))-1;
+    const run = (x, isento, m=months) => simInvest({p0:v.valor, pmt:v.aporte, months:m, rate:taxa(x), tax:isento?()=>0:irRF});
+    /* Parâmetro da outra aplicação que empata com o líquido de referência, por bisseção. */
+    const empate = (alvo, isento, m) => { let lo=-50, hi=v.tipo==="pos"?400:100; for (let i=0;i<60;i++){ const mid=(lo+hi)/2; if (run(mid,isento,m).net < alvo) lo=mid; else hi=mid; } return (lo+hi)/2; };
+    const D = deflator(P.ipca, Math.max(months, 60));
+    const res = [
+      {name:`CDB ${T.fmt(xCdb)}`, color:C.s1, ...run(xCdb,false)},
+      {name:`LCI/LCA ${T.fmt(xLci)}`, color:C.s2, ...run(xLci,true)},
+      {name:"Tesouro Selic", color:C.s3, ...simInvest({p0:v.valor, pmt:v.aporte, months, rate:t=>aToM(over(t)), fee:b=>Math.max(0,b-10000)*0.002/12, tax:irRF})},
+      {name:"Poupança", color:C.s4, ...simInvest({p0:v.valor, pmt:v.aporte, months, rate:t=>poupM(P.selic(t), v.tr/100), tax:()=>0})},
+    ];
+    const cdb = res[0], lci = res[1];
+    const lciEq = empate(cdb.net, true, months), cdbEq = empate(lci.net, false, months);
+    const brutoCdb = cdb.net + cdb.tax;                               // nominal, antes da conversão
+    const fgcTot = brutoCdb + v.nobanco, fgcOk = fgcTot <= 250000;
+    const carOk = months >= v.carencia;
+    if (real) res.forEach(r=>toReal(r, D, v.valor, v.aporte, months));
+    const unid = real ? " em reais de hoje" : "";
+    const best = res.reduce((a,b)=>b.net>a.net?b:a), max = best.net;
+    const ganha = lci.net > cdb.net ? lci : cdb, perde = ganha===lci ? cdb : lci;
+    const prazos = [...new Set([6,12,24,36,60,months])].filter(m=>m<=600).sort((a,b)=>a-b);
+    const tab = prazos.map(m=>{ const c = run(xCdb,false,m), l = run(xLci,true,m); return {m, ir:irRF(m), lEq:empate(c.net,true,m), cEq:empate(l.net,false,m), melhor: l.net>c.net ? "LCI/LCA" : "CDB"}; });
+    const cdiMed = mediaAnual(cdiP, months);
+    const avisos = [];
+    if (!carOk) avisos.push(`A LCI/LCA exige pelo menos ${nf(v.carencia)} meses de prazo: com ${nf(months)} meses ela não está disponível. A comparação vale só como referência.`);
+    if (!fgcOk) avisos.push(`O CDB somado ao que você já tem no banco chega a ${money(fgcTot)} no vencimento, acima do limite de R$ 250 mil do FGC por CPF e por instituição. O excedente fica exposto ao risco do banco.`);
+    return {
+      html: verdict(ganha===lci?"LCI/LCA rende mais":"CDB rende mais",
+          `Em ${yrs(months)}, ${ganha===lci?`a <b>${esc(lci.name)}</b>`:`o <b>${esc(cdb.name)}</b>`} entrega <b>${money(ganha.net)}</b> líquidos${unid}, ${money(ganha.net-perde.net)} a mais que ${perde===lci?"a LCI/LCA":"o CDB"}. O CDB paga ${pct(irRF(months),1)} de IR neste prazo (${money(cdb.tax)}).`,
+          `Para empatar com esse CDB, a LCI/LCA precisaria pagar <b>${T.fmt(lciEq)}</b>; para empatar com essa LCI/LCA, o CDB precisaria pagar <b>${T.fmt(cdbEq)}</b>${T.fmt(cdbEq).endsWith(".")?"":"."}${v.tipo==="pos"&&P.focus?` CDI médio esperado no período: ${pct(cdiMed)} ao ano, pelo Focus.`:""}`) +
+        (avisos.length ? verdict("Atenção", avisos.join(" "), "", true) : "") +
+        `<div class="kpis">${kpi("CDB", money(cdb.net), `${T.fmt(xCdb)} · ${cdb.irrA!=null?pct(cdb.irrA):"—"} a.a. líquido${real?" real":""}`, C.s1, ganha===cdb)}${kpi("LCI/LCA", money(lci.net), `${T.fmt(xLci)} · ${lci.irrA!=null?pct(lci.irrA):"—"} a.a.${real?" real":""}, isento`, C.s2, ganha===lci)}${kpi("LCI/LCA que empata", T.fmt(lciEq), "taxa isenta equivalente ao CDB")}${kpi("CDB que empata", T.fmt(cdbEq), "taxa tributada equivalente à LCI/LCA")}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>Valor líquido no fim do prazo</h3><div class="sub">Já descontados IR e custódia${unid}</div></div></div><div class="bars">${res.map(r=>`<div class="bar"><span>${esc(r.name)}${r===best?` <span class="badge">melhor</span>`:""}</span><span class="track"><i style="width:${Math.max(2,r.net/max*100)}%;background:${r.color}"></i></span><span class="v">${money(r.net)}</span></div>`).join("")}</div></section>` +
+        `<section class="panel"><div class="phead"><div><h3>Taxas de empate em cada prazo</h3><div class="sub">Com as taxas oferecidas, o mesmo valor e os mesmos aportes. Quanto maior o prazo, menor o IR e menor a vantagem da isenção</div></div></div><div class="tablewrap"><table><thead><tr><th>Prazo</th><th class="n">IR do CDB</th><th class="n">LCI/LCA que empata com o CDB</th><th class="n">CDB que empata com a LCI/LCA</th><th>Melhor</th></tr></thead><tbody>
+        ${tab.map(r=>`<tr class="${r.m===months?"best":""}"><td>${yrs(r.m)}${r.m<v.carencia?` <small>abaixo da carência</small>`:""}</td><td class="n num">${pct(r.ir,1)}</td><td class="n num">${T.fmt(r.lEq)}</td><td class="n num">${T.fmt(r.cEq)}</td><td>${r.melhor}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
+        chartPanel("Evolução do valor líquido", "Se resgatado em cada mês", legend(res.map(r=>[r.name,r.color])), "ch") +
+        notes(["IR regressivo do CDB e do Tesouro sobre o rendimento de cada aporte: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima. LCI, LCA e poupança são isentas para pessoa física.",
+          "Taxa de empate: a taxa que faz as duas aplicações chegarem ao mesmo valor líquido, calculada com o mesmo valor, aportes e prazo. Para um aporte único pós-fixado, fica perto da regra prática % isento = % do CDB × (1 − alíquota).",
+          "CDB, LCI e LCA têm garantia do FGC de até R$ 250 mil por CPF e por instituição, somando principal e rendimentos, com teto de R$ 1 milhão a cada 4 anos. Acima disso, o risco é do banco emissor.",
+          "LCI e LCA têm prazo mínimo de resgate definido pelo Conselho Monetário Nacional. Confira a carência e a liquidez antes de aplicar; muitos CDBs têm liquidez diária, a maioria das LCI/LCA não.",
+          "Resgates antes de 30 dias pagam IOF regressivo, não incluído aqui.",
+          "Pós-fixado: o CDI parte da taxa de hoje e acompanha a Selic esperada no Focus (CDI = Selic − 0,10 ponto). IPCA+: IPCA do Focus mês a mês mais a taxa real. Prefixado: taxa fixa.",
+          "Tesouro Selic: Selic over com custódia de 0,20% a.a. sobre o que passa de R$ 10 mil.",
+          "Um CDB acima de 100% do CDI costuma pagar prêmio pelo risco de crédito do banco emissor."]),
+      after(){ lineChart($("#ch"),{label:"Valor líquido", xs:Array.from({length:months+1},(_,i)=>i), series:res.map(r=>({name:r.name,color:r.color,values:r.series})), xFmt:monthX(months), tipTitle:x=>`Mês ${x} · ${yrs(x)}`}); }
+    };
+  }
+});
+
+/* ---------- 13. Ações ---------- */
+function mulberry(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed>>>15, 1|seed); t = t + Math.imul(t ^ t>>>7, 61|t) ^ t; return ((t ^ t>>>14)>>>0)/4294967296; }; }
+const ATIVOS = {
+  acoes:{nome:"Ações", ir:.15, isencao:true},
+  etf:{nome:"ETF de ações", ir:.15, isencao:false},
+  fii:{nome:"Fundos imobiliários (FII)", ir:.20, isencao:false},
+};
+SIMS.push({
+  id:"acoes", nav:"Ações",
+  title:"Quanto podem render suas aplicações em ações?",
+  lede:"Ações oscilam, então não existe um único resultado. O simulador gera 1.000 caminhos de mercado, sorteando trechos reais da história do Ibovespa ou usando as premissas que você informar, e mostra a faixa provável comparada com a renda fixa.",
+  fields:[
+    {k:"tipo",label:"Tipo de ativo",def:"acoes",opts:[["acoes","Ações"],["etf","ETF de ações"],["fii","Fundos imobiliários (FII)"]],wide:true},
+    {k:"inicial",label:"Investimento inicial",def:10000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:1000,pre:"R$",sobra:true},
+    {k:"anos",label:"Prazo",def:15,suf:"anos",wide:true},
+    {k:"modelo",label:"Como gerar os cenários",def:"historico",opts:[["historico","Histórico real do Ibovespa (BOVA11)"],["premissas","Minhas premissas abaixo"]],wide:true,hint:"O histórico sorteia blocos de 12 meses dos últimos 10 anos, com quedas e dividendos reais."},
+    UNIDADE,
+    {sect:"Premissas de mercado"},
+    {k:"valoriz",label:"Valorização média",def:8,suf:"% a.a.",hint:"alta das cotações, sem dividendos"},
+    {k:"dy",label:"Dividendos",def:6,suf:"% a.a.",hint:"dividend yield"},
+    {k:"vol",label:"Volatilidade",def:25,suf:"% a.a.",hint:"Ibovespa: cerca de 20% a 30%"},
+    {k:"custos",label:"Custos",def:0,suf:"% a.a.",hint:"taxa do ETF ou corretagem"},
+    {k:"reinv",label:"Uso dos dividendos",def:"reinveste",opts:[["reinveste","Reinvisto"],["saca","Saco e gasto"]]},
+    {k:"venda",label:"Venda no fim",def:"total",opts:[["total","Tudo de uma vez"],["aos-poucos","Aos poucos, até R$ 20 mil/mês"]]},
+    {sect:"Comparar com renda fixa"},
+    {k:"cdi",label:"CDI médio no período",def:11.5,suf:"% a.a.",mkt:"cdiMedio",hz:v=>v.anos*12},
+    {k:"pcdi",label:"Rendimento",def:100,suf:"% do CDI"},
+  ],
+  run(v){
+    const months = Math.round(v.anos*12);
+    if (!(months>=12 && months<=600)) return {error:"Informe um prazo entre 1 e 50 anos."};
+    if (!(v.inicial+v.aporte>0)) return {error:"Informe um investimento inicial ou um aporte mensal."};
+    if (v.vol>100) return {error:"A volatilidade parece alta demais. Use algo entre 10% e 60% ao ano."};
+    const A = ATIVOS[v.tipo]||ATIVOS.acoes;
+    const isento = v.venda==="aos-poucos" && A.isencao;
+    const s = v.vol/100/Math.sqrt(12), mu = Math.log(1+v.valoriz/100)/12 - s*s/2;
+    const dyM = aToM(v.dy/100), costM = aToM(v.custos/100), reinv = v.reinv==="reinveste";
+    const N = 1000, step = months>120 ? 12 : months>48 ? 3 : 1;
+    const pts = []; for (let t=0;t<=months;t+=step) pts.push(t); if (pts[pts.length-1]!==months) pts.push(months);
+    const idx = new Map(pts.map((t,i)=>[t,i]));
+    const netAt = pts.map(()=>new Float64Array(N));
+    const finals = new Float64Array(N), divs = new Float64Array(N), invested = v.inicial + v.aporte*months;
+    const rnd = mulberry(Math.round(v.inicial+v.aporte*7+v.anos*131+v.valoriz*977+v.vol*313+v.dy*57));
+    const gauss = () => { let u=0; while(!u) u=rnd(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*rnd()); };
+    const hist = (MKT?.series?.retornos?.BOVA11 || []).filter(x=>x!=null);
+    const usarHist = v.modelo==="historico" && hist.length>=36;
+    const histStats = usarHist ? (()=>{ const m=hist.reduce((a,b)=>a+b,0)/hist.length; const sd=Math.sqrt(hist.reduce((a,b)=>a+(b-m)**2,0)/(hist.length-1)); return {ret:Math.pow(1+m,12)-1, vol:sd*Math.sqrt(12), worst:Math.min(...hist), n:hist.length}; })() : null;
+    for (let p=0;p<N;p++){
+      let val = v.inicial + v.aporte, basis = val, cash = 0, bloco = 0, pos = 0;
+      const net = () => { const g = val-basis; return val - (g>0 && !isento ? g*A.ir : 0) + cash; };
+      netAt[0][p] = net();
+      for (let t=1;t<=months;t++){
+        if (usarHist){
+          // bootstrap em blocos de 12 meses: preserva sequências de alta e queda
+          if (bloco===0){ pos = Math.floor(rnd()*(hist.length-12)); bloco = 12; }
+          val *= (1+hist[pos++]) * (1-costM); bloco--;
+        } else {
+          val *= Math.exp(mu + s*gauss()) * (1-costM);
+          const d = val*dyM;
+          if (reinv){ val += d; basis += d; } else cash += d;
+          divs[p] += d;
+        }
+        if (t<months){ val += v.aporte; basis += v.aporte; }
+        const i = idx.get(t); if (i!==undefined) netAt[i][p] = net();
+      }
+      finals[p] = net();
+    }
+    const q = (arr, f) => { const a = Array.from(arr).sort((x,y)=>x-y); return a[Math.min(a.length-1, Math.floor(f*a.length))]; };
+    const P10 = netAt.map(a=>q(a,.10)), P50 = netAt.map(a=>q(a,.50)), P90 = netAt.map(a=>q(a,.90));
+    const rf = simInvest({p0:v.inicial, pmt:v.aporte, months, rate:()=>aToM(v.cdi/100*v.pcdi/100), tax:irRF});
+    const rfPts = pts.map(t=>rf.series[t]);
+    // Unidade: nominal ou em reais de hoje (deflacionado pelo IPCA esperado)
+    const real = v.unid==="real", P = paths(v), D = deflator(P.ipca, months), Dm = real ? D[months] : 1;
+    const investedShow = real ? v.inicial + Array.from({length:months},(_,t)=>v.aporte/D[t]).reduce((a,b)=>a+b,0) : invested;
+    const beat = Array.from(finals).filter(x=>x>rf.net).length/N;
+    const loss = Array.from(finals).filter(x=>x/Dm<investedShow).length/N;
+    const nMed = P50[P50.length-1], nLo = P10[P10.length-1], nHi = P90[P90.length-1];
+    const med = nMed/Dm, lo = nLo/Dm, hi = nHi/Dm, rfNet = rf.net/Dm;
+    const sh = arr => real ? arr.map((x,i)=>x/D[pts[i]]) : arr;
+    const divMed = q(divs,.5);
+    const ipcaMed = mediaAnual(P.ipca, months);
+    const unid = real ? " em reais de hoje" : "";
+    const tag = beat>=.6 ? "Ações tendem a ganhar" : beat>=.4 ? "Empate técnico" : "Renda fixa tende a ganhar";
+    return {
+      html: verdict(tag,
+          `Em ${yrs(months)}, o cenário central é de <b>${money(med)}</b> líquidos${unid}, com ${money(investedShow)} investidos. Em 8 de cada 10 cenários, o resultado fica entre <b>${money(lo)}</b> e <b>${money(hi)}</b>.`,
+          `${A.nome} superam a renda fixa (${money(rfNet)}) em <b>${pct(beat,0)}</b> dos cenários. Em ${pct(loss,0)} deles você terminaria com menos do que investiu${real?", já descontada a inflação":""}.${isento?" Considera venda parcelada, dentro da isenção de R$ 20 mil por mês.":""}${usarHist?` Cenários sorteados de ${histStats.n} meses reais do BOVA11: retorno médio de ${pct(histStats.ret,1)} a.a., volatilidade de ${pct(histStats.vol,0)} e pior mês de ${pct(histStats.worst,1)}.`:v.modelo==="historico"?" O histórico do BOVA11 não carregou; usei suas premissas.":""}`) +
+        `<div class="kpis">${kpi("Cenário central", money(med), "metade dos cenários fica acima", C.s1)}${kpi("Pessimista", money(lo), "só 10% dos cenários ficam abaixo", C.s2)}${kpi("Otimista", money(hi), "só 10% dos cenários ficam acima", C.s3)}${kpi("Renda fixa", money(rfNet), `${nf(v.pcdi,0)}% do CDI, após IR`, C.s4)}${kpi("Chance de vencer a renda fixa", pct(beat,0), `chance de perder dinheiro: ${pct(loss,0)}`)}${usarHist?kpi("Dividendos", "incluídos", "o histórico do BOVA11 já reinveste proventos"):kpi("Dividendos no período", money(divMed), reinv?"reinvestidos (cenário central)":"sacados (cenário central)")}</div>` +
+        chartPanel("Faixa de resultados ao longo do tempo", `Valor líquido se vendido em cada momento${unid}. A área mostra onde caem 80% dos cenários`, legend([["Otimista (90%)",C.s3],["Central",C.s1],["Pessimista (10%)",C.s2],["Renda fixa",C.s4,true]]), "ch") +
+        `<section class="panel"><h3>Como fica cada cenário no fim</h3><div class="tablewrap"><table><thead><tr><th>Cenário</th><th class="n">Valor líquido</th><th class="n">Ganho sobre o investido</th><th class="n">Retorno anual equivalente</th></tr></thead><tbody>
+        ${[["Otimista (90%)",nHi,C.s3],["Central",nMed,C.s1],["Pessimista (10%)",nLo,C.s2],["Renda fixa",rf.net,C.s4]].map(([n,val,c])=>{
+          const fl = Array(months+1).fill(0); fl[0]=-(v.inicial+v.aporte); for (let t=1;t<months;t++) fl[t]=-v.aporte; fl[months]+=val; const im=irr(fl);
+          const a = im===null ? null : real ? (1+mToA(im))/(1+ipcaMed)-1 : mToA(im);
+          return `<tr><td><span class="sw" style="background:${c}"></span>${n}</td><td class="n num">${money(val/Dm)}</td><td class="n num ${val/Dm<investedShow?"neg":""}">${money(val/Dm-investedShow)}</td><td class="n num">${a===null?"—":pct(a)+" a.a."+(real?" real":"")}</td></tr>`; }).join("")}
+        </tbody></table></div></section>` +
+        notes([usarHist?"Cenários gerados por bootstrap em blocos de 12 meses dos retornos mensais reais do BOVA11 nos últimos 10 anos (com proventos reinvestidos). Preserva caudas gordas e sequências de queda que a curva normal ignora.":"Retornos mensais sorteados de uma distribuição log-normal com a valorização média e a volatilidade informadas.",
+          "São 1.000 cenários. O passado recente pode não se repetir: 10 anos incluem poucos ciclos completos da bolsa brasileira.",
+          "Ações: IR de 15% sobre o lucro na venda. Vendas de ações à vista de até R$ 20 mil por mês são isentas (vale para swing trade em ações, não para ETFs nem FIIs).",
+          "ETF de ações: 15% sobre o lucro, sem a isenção de R$ 20 mil. FII: 20% sobre o lucro na venda; os rendimentos mensais são isentos para pessoa física, com condições.",
+          "Dividendos de ações são isentos até R$ 50 mil por mês de uma mesma empresa. Acima disso, há retenção de 10% desde 2026. JCP tem IR retido na fonte e não foi separado aqui.",
+          "Day trade (IR de 20%), compensação de prejuízos e emolumentos da B3 não foram simulados.",
+          "Renda fixa de comparação: título atrelado ao CDI com IR regressivo, sem oscilação."]),
+      after(){ lineChart($("#ch"),{label:"Faixa de resultados", xs:pts, band:{lo:sh(P10), hi:sh(P90), color:C.s1}, series:[{name:"Otimista (90%)",color:C.s3,values:sh(P90)},{name:"Central",color:C.s1,values:sh(P50)},{name:"Pessimista (10%)",color:C.s2,values:sh(P10)},{name:"Renda fixa",color:C.s4,values:sh(rfPts)}], dashed:[3], xFmt:monthX(months), tipTitle:x=>`Mês ${x} · ${yrs(x)}`}); }
+    };
+  }
+});
+
+/* ---------- 14. Dividendos ---------- */
+SIMS.push({
+  id:"dividendos", nav:"Dividendos",
+  title:"Quanto de renda as ações pagadoras de dividendos podem gerar?",
+  lede:"Projeta uma carteira de ações boas pagadoras com aportes mensais, dividendos e JCP reinvestidos ou sacados, e o imposto de cada tipo de provento. Calcula o preço-teto de Bazin e o preço justo pelo modelo de Gordon.",
+  fields:[
+    {k:"inicial",label:"Investimento inicial",def:10000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:1000,pre:"R$",suf:"/mês",sobra:true},
+    {k:"anos",label:"Prazo",def:15,suf:"anos"},
+    {k:"meta",label:"Renda mensal desejada",def:3000,pre:"R$",suf:"/mês",hint:"líquida, em valores de hoje"},
+    {sect:"Ação ou carteira"},
+    {k:"preco",label:"Preço da ação",def:40,pre:"R$"},
+    {k:"dpa",label:"Proventos por ação em 12 meses",def:3.2,pre:"R$",hint:"dividendos + JCP pagos no último ano"},
+    {k:"jcp",label:"Parte paga como JCP",def:30,suf:"%",hint:"o restante é dividendo"},
+    {k:"cresc",label:"Crescimento dos proventos acima do IPCA",def:2,suf:"% a.a.",neg:true,hint:"o preço acompanha, mantendo o dividend yield"},
+    {k:"reinv",label:"Proventos",def:"sim",opts:[["sim","Reinvestir"],["nao","Sacar todo mês"]]},
+    {k:"custo",label:"Custos de negociação",def:0.03,suf:"%",hint:"corretagem e emolumentos"},
+    {sect:"Preço justo"},
+    {k:"k",label:"Retorno exigido",def:14,suf:"% a.a.",hint:"para o modelo de Gordon"},
+    {k:"bazin",label:"Dividend yield mínimo (Bazin)",def:6,suf:"% a.a."},
+    {sect:"Impostos"},
+    {k:"irJcp",label:"IR sobre JCP",def:15,suf:"%",hint:"retido na fonte"},
+    {k:"irDiv",label:"IR sobre dividendos",def:10,suf:"%",hint:"retido sobre o que passar do limite"},
+    {k:"limDiv",label:"Limite isento por empresa",def:50000,pre:"R$",suf:"/mês"},
+    {sect:"Mercado e comparação"},
+    CENARIO, UNIDADE,
+    {k:"ipca",label:"IPCA 12 meses",def:4.22,suf:"% a.a.",mkt:"ipca"},
+    {k:"selic",label:"Selic hoje",def:13.75,suf:"% a.a.",mkt:"selic"},
+    {k:"real",label:"Tesouro IPCA+",def:7,suf:"% a.a.",mkt:"real"},
+  ],
+  run(v){
+    const T = Math.round(v.anos*12);
+    if (!(T>=1 && T<=600)) return {error:"Informe um prazo entre 1 mês e 50 anos."};
+    if (!(v.inicial+v.aporte>0)) return {error:"Informe um investimento inicial ou um aporte mensal."};
+    if (!(v.preco>0)) return {error:"Informe o preço da ação."};
+    if (v.jcp>100) return {error:"A parte paga como JCP vai de 0% a 100%."};
+    if (v.cresc <= -50) return {error:"O crescimento real precisa ser maior que −50% a.a."};
+    const P = paths(v), D = deflator(P.ipca, T), real = v.unid==="real", reinv = v.reinv==="sim";
+    const dy = v.dpa/v.preco, gm = aToM(v.cresc/100), cu = v.custo/100, fj = v.jcp/100;
+    /* Proventos pagos em parcelas mensais iguais, proporcionais ao preço (dividend yield constante). */
+    const sim = (choque=0) => {
+      let preco = v.preco, acoes = (v.inicial+v.aporte)*(1-cu)/preco, base = v.inicial+v.aporte, sacado = 0, sacadoR = 0, irJ = 0, irD = 0, bruto = 0;
+      const renda=[0], liqS=[];
+      const liquido = pr => { const venda = acoes*pr*(1-cu); return venda - Math.max(0, venda-base)*0.15; };
+      liqS.push(liquido(preco));
+      for (let t=1;t<=T;t++){
+        const prov = acoes*preco*dy/12, jcp = prov*fj, div = prov-jcp;
+        const tJ = jcp*v.irJcp/100, tD = Math.max(0, div-v.limDiv)*v.irDiv/100, liq = prov-tJ-tD;
+        irJ += tJ/(real?D[t]:1); irD += tD/(real?D[t]:1); bruto += prov/(real?D[t]:1);
+        preco *= (1+aToM(P.ipca(t)))*(1+gm);
+        if (reinv){ acoes += liq*(1-cu)/preco; base += liq; } else { sacado += liq; sacadoR += liq/D[t]; }
+        if (t<T && v.aporte>0){ acoes += v.aporte*(1-cu)/preco; base += v.aporte; }
+        renda.push(liq); liqS.push(liquido(preco));
+      }
+      const venda = acoes*preco*(1+choque)*(1-cu), ir = Math.max(0, venda-base)*0.15;
+      return {renda, liqS, acoes, preco, base, venda, ir, liq:venda-ir, sacado, sacadoR, irJ, irD, bruto};
+    };
+    const r = sim(), k = t => real ? 1/D[t] : 1;
+    const inv = v.inicial + v.aporte*T;
+    const total = r.liq*k(T) + (real ? r.sacadoR : r.sacado);
+    const rendaFim = r.renda[T], rendaFimR = rendaFim/D[T];
+    const yoc = rendaFim*12/inv;                                          // proventos anuais sobre o valor investido (nominal)
+    const liqUnit = 1 - fj*v.irJcp/100;                                    // fração líquida dos proventos abaixo do limite
+    const patMeta = v.meta*12/(dy*liqUnit);
+    const mMeta = r.renda.findIndex((x,t)=>t>0 && x/D[t] >= v.meta);
+    // Preço justo
+    const gN = (1+mediaAnual(P.ipca, 120))*(1+v.cresc/100)-1, kk = v.k/100;
+    const gordon = kk>gN ? v.dpa*(1+gN)/(kk-gN) : null, teto = v.bazin>0 ? v.dpa/(v.bazin/100) : null;
+    const margem = x => x==null ? "" : x>=v.preco ? `${pct(x/v.preco-1,0)} acima do preço atual` : `${pct(1-x/v.preco,0)} abaixo do preço atual`;
+    // Comparação com os mesmos aportes
+    const base = {p0:v.inicial, pmt:v.aporte, months:T, tax:irRF};
+    const over = t => Math.max(0, P.selic(t)-0.001);
+    const sel = simInvest({...base, rate:t=>aToM(over(t)), fee:b=>Math.max(0,b-10000)*0.002/12});
+    const ipc = simInvest({...base, rate:t=>(1+aToM(P.ipca(t)))*(1+aToM(v.real/100))-1, fee:b=>b*0.002/12});
+    if (real){ toReal(sel, D, v.inicial, v.aporte, T); toReal(ipc, D, v.inicial, v.aporte, T); }
+    const fluxo = Array(T+1).fill(0); fluxo[0] = -(v.inicial+v.aporte);
+    for (let t=1;t<T;t++) fluxo[t] = -v.aporte/(real?D[t]:1);
+    if (!reinv) for (let t=1;t<=T;t++) fluxo[t] += r.renda[t]/(real?D[t]:1);
+    fluxo[T] += r.liq*k(T);
+    const im = irr(fluxo), irrA = im==null ? null : mToA(im);
+    const res = [
+      {name:"Ações de dividendos", color:C.s2, net:total},
+      {name:"Tesouro IPCA+", color:C.s3, net:ipc.net},
+      {name:"Tesouro Selic", color:C.s1, net:sel.net},
+    ];
+    const best = res.reduce((a,b)=>b.net>a.net?b:a), max = best.net;
+    const unid = real ? " em reais de hoje" : "";
+    const choques = [-0.3,-0.15,0,0.15].map(c=>{ const s = sim(c); return {c, tot:s.liq*k(T) + (real ? s.sacadoR : s.sacado), ir:s.ir*k(T)}; });
+    const xs = Array.from({length:T+1},(_,i)=>i);
+    return {
+      html: verdict(reinv ? "Proventos reinvestidos" : "Proventos sacados",
+          `Em ${yrs(T)}, a carteira chega a <b>${nf(r.acoes,0)} ações</b>, que pagam <b>${money(rendaFim*k(T))}/mês</b> líquidos${unid}${real?"":` (${money(rendaFimR)} em valores de hoje)`}. Isso é ${pct(yoc,1)} ao ano sobre o que você investiu (yield on cost). ${reinv?"":`Você terá sacado ${money(real?r.sacadoR:r.sacado)} em proventos. `}Vendendo tudo no fim, sobram ${money(r.liq*k(T))} após ${money(r.ir*k(T))} de IR.`,
+          `Para receber ${money(v.meta)}/mês líquidos em valores de hoje, são necessários cerca de <b>${money(patMeta)}</b> investidos com dividend yield de ${pct(dy,1)}. ${mMeta>0?`Seguindo este plano, você chega lá em <b>${yrs(mMeta)}</b>.`:`No prazo simulado, a renda chega a ${money(rendaFimR)}/mês em valores de hoje.`}`) +
+        `<div class="kpis">${kpi("Renda mensal no fim", money(rendaFim*k(T)), real?"líquida, em reais de hoje":`líquida; ${money(rendaFimR)} em valores de hoje`, C.s2)}${kpi("Yield on cost", pct(yoc,1)+" a.a.", "proventos anuais ÷ total investido")}${kpi("Preço-teto (Bazin)", teto!=null?money2(teto):"—", teto!=null?`para render ${nf(v.bazin,1)}% a.a.; ${margem(teto)}`:"")}${kpi("Preço justo (Gordon)", gordon!=null?money2(gordon):"—", gordon!=null?`com k = ${nf(v.k,1)}% e g = ${pct(gN,1)}; ${margem(gordon)}`:"o retorno exigido precisa superar o crescimento")}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>Valor líquido no fim, com os mesmos aportes</h3><div class="sub">Ações vendidas no fim do prazo${reinv?"":", somando os proventos sacados"}; títulos com IR e custódia${unid}</div></div></div><div class="bars">${res.map(x=>`<div class="bar"><span>${esc(x.name)}${x===best?` <span class="badge">melhor</span>`:""}</span><span class="track"><i style="width:${Math.max(2,x.net/max*100)}%;background:${x.color}"></i></span><span class="v">${money(x.net)}</span></div>`).join("")}</div></section>` +
+        chartPanel("Renda mensal dos proventos", `Dividendos e JCP líquidos recebidos em cada mês${unid}`, legend([["Proventos líquidos",C.s2],["Renda desejada",C.ink,true]]), "ch") +
+        `<section class="panel"><div class="phead"><div><h3>Impostos sobre os proventos no período</h3><div class="sub">Somados mês a mês${unid}</div></div></div><div class="tablewrap"><table><thead><tr><th>Item</th><th class="n">Valor</th><th>Regra usada</th></tr></thead><tbody>
+          <tr><td>Proventos brutos</td><td class="n num">${money(r.bruto)}</td><td>${nf(100-v.jcp)}% dividendos, ${nf(v.jcp)}% JCP</td></tr>
+          <tr><td>IR sobre JCP</td><td class="n num">${money(r.irJ)}</td><td>${nf(v.irJcp,1)}% retido na fonte</td></tr>
+          <tr><td>IR sobre dividendos</td><td class="n num">${money(r.irD)}</td><td>${nf(v.irDiv,1)}% sobre o que passa de ${money(v.limDiv)}/mês</td></tr>
+          <tr><td>Retorno anual da carteira</td><td class="n num">${irrA!=null?pct(irrA):"—"}</td><td>líquido${real?", acima da inflação":""}, vendendo no fim</td></tr>
+        </tbody></table></div></section>` +
+        chartPanel("Valor líquido se vender em cada mês", `Ações sem os proventos sacados; Tesouro com IR e custódia${unid}`, legend([["Ações de dividendos",C.s2],["Tesouro IPCA+",C.s3],["Tesouro Selic",C.s1]]), "ch2") +
+        `<section class="panel"><div class="phead"><div><h3>E se o preço estiver diferente na venda?</h3><div class="sub">A projeção supõe preço acompanhando os proventos; na bolsa, ele oscila muito mais. Veja a aba Ações para cenários de volatilidade</div></div></div><div class="tablewrap"><table><thead><tr><th>Preço na venda</th><th class="n">Total líquido${reinv?"":" com proventos"}</th><th class="n">IR sobre o ganho</th></tr></thead><tbody>
+        ${choques.map(c=>`<tr class="${c.c===0?"best":""}"><td>${c.c===0?"Como projetado":`${c.c>0?"+":"−"}${nf(Math.abs(c.c)*100)}% em relação ao projetado`}</td><td class="n num"><b>${money(c.tot)}</b></td><td class="n num">${money(c.ir)}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
+        notes(["Proventos anuais = dividend yield × preço, pagos em parcelas mensais iguais. Preço e proventos crescem com o IPCA mais o crescimento real informado, então o dividend yield fica constante.",
+          "JCP (juros sobre capital próprio): IR retido na fonte, sem ajuste na declaração. Para a empresa, o JCP é despesa dedutível, por isso muitas pagam parte dos proventos assim.",
+          "Dividendos: isentos até o limite mensal por empresa; acima dele, retenção na fonte. A partir de 2026, a lei prevê 10% acima de R$ 50 mil por mês de uma mesma empresa e um imposto mínimo para rendas muito altas. Confira a regra vigente; os campos permitem ajustar.",
+          "Em uma carteira com várias empresas, o limite vale para cada uma. Aqui a carteira é tratada como uma única empresa, o que superestima o imposto de quem tem várias.",
+          "Venda: IR de 15% sobre o ganho, considerando venda de tudo de uma vez (acima da isenção de R$ 20 mil por mês). Vender aos poucos pode reduzir o imposto.",
+          "Bazin: preço-teto = proventos dos últimos 12 meses ÷ dividend yield mínimo desejado. Gordon: P = D₁ ÷ (k − g), com D₁ = proventos × (1 + g) e g = IPCA esperado + crescimento real.",
+          "Comparação com os mesmos aportes: Tesouro Selic e Tesouro IPCA+ com IR regressivo e custódia. Ações não têm garantia, e empresas podem cortar dividendos."]),
+      after(){
+        lineChart($("#ch"),{label:"Renda mensal dos proventos", xs, series:[{name:"Proventos líquidos",color:C.s2,values:r.renda.map((x,t)=>t===0?null:x*k(t))},{name:"Renda desejada",color:C.ink,values:xs.map(t=>real?v.meta:v.meta*D[t])}], dashed:[1], xFmt:monthX(T), tipTitle:x=>`Mês ${x} · ${yrs(x)}`});
+        lineChart($("#ch2"),{label:"Valor líquido por mês", xs, series:[{name:"Ações de dividendos",color:C.s2,values:r.liqS.map((x,t)=>x*k(t))},{name:"Tesouro IPCA+",color:C.s3,values:ipc.series},{name:"Tesouro Selic",color:C.s1,values:sel.series}], xFmt:monthX(T), tipTitle:x=>`Mês ${x} · ${yrs(x)}`});
+      }
+    };
+  }
+});
+
+/* ---------- 15. Fundos imobiliários ---------- */
+SIMS.push({
+  id:"fii", nav:"Fundos imobiliários",
+  title:"Quanto rendem os fundos imobiliários e quando viro rentista?",
+  lede:"Projeta uma carteira de FIIs com aportes mensais, rendimentos isentos reinvestidos ou não, e cota corrigida pela inflação. Calcula o “número mágico”, a renda mensal ao longo do tempo e compara com o Tesouro Selic e o IPCA+.",
+  fields:[
+    {k:"inicial",label:"Investimento inicial",def:10000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:1000,pre:"R$",suf:"/mês",sobra:true},
+    {k:"anos",label:"Prazo",def:10,suf:"anos"},
+    {k:"meta",label:"Renda mensal desejada",def:3000,pre:"R$",suf:"/mês",hint:"em valores de hoje"},
+    {sect:"Fundo"},
+    {k:"preco",label:"Preço da cota",def:100,pre:"R$"},
+    {k:"dy",label:"Rendimento mensal (dividend yield)",def:0.85,suf:"% a.m.",hint:"rendimento do mês ÷ preço da cota"},
+    {k:"cresc",label:"Crescimento acima do IPCA",def:0,suf:"% a.a.",neg:true,hint:"da cota e dos rendimentos; pode ser negativo"},
+    {k:"reinv",label:"Rendimentos",def:"sim",opts:[["sim","Reinvestir"],["nao","Sacar todo mês"]]},
+    {k:"custo",label:"Custos de negociação",def:0.03,suf:"%",hint:"corretagem e emolumentos, por operação"},
+    {k:"irDiv",label:"IR sobre rendimentos",def:0,suf:"%",hint:"hoje isentos para pessoa física, nas condições da lei"},
+    {sect:"Mercado e comparação"},
+    CENARIO, UNIDADE,
+    {k:"ipca",label:"IPCA 12 meses",def:4.22,suf:"% a.a.",mkt:"ipca"},
+    {k:"selic",label:"Selic hoje",def:13.75,suf:"% a.a.",mkt:"selic"},
+    {k:"real",label:"Tesouro IPCA+",def:7,suf:"% a.a.",mkt:"real",hint:"taxa real do título de prazo parecido"},
+  ],
+  run(v){
+    const T = Math.round(v.anos*12);
+    if (!(T>=1 && T<=600)) return {error:"Informe um prazo entre 1 mês e 50 anos."};
+    if (!(v.inicial+v.aporte>0)) return {error:"Informe um investimento inicial ou um aporte mensal."};
+    if (!(v.preco>0)) return {error:"Informe o preço da cota."};
+    if (v.cresc <= -50) return {error:"O crescimento real precisa ser maior que −50% a.a."};
+    const P = paths(v), D = deflator(P.ipca, T), real = v.unid==="real", reinv = v.reinv==="sim";
+    const dy = v.dy/100, gm = aToM(v.cresc/100), cu = v.custo/100, irD = v.irDiv/100;
+    /* Simulação mensal: preço corrigido por IPCA e crescimento real; rendimento = dy × preço do mês anterior. */
+    const sim = (choque=0) => {
+      let preco = v.preco, cotas = (v.inicial+v.aporte)*(1-cu)/preco, base = v.inicial+v.aporte, sacado = 0, sacadoR = 0;
+      const pat=[cotas*preco], renda=[0], liqS=[];
+      const liquido = (pr, t) => { const venda = cotas*pr*(1-cu); return venda - Math.max(0, venda-base)*0.20; };
+      liqS.push(liquido(preco, 0));
+      for (let t=1;t<=T;t++){
+        const div = cotas*dy*preco*(1-irD);
+        preco *= (1+aToM(P.ipca(t)))*(1+gm);
+        if (reinv){ cotas += div*(1-cu)/preco; base += div; } else { sacado += div; sacadoR += div/D[t]; }
+        if (t<T && v.aporte>0){ cotas += v.aporte*(1-cu)/preco; base += v.aporte; }
+        pat.push(cotas*preco); renda.push(div); liqS.push(liquido(preco, t));
+      }
+      const venda = cotas*preco*(1+choque)*(1-cu), ir = Math.max(0, venda-base)*0.20;
+      return {pat, renda, liqS, cotas, preco, base, venda, ir, liq:venda-ir, sacado, sacadoR};
+    };
+    const r = sim();
+    const k = t => real ? 1/D[t] : 1;
+    const inv = v.inicial + v.aporte*T;
+    const total = r.liq*k(T) + (real ? r.sacadoR : r.sacado);           // venda líquida + rendimentos sacados
+    const rendaFim = r.renda[T], rendaFimR = rendaFim/D[T];
+    const magico = Math.ceil(1/(dy*(1-irD)));                             // cotas cujo rendimento compra uma cota nova
+    const patMeta = v.meta/(dy*(1-irD));                                  // patrimônio, em reais de hoje, para a renda desejada
+    const mMeta = r.renda.findIndex((x,t)=>t>0 && x/D[t] >= v.meta);
+    // Comparação com mesmos aportes
+    const base = {p0:v.inicial, pmt:v.aporte, months:T, tax:irRF};
+    const over = t => Math.max(0, P.selic(t)-0.001);
+    const sel = simInvest({...base, rate:t=>aToM(over(t)), fee:b=>Math.max(0,b-10000)*0.002/12});
+    const ipc = simInvest({...base, rate:t=>(1+aToM(P.ipca(t)))*(1+aToM(v.real/100))-1, fee:b=>b*0.002/12});
+    const fiiNet = r.liqS.map((x,t)=>x*k(t));
+    if (real){ toReal(sel, D, v.inicial, v.aporte, T); toReal(ipc, D, v.inicial, v.aporte, T); }
+    const fluxo = Array(T+1).fill(0); fluxo[0] = -(v.inicial+v.aporte);
+    for (let t=1;t<T;t++) fluxo[t] = -v.aporte/(real?D[t]:1);
+    if (!reinv) for (let t=1;t<=T;t++) fluxo[t] += r.renda[t]/(real?D[t]:1);
+    fluxo[T] += r.liq*k(T);
+    const im = irr(fluxo), irrA = im==null ? null : mToA(im);
+    const res = [
+      {name:"Fundos imobiliários", color:C.s2, net:total, irrA},
+      {name:"Tesouro IPCA+", color:C.s3, net:ipc.net, irrA:ipc.irrA},
+      {name:"Tesouro Selic", color:C.s1, net:sel.net, irrA:sel.irrA},
+    ];
+    const best = res.reduce((a,b)=>b.net>a.net?b:a), max = best.net;
+    const unid = real ? " em reais de hoje" : "";
+    const choques = [-0.3,-0.15,0,0.15].map(c=>{ const s = sim(c); const tot = s.liq*k(T) + (real ? s.sacadoR : s.sacado); return {c, tot, ir:s.ir*k(T)}; });
+    const xs = Array.from({length:T+1},(_,i)=>i);
+    return {
+      html: verdict(reinv ? "Rendimentos reinvestidos" : "Rendimentos sacados",
+          `Em ${yrs(T)}, a carteira chega a <b>${nf(r.cotas,0)} cotas</b>, que valem ${money(r.pat[T]*k(T))}${unid} e pagam <b>${money(rendaFim*k(T))}/mês</b>${real?"":` (${money(rendaFimR)} em valores de hoje)`}. ${reinv?"":`Você terá sacado ${money(real?r.sacadoR:r.sacado)} em rendimentos. `}Vendendo tudo, sobram ${money(r.liq*k(T))} após ${money(r.ir*k(T))} de IR sobre o ganho de capital.`,
+          `Para receber ${money(v.meta)}/mês em valores de hoje, são necessários cerca de <b>${money(patMeta)}</b> investidos com esse rendimento. ${mMeta>0?`Seguindo este plano, você chega lá em <b>${yrs(mMeta)}</b>.`:`No prazo simulado, a renda chega a ${money(rendaFimR)}/mês em valores de hoje.`} Número mágico: <b>${nf(magico)} cotas</b>, a partir das quais os rendimentos do mês compram uma cota nova.`) +
+        `<div class="kpis">${kpi("Renda mensal no fim", money(rendaFim*k(T)), real?"em reais de hoje":`${money(rendaFimR)} em valores de hoje`, C.s2)}${kpi("Patrimônio em cotas", money(r.pat[T]*k(T)), `${nf(r.cotas,0)} cotas a ${money(r.preco*k(T))}`)}${kpi("Retorno anual", irrA!=null?pct(irrA):"—", `líquido${real?", acima da inflação":""}, vendendo no fim`)}${kpi("Número mágico", nf(magico)+" cotas", `rendimento de ${money2(v.preco*dy)} por cota hoje`)}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>Valor líquido no fim, com os mesmos aportes</h3><div class="sub">FII vendido no fim do prazo${reinv?"":", somando os rendimentos sacados"}; títulos com IR e custódia${unid}</div></div></div><div class="bars">${res.map(x=>`<div class="bar"><span>${esc(x.name)}${x===best?` <span class="badge">melhor</span>`:""}</span><span class="track"><i style="width:${Math.max(2,x.net/max*100)}%;background:${x.color}"></i></span><span class="v">${money(x.net)}</span></div>`).join("")}</div></section>` +
+        chartPanel("Renda mensal dos fundos", `Rendimentos recebidos em cada mês${unid}`, legend([["Rendimentos do mês",C.s2],["Renda desejada",C.ink,true]]), "ch") +
+        chartPanel("Valor líquido se vender em cada mês", `FII sem os rendimentos sacados; Tesouro com IR e custódia${unid}`, legend([["Fundos imobiliários",C.s2],["Tesouro IPCA+",C.s3],["Tesouro Selic",C.s1]]), "ch2") +
+        `<section class="panel"><div class="phead"><div><h3>E se o preço da cota estiver diferente na venda?</h3><div class="sub">FIIs são negociados em bolsa: o preço oscila com os juros e com o mercado imobiliário</div></div></div><div class="tablewrap"><table><thead><tr><th>Preço na venda</th><th class="n">Total líquido${reinv?"":" com rendimentos"}</th><th class="n">IR sobre o ganho</th></tr></thead><tbody>
+        ${choques.map(c=>`<tr class="${c.c===0?"best":""}"><td>${c.c===0?"Como projetado":`${c.c>0?"+":"−"}${nf(Math.abs(c.c)*100)}% em relação ao projetado`}</td><td class="n num"><b>${money(c.tot)}</b></td><td class="n num">${money(c.ir)}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
+        notes(["Rendimento do mês = dividend yield × preço da cota. Cota e rendimentos crescem com o IPCA mais o crescimento real informado, o que equivale a supor aluguéis reajustados pela inflação.",
+          "Rendimentos de FII são isentos de IR para pessoa física quando o fundo tem cotas negociadas em bolsa e pelo menos 100 cotistas, e o investidor tem menos de 10% das cotas. Mudanças na lei podem tributá-los: use o campo “IR sobre rendimentos” para testar.",
+          "Ganho de capital na venda das cotas paga 20% de IR, sem isenção para vendas pequenas. O cálculo usa o custo médio das cotas compradas.",
+          "Cotas fracionadas, para simplificar. Na prática só se compram cotas inteiras e o troco fica para o mês seguinte.",
+          "Número mágico: quantidade de cotas cujo rendimento mensal paga uma cota nova, igual a preço ÷ rendimento por cota. A partir dele, a carteira cresce sozinha, mesmo sem aportes.",
+          "FIIs não têm garantia do FGC e o preço da cota oscila. Vacância, inadimplência de inquilinos e alta de juros reduzem rendimentos e preços.",
+          "Comparação com os mesmos aportes: Tesouro Selic (Selic over, custódia acima de R$ 10 mil) e Tesouro IPCA+ (IPCA do cenário mais a taxa informada, custódia de 0,20% a.a.), com IR regressivo."]),
+      after(){
+        lineChart($("#ch"),{label:"Renda mensal dos fundos", xs, series:[{name:"Rendimentos do mês",color:C.s2,values:r.renda.map((x,t)=>t===0?null:x*k(t))},{name:"Renda desejada",color:C.ink,values:xs.map(t=>real?v.meta:v.meta*D[t])}], dashed:[1], xFmt:monthX(T), tipTitle:x=>`Mês ${x} · ${yrs(x)}`});
+        lineChart($("#ch2"),{label:"Valor líquido por mês", xs, series:[{name:"Fundos imobiliários",color:C.s2,values:fiiNet},{name:"Tesouro IPCA+",color:C.s3,values:ipc.series},{name:"Tesouro Selic",color:C.s1,values:sel.series}], xFmt:monthX(T), tipTitle:x=>`Mês ${x} · ${yrs(x)}`});
+      }
+    };
+  }
+});
+
+/* ---------- 16. Criptomoedas ---------- */
+const CRIPTO_IR = {
+  br:   {nome:"Exchange no Brasil", ir:.15, isencao:true},
+  ext:  {nome:"Exchange no exterior", ir:.15, isencao:false},
+  etf:  {nome:"ETF de cripto na B3", ir:.15, isencao:false},
+};
+SIMS.push({
+  id:"cripto", nav:"Criptomoedas",
+  title:"Quanto posso ganhar ou perder com criptomoedas?",
+  lede:"Criptomoedas sobem e caem muito mais que ações. O simulador gera 1.000 caminhos, sorteando trechos reais da história do ativo ou usando suas premissas, e mostra a faixa de resultados, as quedas pelo caminho e o efeito no seu patrimônio total.",
+  fields:[
+    {k:"ativo",label:"Criptomoeda",def:"BTC",opts:[["BTC","Bitcoin (BTC)"],["ETH","Ethereum (ETH)"]]},
+    {k:"onde",label:"Onde investe",def:"br",opts:[["br","Exchange no Brasil"],["ext","Exchange no exterior"],["etf","ETF na B3"]],wide:true},
+    {k:"inicial",label:"Investimento inicial",def:5000,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:500,pre:"R$",sobra:true},
+    {k:"anos",label:"Prazo",def:5,suf:"anos"},
+    {k:"patrimonio",label:"Resto do patrimônio",def:100000,pre:"R$",hint:"fora de cripto, para medir o peso"},
+    {k:"modelo",label:"Como gerar os cenários",def:"historico",opts:[["historico","Histórico real do ativo, em reais"],["premissas","Minhas premissas abaixo"]],wide:true,hint:"O histórico sorteia blocos de 12 meses dos últimos anos, com quedas e altas reais."},
+    {k:"venda",label:"Venda no fim",def:"total",opts:[["total","De uma vez"],["aos-poucos","Até R$ 35 mil/mês"]],when:["onde","br"]},
+    UNIDADE,
+    {sect:"Premissas"},
+    {k:"valoriz",label:"Valorização média",def:20,suf:"% a.a.",hint:"em reais"},
+    {k:"vol",label:"Volatilidade",def:65,suf:"% a.a.",hint:"bitcoin: cerca de 50% a 80%"},
+    {k:"custo",label:"Custo de compra",def:0.5,suf:"%",hint:"spread e corretagem da exchange"},
+    {sect:"Comparar com renda fixa"},
+    {k:"cdi",label:"CDI médio no período",def:11.5,suf:"% a.a.",mkt:"cdiMedio",hz:v=>v.anos*12},
+  ],
+  run(v){
+    const months = Math.round(v.anos*12);
+    if (!(months>=12 && months<=360)) return {error:"Informe um prazo entre 1 e 30 anos."};
+    if (!(v.inicial+v.aporte>0)) return {error:"Informe um investimento inicial ou um aporte mensal."};
+    if (v.vol>200) return {error:"A volatilidade parece alta demais. Use algo entre 30% e 120% ao ano."};
+    if (v.custo>=100) return {error:"O custo de compra precisa ser menor que 100%."};
+    const O = CRIPTO_IR[v.onde] || CRIPTO_IR.br, nomeAtivo = v.ativo==="ETH" ? "ethereum" : "bitcoin";
+    const isento = O.isencao && v.venda==="aos-poucos";
+    const s = v.vol/100/Math.sqrt(12), mu = Math.log(1+v.valoriz/100)/12 - s*s/2, cu = v.custo/100;
+    const N = 1000, step = months>120 ? 12 : months>48 ? 3 : 1;
+    const pts = []; for (let t=0;t<=months;t+=step) pts.push(t); if (pts[pts.length-1]!==months) pts.push(months);
+    const idx = new Map(pts.map((t,i)=>[t,i]));
+    const netAt = pts.map(()=>new Float64Array(N)), finals = new Float64Array(N), dds = new Float64Array(N);
+    const invested = v.inicial + v.aporte*months;
+    const rnd = mulberry(Math.round(v.inicial+v.aporte*7+v.anos*131+v.valoriz*977+v.vol*313)+(v.ativo==="ETH"?17:0));
+    const gauss = () => { let u=0; while(!u) u=rnd(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*rnd()); };
+    const hist = (MKT?.series?.retornos?.[v.ativo] || []).filter(x=>x!=null);
+    const usarHist = v.modelo==="historico" && hist.length>=36;
+    const hs = usarHist ? (()=>{ const lg = hist.map(x=>Math.log(1+x)); const m = lg.reduce((a,b)=>a+b,0)/lg.length; const sd = Math.sqrt(lg.reduce((a,b)=>a+(b-m)**2,0)/(lg.length-1));
+      let pk=1, val=1, dd=0; for (const x of hist){ val*=1+x; pk=Math.max(pk,val); dd=Math.min(dd,val/pk-1); }
+      return {ret:Math.exp(12*m)-1, vol:sd*Math.sqrt(12), worst:Math.min(...hist), dd, n:hist.length}; })() : null;
+    for (let p=0;p<N;p++){
+      let preco = 1, cotas = (v.inicial+v.aporte)*(1-cu), basis = v.inicial+v.aporte, pico = 1, dd = 0, bloco = 0, pos = 0;
+      const net = () => { const val = cotas*preco, g = val-basis; return val - (g>0 && !isento ? g*O.ir : 0); };
+      netAt[0][p] = net();
+      for (let t=1;t<=months;t++){
+        let r;
+        if (usarHist){ if (bloco===0){ pos = Math.floor(rnd()*(hist.length-12)); bloco = 12; } r = hist[pos++]; bloco--; }
+        else r = Math.exp(mu + s*gauss()) - 1;
+        preco *= 1+r; pico = Math.max(pico, preco); dd = Math.min(dd, preco/pico-1);
+        if (t<months && v.aporte>0){ cotas += v.aporte*(1-cu)/preco; basis += v.aporte; }
+        const i = idx.get(t); if (i!==undefined) netAt[i][p] = net();
+      }
+      finals[p] = net(); dds[p] = dd;
+    }
+    const q = (arr, f) => { const a = Array.from(arr).sort((x,y)=>x-y); return a[Math.min(a.length-1, Math.floor(f*a.length))]; };
+    const P10 = netAt.map(a=>q(a,.10)), P50 = netAt.map(a=>q(a,.50)), P90 = netAt.map(a=>q(a,.90));
+    const rf = simInvest({p0:v.inicial, pmt:v.aporte, months, rate:()=>aToM(v.cdi/100), tax:irRF});
+    const rfPts = pts.map(t=>rf.series[t]);
+    const real = v.unid==="real", P = paths(v), D = deflator(P.ipca, months), Dm = real ? D[months] : 1;
+    const investedShow = real ? v.inicial + Array.from({length:months},(_,t)=>v.aporte/D[t]).reduce((a,b)=>a+b,0) : invested;
+    const beat = Array.from(finals).filter(x=>x>rf.net).length/N;
+    const loss = Array.from(finals).filter(x=>x/Dm<investedShow).length/N;
+    const half = Array.from(finals).filter(x=>x/Dm<investedShow/2).length/N;
+    const nMed = P50[P50.length-1], nLo = P10[P10.length-1], nHi = P90[P90.length-1];
+    const med = nMed/Dm, lo = nLo/Dm, hi = nHi/Dm, rfNet = rf.net/Dm;
+    const ddMed = q(dds,.5), ddRuim = q(dds,.1);
+    const sh = arr => real ? arr.map((x,i)=>x/D[pts[i]]) : arr;
+    const ipcaMed = mediaAnual(P.ipca, months);
+    const unid = real ? " em reais de hoje" : "";
+    // Peso na carteira: o que acontece com o patrimônio total numa queda de 80%
+    const hoje = v.inicial, peso = hoje/(hoje+v.patrimonio||1), quedaTot = peso*0.8;
+    const tag = beat>=.6 ? "Cripto tende a ganhar" : beat>=.4 ? "Resultado incerto" : "Renda fixa tende a ganhar";
+    return {
+      html: verdict(tag,
+          `Em ${yrs(months)}, o cenário central do ${nomeAtivo} é de <b>${money(med)}</b> líquidos${unid}, com ${money(investedShow)} investidos. Em 8 de cada 10 cenários, o resultado fica entre <b>${money(lo)}</b> e <b>${money(hi)}</b>.`,
+          `Supera a renda fixa (${money(rfNet)}) em <b>${pct(beat,0)}</b> dos cenários, mas termina abaixo do investido em ${pct(loss,0)} deles e com menos da metade em ${pct(half,0)}. No caminho, a queda típica do pico ao fundo é de <b>${pct(-ddMed,0)}</b>; em 1 de cada 10 cenários passa de ${pct(-ddRuim,0)}.${usarHist?` Cenários sorteados de ${hs.n} meses reais do ${nomeAtivo} em reais: retorno médio de ${pct(hs.ret,0)} a.a., volatilidade de ${pct(hs.vol,0)}, pior mês de ${pct(hs.worst,0)} e maior queda de ${pct(-hs.dd,0)}. Esse passado inclui a fase de maior valorização do ativo: repeti-lo tende a dar uma projeção otimista. Compare com “Minhas premissas”.`:v.modelo==="historico"?` O histórico do ${nomeAtivo} ainda não está disponível; usei suas premissas.`:""}`) +
+        `<div class="kpis">${kpi("Cenário central", money(med), "metade dos cenários fica acima", C.s1)}${kpi("Pessimista", money(lo), "só 10% dos cenários ficam abaixo", C.s2)}${kpi("Otimista", money(hi), "só 10% dos cenários ficam acima", C.s3)}${kpi("Renda fixa", money(rfNet), `CDI de ${nf(v.cdi,1)}%, após IR`, C.s4)}${kpi("Queda típica no caminho", pct(-ddMed,0), `pior 10%: ${pct(-ddRuim,0)}`)}${kpi("Peso no patrimônio", pct(peso,0), `queda de 80% no cripto = ${pct(quedaTot,1)} do total`)}</div>` +
+        chartPanel("Faixa de resultados ao longo do tempo", `Valor líquido se vendido em cada momento${unid}. A área mostra onde caem 80% dos cenários`, legend([["Otimista (90%)",C.s3],["Central",C.s1],["Pessimista (10%)",C.s2],["Renda fixa",C.s4,true]]), "ch") +
+        `<section class="panel"><h3>Como fica cada cenário no fim</h3><div class="tablewrap"><table><thead><tr><th>Cenário</th><th class="n">Valor líquido</th><th class="n">Ganho sobre o investido</th><th class="n">Retorno anual equivalente</th></tr></thead><tbody>
+        ${[["Otimista (90%)",nHi,C.s3],["Central",nMed,C.s1],["Pessimista (10%)",nLo,C.s2],["Renda fixa",rf.net,C.s4]].map(([n,val,c])=>{
+          const fl = Array(months+1).fill(0); fl[0]=-(v.inicial+v.aporte); for (let t=1;t<months;t++) fl[t]=-v.aporte; fl[months]+=val; const im=irr(fl);
+          const a = im===null ? null : real ? (1+mToA(im))/(1+ipcaMed)-1 : mToA(im);
+          return `<tr><td><span class="sw" style="background:${c}"></span>${n}</td><td class="n num">${money(val/Dm)}</td><td class="n num ${val/Dm<investedShow?"neg":""}">${money(val/Dm-investedShow)}</td><td class="n num">${a===null?"—":pct(a)+" a.a."+(real?" real":"")}</td></tr>`; }).join("")}
+        </tbody></table></div></section>` +
+        notes([usarHist?`Cenários gerados por bootstrap em blocos de 12 meses dos retornos mensais reais do ${nomeAtivo} cotado em reais (Yahoo Finance, convertido pelo dólar do mês). Preserva quedas longas e altas explosivas que a curva normal subestima.`:"Retornos mensais sorteados de uma distribuição log-normal com a valorização média e a volatilidade informadas. Na prática, cripto tem quedas mais bruscas que a curva normal sugere.",
+          "São 1.000 cenários. O histórico de criptomoedas é curto e marcado por poucos ciclos; não há garantia de que se repita.",
+          "Arrasto da volatilidade: com oscilações tão grandes, o cenário central fica bem abaixo da valorização média. Uma queda de 50% exige alta de 100% só para voltar ao ponto de partida.",
+          "Exchange no Brasil: ganho de capital isento quando o total vendido no mês, somando todos os criptoativos, fica até R$ 35 mil; acima disso, 15% sobre o ganho (alíquota maior para ganhos acima de R$ 5 milhões).",
+          "Exchange no exterior: rendimentos de aplicações no exterior pagam 15% na declaração anual, sem a isenção mensal. ETF de cripto na B3: 15% sobre o ganho, sem isenção.",
+          "Mudanças na tributação de criptoativos estão em discussão. Confira as regras vigentes antes de decidir.",
+          "Criptomoedas não têm FGC, lastro ou fluxo de caixa. Exchanges podem quebrar ou ser invadidas; guardar em carteira própria exige cuidado com as chaves.",
+          "Peso no patrimônio: valor de hoje em cripto ÷ (cripto + resto do patrimônio). Muitos planejadores sugerem limitar cripto a uma fração pequena da carteira.",
+          "Renda fixa de comparação: título atrelado ao CDI com IR regressivo, sem oscilação."]),
+      after(){ lineChart($("#ch"),{label:"Faixa de resultados", xs:pts, band:{lo:sh(P10), hi:sh(P90), color:C.s1}, series:[{name:"Otimista (90%)",color:C.s3,values:sh(P90)},{name:"Central",color:C.s1,values:sh(P50)},{name:"Pessimista (10%)",color:C.s2,values:sh(P10)},{name:"Renda fixa",color:C.s4,values:sh(rfPts)}], dashed:[3], xFmt:monthX(months), tipTitle:x=>`Mês ${x} · ${yrs(x)}`}); }
+    };
+  }
+});
+
+/* ---------- 17. PGBL x VGBL ---------- */
+SIMS.push({
+  id:"previdencia", nav:"PGBL ou VGBL",
+  title:"PGBL, VGBL ou investir por fora?",
+  lede:"O PGBL deduz até 12% da renda bruta no IR e tributa tudo no resgate. O VGBL não deduz e tributa só o rendimento. Veja qual deixa mais dinheiro no seu bolso.",
+  fields:[
+    {k:"renda",label:"Renda bruta tributável",def:180000,pre:"R$",suf:"/ano",wide:true},
+    {k:"contrib",label:"Contribuição",def:21600,pre:"R$",suf:"/ano"},
+    {k:"anos",label:"Prazo",def:20,suf:"anos"},
+    {k:"decl",label:"Declaração do IR",def:"completa",opts:[["completa","Completa"],["simples","Simplificada"]]},
+    {k:"aliq",label:"Sua alíquota de IR",def:"27.5",opts:[["27.5","27,5%"],["22.5","22,5%"],["15","15%"],["7.5","7,5%"],["0","Isento"]]},
+    {k:"restit",label:"Restituição do PGBL",def:"reinveste",opts:[["reinveste","Reinvisto"],["gasta","Gasto"]],wide:true},
+    {sect:"Rentabilidade"},
+    {k:"ret",label:"Retorno bruto",def:11,suf:"% a.a.",mkt:"cdiMedio",hz:v=>v.anos*12},
+    {k:"adm",label:"Taxa de administração",def:1,suf:"% a.a."},
+  ],
+  run(v){
+    const Y=Math.round(v.anos);
+    if (!(Y>=1 && Y<=50)) return {error:"Informe um prazo entre 1 e 50 anos."};
+    if (!(v.contrib>0)) return {error:"Informe a contribuição anual."};
+    const aliq = parseFloat(v.aliq)/100;
+    const rp = (1+v.ret/100)*(1-v.adm/100)-1;          // dentro do plano
+    const rf = (1+v.ret/100)*(1-0.002)-1;              // fora: Tesouro com custódia
+    const ded = v.decl==="completa" ? Math.min(v.contrib, 0.12*v.renda) : 0;
+    const refund = ded*aliq;
+    const at = (t, kind) => {
+      let s=0;
+      for (let y=0;y<t;y++){
+        const age=t-y;
+        if (kind==="fora"){ const val=v.contrib*Math.pow(1+rf,age); s += val-(val-v.contrib)*0.15; continue; }
+        const val=v.contrib*Math.pow(1+rp,age);
+        s += kind==="pgbl" ? val*(1-irPrev(age)) : val-(val-v.contrib)*irPrev(age);
+      }
+      if (kind==="pgbl" && refund>0){
+        for (let y=0;y<t;y++){
+          if (v.restit==="reinveste"){ const age=Math.max(0,t-(y+1)); const val=refund*Math.pow(1+rf,age); s += val-(val-refund)*0.15; }
+          else s += 0;
+        }
+      }
+      return s;
+    };
+    const xs=Array.from({length:Y+1},(_,i)=>i);
+    const P=xs.map(t=>at(t,"pgbl")), V=xs.map(t=>at(t,"vgbl")), F=xs.map(t=>at(t,"fora"));
+    const res=[{name:"PGBL",color:C.s1,net:P[Y]},{name:"VGBL",color:C.s2,net:V[Y]},{name:"Investir por fora",color:C.s3,net:F[Y]}];
+    const best=res.reduce((a,b)=>b.net>a.net?b:a);
+    const lim=0.12*v.renda, excess=Math.max(0,v.contrib-lim);
+    let rec;
+    if (v.decl!=="completa") rec = "Como você faz a declaração simplificada, o PGBL não gera dedução. Fique entre VGBL e investir por fora.";
+    else if (excess>0) rec = `O ideal é colocar até ${money(lim)} por ano no PGBL (12% da renda) e o excedente de ${money(excess)} no VGBL ou fora da previdência.`;
+    else rec = `Você pode aportar até ${money(lim)} por ano no PGBL com dedução. Hoje usa ${pct(v.contrib/lim,0)} desse limite.`;
+    return {
+      html: verdict("Resultado", `Em ${Y} anos, <b>${best.name}</b> deixa mais dinheiro líquido: <b>${money(best.net)}</b>.`,
+          `${ded>0?`O PGBL devolve ${money(refund)} por ano de IR (${v.restit==="reinveste"?"reinvestidos no cálculo":"gastos, então não entram no cálculo"}). `:""}${rec}`) +
+        `<div class="kpis">${res.map(r=>kpi(r.name, money(r.net), r.name==="PGBL"?`IR sobre tudo no resgate`:r.name==="VGBL"?"IR só sobre o rendimento":"IR de 15% sobre o ganho", r.color, r===best)).join("")}${kpi("Total aportado", money(v.contrib*Y), `${money(v.contrib)}/ano`)}</div>` +
+        chartPanel("Valor líquido se resgatado em cada ano", "Com IR da tabela regressiva de cada aporte", legend(res.map(r=>[r.name,r.color])), "ch") +
+        `<section class="panel"><h3>Tabela regressiva da previdência</h3><div class="tablewrap"><table><thead><tr><th>Tempo de cada aporte no plano</th><th class="n">Até 2 anos</th><th class="n">2–4</th><th class="n">4–6</th><th class="n">6–8</th><th class="n">8–10</th><th class="n">Acima de 10</th></tr></thead><tbody><tr><td>Alíquota de IR</td><td class="n num">35%</td><td class="n num">30%</td><td class="n num">25%</td><td class="n num">20%</td><td class="n num">15%</td><td class="n num">10%</td></tr></tbody></table></div></section>` +
+        notes(["PGBL: dedução de até 12% da renda bruta tributável, só para quem faz a declaração completa e contribui para o INSS (ou regime próprio). No resgate, o IR incide sobre o valor total.",
+          "VGBL: sem dedução; no resgate, o IR incide só sobre o rendimento.",
+          "Tabela regressiva aplicada a cada aporte pelo tempo que ficou no plano. A tabela progressiva não foi simulada.",
+          "Investir por fora: Tesouro de longo prazo, custódia de 0,20% a.a. e IR de 15% sobre o ganho, sem taxa de administração.",
+          "Restituição do PGBL reinvestida fora da previdência a partir do ano seguinte ao aporte.",
+          "Previdência não tem come-cotas, entra na sucessão sem inventário e pode ser portada entre planos sem IR.",
+          "Aportes em VGBL acima de R$ 600 mil por ano e por pessoa pagam IOF de 5% sobre o excedente."]),
+      after(){ lineChart($("#ch"),{label:"Valor líquido por ano", xs, series:res.map((r,i)=>({name:r.name,color:r.color,values:[P,V,F][i]})), xFmt:v=>`${nf(v)}a`, tipTitle:x=>`Ano ${x}`}); }
+    };
+  }
+});
+
+/* ---------- 18. Previdência privada ---------- */
+SIMS.push({
+  id:"prevprivada", nav:"Previdência privada",
+  title:"Quanto a previdência privada vai pagar por mês, e em qual tabela de IR?",
+  lede:"Simula o plano do primeiro aporte ao último mês de renda: o efeito das taxas, a restituição do PGBL e a renda líquida na tabela progressiva e na regressiva. Valores em reais de hoje.",
+  fields:[
+    {k:"idade",label:"Idade hoje",def:35,suf:"anos"},
+    {k:"idadeApos",label:"Começar a receber aos",def:60,suf:"anos"},
+    {k:"anosRenda",label:"Receber a renda por",def:25,suf:"anos"},
+    {k:"saldo",label:"Saldo atual no plano",def:0,pre:"R$"},
+    {k:"aporte",label:"Contribuição mensal",def:1000,pre:"R$",suf:"/mês",sobra:true},
+    {k:"plano",label:"Tipo de plano",def:"pgbl",opts:[["pgbl","PGBL"],["vgbl","VGBL"]]},
+    {sect:"Imposto de renda"},
+    {k:"rendaAnual",label:"Renda bruta tributável hoje",def:120000,pre:"R$",suf:"/ano",hint:"define o limite de 12% do PGBL"},
+    {k:"aliq",label:"Sua alíquota hoje",def:"27.5",opts:[["27.5","27,5% (declaração completa)"],["22.5","22,5%"],["15","15%"],["7.5","7,5%"],["0","Simplificada ou isento"]],when:["plano","pgbl"]},
+    {k:"restit",label:"Restituição do PGBL",def:"reinveste",opts:[["reinveste","Reinvisto no plano"],["gasta","Gasto"]],when:["plano","pgbl"]},
+    {k:"outra",label:"Outra renda na aposentadoria",def:4000,pre:"R$",suf:"/mês",hint:"INSS e outras rendas tributáveis"},
+    {sect:"Plano"},
+    {k:"ret",label:"Retorno bruto acima da inflação",def:5,suf:"% a.a.",hint:"antes da taxa de administração"},
+    {k:"adm",label:"Taxa de administração",def:1.5,suf:"% a.a."},
+    {k:"carreg",label:"Taxa de carregamento",def:0,suf:"%",hint:"cobrada sobre cada contribuição"},
+    {k:"admBaixa",label:"Plano de baixo custo",def:0.5,suf:"% a.a.",hint:"para comparar o efeito das taxas"},
+  ],
+  run(v){
+    if (!(v.idadeApos>v.idade)) return {error:"A idade de início da renda precisa ser maior que a idade atual."};
+    if (!(v.anosRenda>=1 && v.anosRenda<=50)) return {error:"Informe de 1 a 50 anos de renda."};
+    if (!(v.saldo+v.aporte>0)) return {error:"Informe um saldo atual ou uma contribuição mensal."};
+    if (v.carreg>=100) return {error:"A taxa de carregamento precisa ser menor que 100%."};
+    const N = Math.round((v.idadeApos-v.idade)*12), M = Math.round(v.anosRenda*12);
+    if (N>720) return {error:"Use um prazo de acumulação de até 60 anos."};
+    const pgbl = v.plano==="pgbl", aliq = pgbl ? parseFloat(v.aliq)/100 : 0;
+    const restAno = pgbl ? Math.min(12*v.aporte, 0.12*v.rendaAnual)*aliq : 0;
+    const reinvRest = pgbl && v.restit==="reinveste" && restAno>0;
+    const rB = aToM(v.ret/100);
+    /* Plano com lotes (um por contribuição) para o IR regressivo. Tudo em reais de hoje. */
+    const plano = adm => {
+      const f = (1+rB)*(1-adm/100/12), lots = [], saldoS = [];
+      const add = (a, s) => { if (a>0) lots.push({s, v:a*(1-v.carreg/100), a}); };
+      add(v.saldo, -120); add(v.aporte, 0);                                     // saldo atual tratado como aporte antigo (10 anos)
+      const tot = () => lots.reduce((x,l)=>x+l.v,0); saldoS.push(tot());
+      for (let t=1;t<=N;t++){
+        for (const l of lots) l.v *= f;
+        if (t<N) add(v.aporte, t);
+        if (reinvRest && t%12===4) add(restAno, t);                             // restituição em maio do ano seguinte, aprox.
+        saldoS.push(tot());
+      }
+      const B = tot(), i = f-1, W = i>0 ? B*i/(1-Math.pow(1+i,-M)) : B/M;
+      /* Fase de renda: saque W por mês, tirado dos lotes mais antigos primeiro. */
+      const brutoR=[], baseR=[], regR=[]; let irReg=0, irProg=0;
+      for (let k=1;k<=M;k++){
+        for (const l of lots) l.v *= f;
+        let falta = W, base = 0, imp = 0;
+        for (const l of lots){
+          if (falta<=1e-9) break; if (l.v<=1e-9) continue;
+          const tira = Math.min(falta, l.v), frac = tira/l.v;
+          const princ = l.a*frac, ganho = Math.max(0, tira-princ);
+          const b = pgbl ? tira : ganho;
+          base += b; imp += b*irPrev((N+k-l.s)/12);
+          l.v -= tira; l.a -= princ; falta -= tira;
+        }
+        const prog = irMensal(base+v.outra) - irMensal(v.outra);
+        brutoR.push(W); baseR.push(base); regR.push(W-imp);
+        irReg += imp; irProg += prog;
+      }
+      const progR = brutoR.map((w,k)=>w-(irMensal(baseR[k]+v.outra)-irMensal(v.outra)));
+      return {saldoS, B, W, regR, progR, irReg, irProg};
+    };
+    const P = plano(v.adm), L = plano(v.admBaixa);
+    const media = a => a.reduce((x,y)=>x+y,0)/a.length;
+    const mReg = media(P.regR), mProg = media(P.progR), melhor = mReg>=mProg ? "regressiva" : "progressiva";
+    const aportado = v.saldo + v.aporte*N, custoTaxas = L.B - P.B;
+    const xs = Array.from({length:N+1},(_,t)=>v.idade+t/12);
+    const anos = [1,5,10,15,20,25,30,40,50].filter(y=>y<=v.anosRenda);
+    return {
+      html: verdict(`Tabela ${melhor}`,
+          `Aos ${nf(v.idadeApos)} anos, o plano terá <b>${money(P.B)}</b> em valores de hoje, que pagam <b>${money(P.W)}/mês</b> brutos por ${yrs(M)}. Líquido, isso dá em média <b>${money(Math.max(mReg,mProg))}/mês</b> na tabela ${melhor}, contra ${money(Math.min(mReg,mProg))} na ${melhor==="regressiva"?"progressiva":"regressiva"}.`,
+          `As taxas pesam: com ${nf(v.adm,2)}% a.a. de administração${v.carreg>0?` e ${nf(v.carreg,1)}% de carregamento`:""}, você chega com ${money(custoTaxas)} a menos que num plano de ${nf(v.admBaixa,2)}% a.a., uma renda ${money(L.W-P.W)}/mês menor.${pgbl?(restAno>0?` O PGBL devolve cerca de ${money(restAno)} por ano no IR${reinvRest?", reinvestidos no plano":""}.`:" Sem declaração completa, o PGBL não dá dedução: avalie o VGBL."):""}`) +
+        `<div class="kpis">${kpi(`Saldo aos ${nf(v.idadeApos)}`, money(P.B), `${money(aportado)} contribuídos`, C.s1)}${kpi("Renda líquida média", money(Math.max(mReg,mProg))+"/mês", `tabela ${melhor}; bruta ${money(P.W)}`, C.s2)}${kpi("Custo das taxas", money(custoTaxas), `saldo a menos que no plano de ${nf(v.admBaixa,2)}%`)}${kpi("IR na fase de renda", money(Math.min(P.irReg,P.irProg)), `regressiva ${money(P.irReg)} · progressiva ${money(P.irProg)}`)}</div>` +
+        chartPanel("Saldo do plano até a aposentadoria", "Seu plano e um plano de baixo custo, com as mesmas contribuições, em reais de hoje", legend([["Seu plano",C.s1],[`Taxa de ${nf(v.admBaixa,2)}%`,C.s3,true]]), "ch") +
+        chartPanel("Renda líquida mensal na aposentadoria", `Saque bruto de ${money(P.W)}/mês, em reais de hoje, já somada à outra renda de ${money(v.outra)} para o cálculo da progressiva`, legend([["Tabela regressiva",C.s2],["Tabela progressiva",C.s4]]), "ch2") +
+        `<section class="panel"><div class="phead"><div><h3>Renda líquida por ano de aposentadoria</h3><div class="sub">Média mensal em cada ano, em reais de hoje</div></div></div><div class="tablewrap"><table><thead><tr><th>Ano da renda</th><th>Idade</th><th class="n">Regressiva</th><th class="n">Progressiva</th></tr></thead><tbody>
+        ${anos.map(y=>{ const a=(y-1)*12, b=Math.min(M,y*12); const rg=media(P.regR.slice(a,b)), pg=media(P.progR.slice(a,b)); return `<tr><td>${y}º</td><td>${nf(v.idadeApos+y-1)} anos</td><td class="n num">${rg>=pg?`<b>${money(rg)}</b>`:money(rg)}</td><td class="n num">${pg>rg?`<b>${money(pg)}</b>`:money(pg)}</td></tr>`; }).join("")}
+        </tbody></table></div></section>` +
+        `<section class="panel"><h3>Tabela regressiva da previdência</h3><div class="tablewrap"><table><thead><tr><th>Tempo de cada contribuição no plano</th><th class="n">Até 2 anos</th><th class="n">2–4</th><th class="n">4–6</th><th class="n">6–8</th><th class="n">8–10</th><th class="n">Acima de 10</th></tr></thead><tbody><tr><td>Alíquota de IR</td><td class="n num">35%</td><td class="n num">30%</td><td class="n num">25%</td><td class="n num">20%</td><td class="n num">15%</td><td class="n num">10%</td></tr></tbody></table></div></section>` +
+        notes(["Valores em reais de hoje: o retorno é acima da inflação e a contribuição é corrigida pela inflação todo mês. As faixas da tabela progressiva também são tratadas como corrigidas pela inflação, o que na prática nem sempre acontece.",
+          "Renda por prazo certo: o saldo é consumido em parcelas iguais até o fim do prazo, com o dinheiro ainda rendendo. Rendas vitalícias de seguradora não foram simuladas.",
+          "Tabela regressiva: cada contribuição paga de 35% a 10% conforme o tempo no plano. Os saques saem das contribuições mais antigas primeiro. A escolha da tabela é definitiva: pode ser feita até o primeiro resgate ou recebimento da renda.",
+          "Tabela progressiva: o benefício soma-se à outra renda tributável (como o INSS) e paga o IR mensal da tabela de 2026, com desconto simplificado e o redutor para rendas até R$ 7.350. Há retenção de 15% na fonte com ajuste na declaração anual. Aposentados acima de 65 anos têm parcela isenta extra, não incluída.",
+          "PGBL: IR sobre o valor total resgatado; dedução de até 12% da renda bruta tributável para quem faz a declaração completa e contribui para a previdência oficial. VGBL: IR só sobre o rendimento, sem dedução.",
+          "O saldo atual é tratado como contribuição feita há 10 anos, já na menor alíquota da tabela regressiva.",
+          "Taxa de administração cobrada sobre o saldo todo ano; taxa de carregamento descontada de cada contribuição. Planos com taxas menores podem receber o saldo por portabilidade, sem IR."]),
+      after(){
+        lineChart($("#ch"),{label:"Saldo do plano", xs, series:[{name:"Seu plano",color:C.s1,values:P.saldoS},{name:`Taxa de ${nf(v.admBaixa,2)}%`,color:C.s3,values:L.saldoS}], dashed:[1], xFmt:x=>`${nf(x)}`, tipTitle:x=>`${yrs(Math.round(x*12))} de idade`});
+        const xr = Array.from({length:M},(_,k)=>v.idadeApos+(k+1)/12);
+        lineChart($("#ch2"),{label:"Renda líquida mensal", xs:xr, series:[{name:"Tabela regressiva",color:C.s2,values:P.regR},{name:"Tabela progressiva",color:C.s4,values:P.progR}], xFmt:x=>`${nf(x)}`, tipTitle:x=>`${yrs(Math.round(x*12))} de idade`});
+      }
+    };
+  }
+});
+
+/* ---------- 19. Imposto de renda ---------- */
+SIMS.push({
+  id:"ir", nav:"Imposto de renda",
+  title:"Quanto de imposto de renda eu pago, e qual declaração compensa?",
+  lede:"Calcula o IR retido no salário com a tabela de 2026, compara a declaração completa com a simplificada, mostra quanto o PGBL reduz o imposto e explica a diferença entre alíquota efetiva e marginal.",
+  fields:[
+    {k:"salario",label:"Salário bruto",def:8000,pre:"R$",suf:"/mês"},
+    {k:"dep",label:"Dependentes",def:1,suf:"pessoas"},
+    {k:"prev",label:"Previdência oficial",def:"inss",opts:[["inss","INSS (calcular)"],["outro","Informar o valor"]]},
+    {k:"prevValor",label:"Contribuição previdenciária",def:900,pre:"R$",suf:"/mês",when:["prev","outro"],hint:"regime próprio de servidor, por exemplo"},
+    {k:"pensao",label:"Pensão alimentícia paga",def:0,pre:"R$",suf:"/mês",hint:"judicial ou por escritura"},
+    {sect:"Para a declaração anual"},
+    {k:"outras",label:"Outras rendas tributáveis",def:0,pre:"R$",suf:"/ano",hint:"aluguéis, autônomo; sem retenção na fonte"},
+    {k:"saude",label:"Despesas médicas",def:3000,pre:"R$",suf:"/ano",hint:"sem limite"},
+    {k:"educ",label:"Despesas com educação",def:0,pre:"R$",suf:"/ano",hint:`limite de ${brl.format(3561.50)} por pessoa`},
+    {k:"pgbl",label:"Contribuição ao PGBL",def:0,pre:"R$",suf:"/ano",hint:"dedutível até 12% da renda tributável"},
+  ],
+  run(v){
+    if (!(v.salario>0)) return {error:"Informe o salário bruto."};
+    const M = IRPF.mes, A = IRPF.ano, dep = Math.round(v.dep);
+    const prevMes = s => v.prev==="inss" ? inssMes(s) : v.prevValor;
+    /* IR retido no mês: a fonte usa o maior entre as deduções legais e o desconto simplificado. */
+    const mes = s => {
+      const p = prevMes(s), legais = p + dep*M.dependente + v.pensao, ded = Math.max(legais, M.simplificado);
+      const base = Math.max(0, s-ded), ir = irMesBase(base, s);
+      return {p, ded, base, ir, simplif: M.simplificado>legais, liq: s-p-ir-v.pensao};
+    };
+    const m = mes(v.salario);
+    const marg = (mes(v.salario+100).ir - m.ir)/100;
+    // Declaração anual (13º tem tributação exclusiva e fica de fora)
+    const renda = 12*v.salario + v.outras, retido = 12*m.ir;
+    const pgblDed = Math.min(v.pgbl, A.pgbl*renda);
+    const completa = pg => {
+      const ded = 12*m.p + dep*A.dependente + v.saude + Math.min(v.educ, A.educacao*(1+dep)) + 12*v.pensao + pg;
+      const base = Math.max(0, renda-ded); return {ded, base, ir:irAnoBase(base, renda)};
+    };
+    const Comp = completa(pgblDed);
+    const sDesc = Math.min(A.simplificadoPct*renda, A.simplificadoMax);
+    const Simp = {ded:sDesc, base:Math.max(0, renda-sDesc), ir:irAnoBase(Math.max(0, renda-sDesc), renda)};
+    const melhor = Comp.ir <= Simp.ir ? "completa" : "simplificada", D = melhor==="completa" ? Comp : Simp;
+    const saldo = retido - D.ir;
+    // PGBL: quanto o imposto cai contribuindo com 12% da renda (só na completa)
+    const pgblMax = A.pgbl*renda, C0 = completa(0), Cmax = completa(pgblMax);
+    const econMax = Math.max(0, Math.min(C0.ir, Simp.ir) - Math.min(Cmax.ir, Simp.ir));
+    const econAtual = Math.max(0, Math.min(C0.ir, Simp.ir) - Math.min(Comp.ir, Simp.ir));
+    // Faixa a faixa da tabela mensal
+    let ant = 0; const porFaixa = M.faixas.map(([lim,a])=>{ const parte = Math.max(0, Math.min(m.base, lim)-ant); const r = {de:ant, ate:lim, a, parte, ir:parte*a}; ant = lim; return r; });
+    const brutoTab = porFaixa.reduce((x,f)=>x+f.ir,0), red = Math.min(brutoTab, irRedutor(v.salario, M.red));
+    // Curva de alíquotas por salário
+    const xs = [], efet = [], margS = [];
+    for (let s=1000; s<=30000; s+=250){ const a = mes(s), b = mes(s+100); xs.push(s); efet.push(a.ir/s); margS.push((b.ir-a.ir)/100); }
+    const fx = lim => lim===Infinity ? "acima" : money2(lim);
+    return {
+      html: verdict(Math.abs(saldo)<1 ? (retido<1 ? "Isento" : "Sem ajuste") : saldo>0 ? "Restituição" : "Imposto a pagar",
+          `Com salário de ${money(v.salario)}, são retidos <b>${money2(m.ir)}/mês</b> de IR, uma alíquota efetiva de <b>${pct(m.ir/v.salario,1)}</b>. Cada R$ 100 a mais de salário paga ${money2(marg*100)} de imposto: alíquota marginal de <b>${pct(marg,1)}</b>.`,
+          `Na declaração anual, ${Math.abs(Comp.ir-Simp.ir)<1?`completa e simplificada dão o mesmo imposto: ${money(D.ir)}.`:`a <b>${melhor}</b> compensa: imposto devido de ${money(D.ir)}, contra ${money(melhor==="completa"?Simp.ir:Comp.ir)} na ${melhor==="completa"?"simplificada":"completa"}.`} ${Math.abs(saldo)<1?(retido<1?" Nada é retido no ano e não há imposto a pagar.":` Os ${money(retido)} retidos no ano cobrem exatamente o imposto.`):` Com ${money(retido)} retidos no ano, você ${saldo>0?`<b>recebe ${money(saldo)}</b> de restituição`:`<b>paga ${money(-saldo)}</b> na declaração`}.`}${econMax>econAtual+1?` Contribuindo com ${money(pgblMax)} por ano ao PGBL (12% da renda), o imposto cairia mais ${money(econMax-econAtual)}.`:""}`) +
+        `<div class="kpis">${kpi("IR retido no mês", money2(m.ir), `${m.simplif?"desconto simplificado":"deduções legais"} de ${money2(m.ded)}`, C.s2)}${kpi("Salário líquido", money2(m.liq), `${v.prev==="inss"?"INSS":"previdência"} de ${money2(m.p)}`, C.s1)}${kpi("Alíquota efetiva", pct(m.ir/v.salario,1), "imposto ÷ salário bruto")}${kpi("Alíquota marginal", pct(marg,1), "sobre o próximo real ganho")}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>Declaração anual: completa ou simplificada?</h3><div class="sub">Ano-calendário 2026, sem o 13º salário (tributação exclusiva na fonte)</div></div></div><div class="tablewrap"><table><thead><tr><th>Item</th><th class="n">Completa</th><th class="n">Simplificada</th></tr></thead><tbody>
+          <tr><td>Rendimentos tributáveis</td><td class="n num">${money(renda)}</td><td class="n num">${money(renda)}</td></tr>
+          <tr><td>Deduções</td><td class="n num">${money(Comp.ded)}</td><td class="n num">${money(Simp.ded)} <small>(20%, até ${money(A.simplificadoMax)})</small></td></tr>
+          <tr><td>Base de cálculo</td><td class="n num">${money(Comp.base)}</td><td class="n num">${money(Simp.base)}</td></tr>
+          <tr class="${melhor==="completa"?"best":""}"><td>Imposto devido${melhor==="completa"?" <span class=\"badge\">melhor</span>":""}</td><td class="n num"><b>${money(Comp.ir)}</b></td><td class="n num">${melhor==="simplificada"?`<b>${money(Simp.ir)}</b> <span class="badge">melhor</span>`:money(Simp.ir)}</td></tr>
+          <tr><td>Imposto retido no salário</td><td class="n num">${money(retido)}</td><td class="n num">${money(retido)}</td></tr>
+          <tr><td>${saldo>=0?"Restituição":"A pagar"}</td><td class="n num">${money(Math.abs(retido-Comp.ir))}${retido-Comp.ir<0?" a pagar":""}</td><td class="n num">${money(Math.abs(retido-Simp.ir))}${retido-Simp.ir<0?" a pagar":""}</td></tr>
+        </tbody></table></div></section>` +
+        `<section class="panel"><div class="phead"><div><h3>Como o IR do mês é calculado, faixa a faixa</h3><div class="sub">Base de ${money2(m.base)} = salário − ${m.simplif?"desconto simplificado":"previdência, dependentes e pensão"}</div></div></div><div class="tablewrap"><table><thead><tr><th>Faixa da base mensal</th><th class="n">Alíquota</th><th class="n">Parte da sua base</th><th class="n">Imposto</th></tr></thead><tbody>
+        ${porFaixa.map(f=>`<tr class="${f.parte>0&&(m.base<=f.ate)?"best":""}"><td>${f.de===0?"Até":"De "+money2(f.de)+" até"} ${fx(f.ate)}</td><td class="n num">${pct(f.a,1)}</td><td class="n num">${money2(f.parte)}</td><td class="n num">${money2(f.ir)}</td></tr>`).join("")}
+          <tr><td>Redutor de 2026${red<0.005?" <small>(só para salários até R$ 7.350)</small>":""}</td><td></td><td></td><td class="n num">${red<0.005?"—":"−"+money2(red)}</td></tr>
+          <tr><td><b>IR retido</b></td><td></td><td></td><td class="n num"><b>${money2(m.ir)}</b></td></tr>
+        </tbody></table></div></section>` +
+        chartPanel("Alíquota efetiva e marginal por salário", `Com ${dep} ${dep===1?"dependente":"dependentes"} e ${v.prev==="inss"?"INSS":"a previdência informada"}. A marginal salta entre R$ 5 mil e R$ 7.350, onde o redutor vai sumindo`, legend([["Efetiva",C.s1],["Marginal",C.s2]]), "ch") +
+        notes(["Tabela progressiva mensal em vigor desde maio de 2025, com o redutor da Lei 15.270/2025: quem ganha até R$ 5.000 por mês fica isento, e o desconto diminui até sumir em R$ 7.350. Na declaração anual, os limites equivalentes são R$ 60 mil e R$ 88,2 mil. Confira os valores vigentes.",
+          "Na fonte, vale o maior entre as deduções legais (previdência, dependentes, pensão) e o desconto simplificado mensal de R$ 607,20.",
+          "INSS do empregado pela tabela progressiva de 2025 (7,5% a 14%, até o teto). Servidores com regime próprio podem informar o valor.",
+          "Declaração completa: previdência oficial, dependentes (R$ 2.275,08 cada), saúde sem limite, educação até R$ 3.561,50 por pessoa, pensão alimentícia e PGBL até 12% da renda tributável. Simplificada: desconto de 20%, limitado a R$ 16.754,34.",
+          "Outras rendas tributáveis (aluguéis, trabalho autônomo) sem retenção na fonte pagam carnê-leão mensal; aqui o imposto delas aparece no ajuste anual.",
+          "O 13º salário tem tributação exclusiva na fonte e não entra na declaração de ajuste. Rendimentos isentos e de tributação exclusiva (poupança, LCI, dividendos até o limite, aplicações) também ficam de fora.",
+          "Alíquota efetiva: imposto pago ÷ renda. Alíquota marginal: quanto do próximo real ganho vai para o imposto. É a marginal que importa para decidir um aumento, uma hora extra ou o PGBL."]),
+      after(){ lineChart($("#ch"),{label:"Alíquota efetiva e marginal por salário", xs, series:[{name:"Efetiva",color:C.s1,values:efet},{name:"Marginal",color:C.s2,values:margS}], minTop:0.05, yFmt:x=>pct(x,0), tipFmt:x=>pct(x,1), xFmt:x=>compact(x), tipTitle:x=>`Salário de ${money(x)}`}); }
+    };
+  }
+});
+
+/* ---------- 20. Câmbio e viagem ---------- */
+const FORMAS_CAMBIO = [
+  {k:"cc",  nome:"Cartão de crédito", color:C.s2, obs:"cotação do dia do pagamento da fatura ou da compra, conforme o banco"},
+  {k:"pre", nome:"Cartão pré-pago", color:C.s4, obs:"cotação travada na recarga"},
+  {k:"conta", nome:"Conta global", color:C.s1, obs:"conta em moeda estrangeira com cartão de débito"},
+  {k:"esp", nome:"Dinheiro em espécie", color:C.s3, obs:"casa de câmbio ou banco"},
+];
+/* Volatilidade anual do dólar pelos retornos diários dos últimos 12 meses. */
+const volDolar = () => { const v = MKT?.bolsa?.dolar?.valores; if (!v || v.length<60) return null;
+  const r = v.slice(1).map((x,i)=>Math.log(x/v[i])), m = r.reduce((a,b)=>a+b,0)/r.length;
+  return Math.sqrt(r.reduce((a,b)=>a+(b-m)**2,0)/(r.length-1)*252); };
+SIMS.push({
+  id:"cambio", nav:"Câmbio e viagem",
+  title:"Qual a forma mais barata de levar dinheiro para a viagem?",
+  lede:"Compara cartão de crédito, cartão pré-pago, conta global e dinheiro em espécie pelo custo total em reais, com spread e IOF. Mostra o risco do câmbio até a viagem e quanto guardar por mês.",
+  fields:[
+    {k:"moeda",label:"Moeda",def:"USD",opts:[["USD","Dólar americano"],["EUR","Euro"],["OUT","Outra"]]},
+    {k:"gasto",label:"Gastos na viagem",def:3000,suf:"na moeda",hint:"hospedagem, passeios, compras"},
+    {k:"cotUSD",label:"Dólar comercial",def:5.0,pre:"R$",mkt:"dolar",when:["moeda","USD"]},
+    {k:"cotOUT",label:"Cotação comercial",def:5.8,pre:"R$",when:["moeda","EUR"],hint:"euro comercial do dia"},
+    {k:"cotX",label:"Cotação comercial",def:1,pre:"R$",when:["moeda","OUT"]},
+    {k:"meses",label:"Meses até a viagem",def:6,suf:"meses"},
+    {sect:"Spread sobre a cotação comercial"},
+    {k:"spcc",label:"Cartão de crédito",def:5,suf:"%",hint:"veja o “dólar turismo do cartão” do seu banco"},
+    {k:"sppre",label:"Cartão pré-pago",def:4,suf:"%"},
+    {k:"spconta",label:"Conta global",def:1.5,suf:"%"},
+    {k:"spesp",label:"Dinheiro em espécie",def:6,suf:"%",hint:"casas de câmbio variam bastante"},
+    {sect:"IOF"},
+    {k:"iofCartao",label:"Cartões e conta global",def:3.5,suf:"%",hint:"confira a alíquota vigente"},
+    {k:"iofEsp",label:"Compra de espécie",def:3.5,suf:"%"},
+    {sect:"Planejamento"},
+    {k:"rend",label:"Rendimento líquido até a viagem",def:10,suf:"% a.a.",mkt:"investLiq",hz:v=>Math.max(1,v.meses)},
+    {k:"vol",label:"Volatilidade da moeda",def:15,suf:"% a.a.",mkt:"volDolar",hint:"oscilação típica em um ano"},
+  ],
+  run(v){
+    const cot = v.moeda==="USD" ? v.cotUSD : v.moeda==="EUR" ? v.cotOUT : v.cotX, simb = v.moeda==="USD" ? "US$" : v.moeda==="EUR" ? "€" : "";
+    if (!(cot>0)) return {error:"Informe a cotação comercial da moeda."};
+    if (!(v.gasto>0)) return {error:"Informe quanto pretende gastar na viagem."};
+    const n = Math.round(v.meses);
+    const sp = {cc:v.spcc, pre:v.sppre, conta:v.spconta, esp:v.spesp}, iof = {cc:v.iofCartao, pre:v.iofCartao, conta:v.iofCartao, esp:v.iofEsp};
+    const res = FORMAS_CAMBIO.map(f=>{ const vet = cot*(1+sp[f.k]/100)*(1+iof[f.k]/100); return {...f, vet, total:vet*v.gasto, extra:(vet/cot-1)}; });
+    const best = res.reduce((a,b)=>b.total<a.total?b:a), worst = res.reduce((a,b)=>b.total>a.total?b:a), max = worst.total;
+    const base = cot*v.gasto;
+    // Risco cambial: preço da moeda daqui a n meses (sem tendência, volatilidade informada)
+    const t = Math.max(n,1)/12, sd = v.vol/100*Math.sqrt(t), z = 1.2816;
+    const cenas = [["Moeda cai (10% dos casos)",Math.exp(-z*sd)],["Moeda estável",1],["Moeda sobe (10% dos casos)",Math.exp(z*sd)]];
+    // Planejamento: quanto guardar por mês para pagar a viagem pela forma mais barata, hoje
+    const r = aToM(v.rend/100), alvo = best.total;
+    const mensal = n<1 ? alvo : (r>0 ? alvo*r/(Math.pow(1+r,n)-1) : alvo/n);
+    const fmtM = x => (simb?simb+" ":"") + x.toLocaleString("pt-BR",{maximumFractionDigits:0});
+    return {
+      html: verdict(`${best.nome} sai mais barato`,
+          `Para gastar ${fmtM(v.gasto)}, você paga <b>${money(best.total)}</b> usando ${best.nome.toLowerCase()} (${money2(best.vet)} por unidade), contra ${money(worst.total)} com ${worst.nome.toLowerCase()}: <b>${money(worst.total-best.total)}</b> de diferença. Na cotação comercial, seriam ${money(base)}.`,
+          `${n>0?`Até a viagem, em ${yrs(n)}, a moeda pode oscilar: em 1 de cada 10 cenários, a mesma viagem custa mais de ${money(best.total*Math.exp(z*sd))}. Comprar aos poucos (preço médio) ou travar o câmbio com antecedência reduz esse risco. Para juntar ${money(alvo)} até lá, guarde <b>${money(mensal)}/mês</b>.`:"Para quem viaja agora, o que pesa é o spread e o IOF de cada forma de pagamento."}`) +
+        `<div class="kpis">${res.map(f=>kpi(f.nome, money(f.total), `${money2(f.vet)} por unidade · +${pct(f.extra,1)} sobre a comercial`, f.color, f===best)).join("")}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>Custo total em reais</h3><div class="sub">Cotação comercial de ${money2(cot)} + spread + IOF</div></div></div><div class="bars">${res.map(f=>`<div class="bar"><span>${esc(f.nome)}${f===best?` <span class="badge">melhor</span>`:""}</span><span class="track"><i style="width:${Math.max(2,f.total/max*100)}%;background:${f.color}"></i></span><span class="v">${money(f.total)}</span></div>`).join("")}</div></section>` +
+        `<section class="panel"><div class="phead"><div><h3>Como se forma o valor efetivo total (VET)</h3><div class="sub">Quanto você paga, em reais, por unidade da moeda</div></div></div><div class="tablewrap"><table><thead><tr><th>Forma</th><th class="n">Comercial</th><th class="n">Spread</th><th class="n">IOF</th><th class="n">VET</th><th>Observação</th></tr></thead><tbody>
+        ${res.map(f=>`<tr class="${f===best?"best":""}"><td><span class="sw" style="background:${f.color}"></span>${f.nome}</td><td class="n num">${money2(cot)}</td><td class="n num">${pct(sp[f.k]/100,1)}</td><td class="n num">${pct(iof[f.k]/100,1)}</td><td class="n num"><b>${money2(f.vet)}</b></td><td>${f.obs}</td></tr>`).join("")}
+        </tbody></table></div></section>` +
+        (n>0 ? `<section class="panel"><div class="phead"><div><h3>E se a moeda mudar até a viagem?</h3><div class="sub">Custo da viagem pela forma mais barata, com volatilidade de ${nf(v.vol,0)}% a.a. em ${yrs(n)}</div></div></div><div class="tablewrap"><table><thead><tr><th>Cenário</th><th class="n">Cotação comercial</th><th class="n">Custo da viagem</th><th class="n">Diferença</th></tr></thead><tbody>
+        ${cenas.map(([nm,f])=>`<tr class="${f===1?"best":""}"><td>${nm}</td><td class="n num">${money2(cot*f)}</td><td class="n num"><b>${money(best.total*f)}</b></td><td class="n num">${f===1?"—":(f>1?"+":"−")+money(Math.abs(best.total*(f-1)))}</td></tr>`).join("")}
+        </tbody></table></div></section>` : "") +
+        notes(["VET (valor efetivo total): cotação comercial × (1 + spread) × (1 + IOF). É o número que o banco ou a casa de câmbio deve informar antes da operação; use-o para comparar.",
+          "IOF: desde 2025, compras com cartão de crédito, débito e pré-pago no exterior, remessas para conta própria e compra de moeda em espécie pagam a mesma alíquota (3,5% na data deste simulador). As regras mudam por decreto: confira a vigente.",
+          "Cartão de crédito: a conversão usa a cotação do dia do pagamento da fatura ou do dia da compra, conforme o banco. Se a moeda subir até lá, você paga mais.",
+          "Conta global: costuma ter spread menor e permite comprar a moeda aos poucos antes da viagem, fazendo preço médio. Verifique tarifas de saque em caixas eletrônicos no exterior.",
+          "Dinheiro em espécie: útil para pequenas despesas, mas tem spread maior e risco de perda ou roubo. Em viagens internacionais, valores acima de R$ 10 mil devem ser declarados à Receita Federal.",
+          "Cenários de câmbio: oscilação sem tendência, com a volatilidade informada (preenchida pela oscilação do dólar PTAX nos últimos 12 meses). A faixa cobre 80% dos casos.",
+          "Planejamento: valor mensal a investir até a viagem para juntar o custo de hoje pela forma mais barata, ao rendimento líquido informado."]),
+    };
+  }
+});
+
+/* ---------- 21. Passagens aéreas ---------- */
+const AEROPORTOS = [
+  ["OPS","Sinop (MT)","BR"],["CGB","Cuiabá (MT)","BR"],["BSB","Brasília (DF)","BR"],["GRU","São Paulo – Guarulhos","BR"],["CGH","São Paulo – Congonhas","BR"],
+  ["VCP","Campinas – Viracopos","BR"],["GIG","Rio de Janeiro – Galeão","BR"],["SDU","Rio de Janeiro – Santos Dumont","BR"],["CNF","Belo Horizonte – Confins","BR"],
+  ["POA","Porto Alegre (RS)","BR"],["CWB","Curitiba (PR)","BR"],["FLN","Florianópolis (SC)","BR"],["IGU","Foz do Iguaçu (PR)","BR"],["CGR","Campo Grande (MS)","BR"],
+  ["GYN","Goiânia (GO)","BR"],["SSA","Salvador (BA)","BR"],["REC","Recife (PE)","BR"],["FOR","Fortaleza (CE)","BR"],["NAT","Natal (RN)","BR"],["MCZ","Maceió (AL)","BR"],
+  ["JPA","João Pessoa (PB)","BR"],["AJU","Aracaju (SE)","BR"],["SLZ","São Luís (MA)","BR"],["THE","Teresina (PI)","BR"],["BEL","Belém (PA)","BR"],["MAO","Manaus (AM)","BR"],
+  ["PVH","Porto Velho (RO)","BR"],["RBR","Rio Branco (AC)","BR"],["PMW","Palmas (TO)","BR"],["VIX","Vitória (ES)","BR"],["FEN","Fernando de Noronha (PE)","BR"],
+  ["EZE","Buenos Aires – Ezeiza","AR"],["AEP","Buenos Aires – Aeroparque","AR"],["SCL","Santiago","CL"],["MVD","Montevidéu","UY"],["ASU","Assunção","PY"],["LIM","Lima","PE"],
+  ["BOG","Bogotá","CO"],["PTY","Cidade do Panamá","PA"],["CUN","Cancún","MX"],["MEX","Cidade do México","MX"],["MIA","Miami","US"],["MCO","Orlando","US"],
+  ["JFK","Nova York – JFK","US"],["LAX","Los Angeles","US"],["YYZ","Toronto","CA"],["LIS","Lisboa","PT"],["OPO","Porto","PT"],["MAD","Madri","ES"],["BCN","Barcelona","ES"],
+  ["CDG","Paris – Charles de Gaulle","FR"],["FCO","Roma – Fiumicino","IT"],["MXP","Milão – Malpensa","IT"],["LHR","Londres – Heathrow","GB"],["FRA","Frankfurt","DE"],
+  ["AMS","Amsterdã","NL"],["ZRH","Zurique","CH"],["DXB","Dubai","AE"],["DOH","Doha","QA"],["NRT","Tóquio – Narita","JP"],["JNB","Joanesburgo","ZA"],
+];
+const AERO = Object.fromEntries(AEROPORTOS.map(([c,n,p])=>[c,{n,p}]));
+const isoDias = d => { const x = new Date(); x.setDate(x.getDate()+d); return x.toISOString().slice(0,10); };
+SIMS.push({
+  id:"voos", nav:"Passagens aéreas",
+  title:"Onde pesquisar a passagem e vale a pena usar milhas?",
+  lede:"Monta a pesquisa já preenchida nos principais buscadores de passagens, nacionais e internacionais, orienta sobre a antecedência e compara pagar em dinheiro ou em milhas. Os preços aparecem nos próprios buscadores: este site não consulta tarifas ao vivo.",
+  fields:[
+    {k:"origem",label:"Origem",def:"CGB",opts:AEROPORTOS.map(([c,n])=>[c,`${c} · ${n}`]),wide:true},
+    {k:"destino",label:"Destino",def:"LIS",opts:AEROPORTOS.map(([c,n])=>[c,`${c} · ${n}`]),wide:true},
+    {k:"tipo",label:"Viagem",def:"ida-volta",opts:[["ida-volta","Ida e volta"],["ida","Só ida"]]},
+    {k:"classe",label:"Classe",def:"economy",opts:[["economy","Econômica"],["premium","Econômica premium"],["business","Executiva"]]},
+    {k:"ida",label:"Ida",def:isoDias(60),type:"date"},
+    {k:"volta",label:"Volta",def:isoDias(74),type:"date",when:["tipo","ida-volta"]},
+    {k:"adultos",label:"Passageiros",def:1,suf:"adultos"},
+    {sect:"Dinheiro ou milhas? (preencha com o que encontrar)"},
+    {k:"preco",label:"Preço em dinheiro",def:6500,pre:"R$",hint:"total por pessoa, com taxas"},
+    {k:"moedaEst",label:"Cobrado em moeda estrangeira?",def:"nao",opts:[["nao","Não, em reais"],["sim","Sim (site do exterior)"]],hint:"aí incidem IOF e spread do cartão"},
+    {k:"milhas",label:"Milhas exigidas",def:140000,suf:"milhas",hint:"por pessoa"},
+    {k:"taxas",label:"Taxas na emissão com milhas",def:1200,pre:"R$",hint:"taxa de embarque e combustível"},
+    {k:"milheiro",label:"Valor do milheiro",def:25,pre:"R$",suf:"/mil",hint:"preço de venda ou de compra das suas milhas"},
+    {k:"iof",label:"IOF + spread do cartão",def:8.7,suf:"%",when:["moedaEst","sim"],hint:"veja a aba Câmbio e viagem"},
+  ],
+  run(v, st){
+    const O = AERO[v.origem], Dd = AERO[v.destino], idaVolta = v.tipo==="ida-volta";
+    if (v.origem===v.destino) return {error:"Escolha origem e destino diferentes."};
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v.ida||"")) return {error:"Informe a data de ida."};
+    if (idaVolta && !(v.volta>v.ida)) return {error:"A volta precisa ser depois da ida."};
+    const pax = Math.max(1, Math.round(v.adultos||1));
+    const hoje = new Date().toISOString().slice(0,10);
+    if (v.ida < hoje) return {error:"A data de ida já passou. Escolha uma nova data ou clique em “Restaurar exemplo”."};
+    const intl = O.p!=="BR" || Dd.p!=="BR";
+    const dias = Math.round((new Date(v.ida) - new Date(hoje))/864e5);
+    const [jMin, jMax] = intl ? [60, 180] : [30, 90];
+    const janela = dias<jMin*0.5 ? "em cima da hora" : dias<jMin ? "um pouco tarde" : dias<=jMax ? "na janela ideal" : "cedo";
+    // Links de busca
+    const o = v.origem, d = v.destino, yymmdd = s => s.slice(2).replace(/-/g,"");
+    const kayakCab = {economy:"", premium:"/premium", business:"/business"}[v.classe];
+    const kayakPax = pax>1 ? `/${pax}adults` : "";
+    const datasK = idaVolta ? `${v.ida}/${v.volta}` : v.ida;
+    const gq = `Flights from ${o} to ${d} on ${v.ida}${idaVolta?` through ${v.volta}`:" one way"}${v.classe==="business"?" business class":v.classe==="premium"?" premium economy":""}${pax>1?` for ${pax} adults`:""}`;
+    const links = [
+      ["Google Voos", `https://www.google.com/travel/flights?q=${encodeURIComponent(gq)}&hl=pt-BR&curr=BRL`, "calendário de preços e alertas"],
+      ["Skyscanner", `https://www.skyscanner.com.br/transporte/passagens-aereas/${o.toLowerCase()}/${d.toLowerCase()}/${yymmdd(v.ida)}/${idaVolta?yymmdd(v.volta)+"/":""}?adultsv2=${pax}&cabinclass=${v.classe==="premium"?"premiumeconomy":v.classe}&rtn=${idaVolta?1:0}`, "compara agências e companhias"],
+      ["Kayak", `https://www.kayak.com.br/flights/${o}-${d}/${datasK}${kayakPax}${kayakCab}?sort=bestflight_a`, "previsão de alta ou queda"],
+      ["Momondo", `https://www.momondo.com.br/flight-search/${o}-${d}/${datasK}${kayakPax}${kayakCab}?sort=bestflight_a`, "boa cobertura internacional"],
+    ];
+    const cias = intl ? [["LATAM","https://www.latamairlines.com/br/pt"],["Azul","https://www.voeazul.com.br"],["TAP","https://www.flytap.com/pt-br"],["GOL","https://www.voegol.com.br"]]
+                      : [["LATAM","https://www.latamairlines.com/br/pt"],["GOL","https://www.voegol.com.br"],["Azul","https://www.voeazul.com.br"]];
+    // Dinheiro × milhas
+    const fx = v.moedaEst==="sim" ? 1+v.iof/100 : 1;
+    const dinheiro = v.preco*fx*pax, comMilhas = (v.milhas/1000*v.milheiro + v.taxas)*pax;
+    const equil = v.milhas>0 ? (v.preco*fx - v.taxas)/(v.milhas/1000) : null;      // milheiro que empata
+    const usaMilhas = comMilhas < dinheiro;
+    const btn = (n,u,s) => `<a class="lnk" href="${u}" target="_blank" rel="noopener noreferrer"><b>${esc(n)}</b><span>${esc(s)}</span></a>`;
+    return {
+      html: verdict(intl ? "Voo internacional" : "Voo nacional",
+          `${esc(O.n)} → ${esc(Dd.n)}, ${idaVolta?`de ${Mercado.dataBR(v.ida)} a ${Mercado.dataBR(v.volta)}`:`só ida em ${Mercado.dataBR(v.ida)}`}, ${pax} ${pax===1?"adulto":"adultos"}. Faltam <b>${nf(dias)} dias</b>: você está <b>${janela}</b> (para voos ${intl?"internacionais":"nacionais"}, a faixa costuma ser de ${jMin} a ${jMax} dias de antecedência).`,
+          `Com os valores informados, ${usaMilhas?`<b>vale usar milhas</b>: custa ${money(comMilhas)} contra ${money(dinheiro)} em dinheiro`:`<b>vale pagar em dinheiro</b>: ${money(dinheiro)} contra ${money(comMilhas)} usando milhas`}. Milhas compensam quando o seu milheiro vale menos que ${equil!=null?money2(equil):"—"}.`) +
+        `<section class="panel"><div class="phead"><div><h3>Pesquise nos buscadores</h3><div class="sub">Os links abrem a busca já preenchida em uma nova aba. Compare pelo menos dois e confira o preço final, com bagagem</div></div></div><div class="lnks">${links.map(l=>btn(...l)).join("")}</div>
+          <div class="sub" style="margin-top:12px">Sites das companhias: ${cias.map(([n,u])=>`<a href="${u}" target="_blank" rel="noopener noreferrer">${n}</a>`).join(" · ")}</div></section>` +
+        `<div class="kpis">${kpi("Em dinheiro", money(dinheiro), `${pax>1?`${pax} × ${money(v.preco*fx)}`:"por pessoa, com taxas"}${fx>1?`; inclui IOF e spread de ${pct(fx-1,1)}`:""}`, C.s2, !usaMilhas)}${kpi("Com milhas", money(comMilhas), `${nf(v.milhas*pax)} milhas a ${money2(v.milheiro)}/mil + taxas`, C.s1, usaMilhas)}${kpi("Milheiro que empata", equil!=null?money2(equil):"—", "acima disso, pague em dinheiro")}${kpi("Antecedência", nf(dias)+" dias", janela)}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>Como economizar</h3></div></div><ul class="notes">
+          <li><b>Datas flexíveis:</b> no Google Voos, o calendário e o gráfico de preços mostram as datas mais baratas em volta da sua. Terças, quartas e sábados costumam sair mais em conta.</li>
+          <li><b>Alertas de preço:</b> ative o alerta da rota no Google Voos ou no Kayak e compre quando o preço cair para a faixa baixa da rota.</li>
+          <li><b>Aeroportos próximos:</b> ${o==="OPS"?"de Sinop, compare também a saída por Cuiabá (CGB); ":""}em São Paulo e no Rio, compare os dois ou três aeroportos da cidade.</li>
+          <li><b>Bagagem e assento:</b> tarifas básicas não incluem mala despachada. Some bagagem, marcação de assento e taxas antes de comparar.</li>
+          ${intl?`<li><b>Moeda da compra:</b> compre em reais em sites brasileiros quando possível. Se a cobrança for em dólar ou euro, o cartão soma IOF e spread (veja a aba Câmbio e viagem).</li><li><b>Documentos:</b> confira passaporte, visto e seguro-viagem exigidos pelo destino antes de emitir.</li>`:`<li><b>Promoções relâmpago:</b> companhias nacionais fazem promoções frequentes; o alerta de preço ajuda a pegar a queda.</li>`}
+          <li><b>Milhas:</b> transferências bonificadas de pontos do cartão para programas de fidelidade podem baixar bastante o custo do milheiro.</li>
+        </ul></section>` +
+        notes(["Este simulador não consulta preços ao vivo: os preços aparecem nos buscadores, que recebem a rota, as datas, os passageiros e a classe pelo link. Se algum site mudar o formato dos links, faça a busca diretamente nele.",
+          "Antecedência: faixas usuais de referência (nacional: 1 a 3 meses; internacional: 2 a 6 meses). Alta temporada, feriados e eventos exigem mais antecedência.",
+          "Milhas: custo = milhas ÷ 1.000 × valor do milheiro + taxas de emissão. O milheiro que empata é (preço em dinheiro − taxas) ÷ (milhas ÷ 1.000). Use o valor pelo qual você venderia ou compraria as milhas.",
+          "Compras em moeda estrangeira com cartão pagam IOF e a conversão com spread do banco, informados no campo correspondente."]),
+    };
+  }
+});
+
+/* ---------- 22. Orçamento de viagem ---------- */
+/* Estimativas de referência (2026) em euros. hosp: quarto duplo por noite; alim: por pessoa/dia; transp: grupo/dia;
+ * passeios: por pessoa/dia; compras: total; passagem: R$ por pessoa, ida e volta saindo do Brasil (luxo = executiva). */
+const CENARIOS = [["eco","Econômico",C.s3],["med","Médio",C.s1],["lux","Luxo",C.s2]];
+const DESTINOS = {
+  italia:   {em:"na Itália", nome:"Itália (Roma, Florença, Veneza)", hosp:[70,150,450], alim:[35,65,160], transp:[12,20,80], passeios:[15,30,90], passagem:[4800,6800,24000]},
+  franca:   {em:"na França", nome:"França (Paris)", hosp:[85,180,600], alim:[40,75,200], transp:[14,22,100], passeios:[20,35,110], passagem:[4600,6500,23000]},
+  grecia:   {em:"na Grécia", nome:"Grécia (Atenas e ilhas)", hosp:[55,120,400], alim:[28,50,140], transp:[15,30,90], passeios:[12,25,80], passagem:[5200,7500,26000]},
+  alemanha: {em:"na Alemanha", nome:"Alemanha (Berlim, Munique)", hosp:[70,140,380], alim:[32,60,150], transp:[12,20,80], passeios:[12,25,70], passagem:[4800,6800,24000]},
+  holanda:  {em:"na Holanda", nome:"Holanda (Amsterdã)", hosp:[90,190,500], alim:[38,70,170], transp:[14,22,90], passeios:[18,35,90], passagem:[4900,7000,24000]},
+  leste:    {em:"no Leste Europeu", nome:"Leste Europeu (Praga, Budapeste, Cracóvia)", hosp:[40,85,280], alim:[20,38,100], transp:[8,14,60], passeios:[10,20,60], passagem:[5000,7200,25000]},
+  noruega:  {em:"na Noruega", nome:"Noruega (Oslo e fiordes)", hosp:[110,210,550], alim:[50,90,220], transp:[25,40,120], passeios:[30,55,150], passagem:[5500,8000,27000]},
+  russia:   {em:"na Rússia", nome:"Rússia (Moscou, São Petersburgo)", hosp:[45,100,350], alim:[22,45,130], transp:[6,12,60], passeios:[12,25,80], passagem:[6500,9000,30000],
+             aviso:"Desde 2022, cartões Visa e Mastercard emitidos fora da Rússia não funcionam no país e não há voos diretos da União Europeia. Leve dinheiro em espécie, confira visto e as orientações do Itamaraty antes de planejar."},
+  portugal: {em:"em Portugal", nome:"Portugal (Lisboa, Porto)", hosp:[55,110,350], alim:[25,45,120], transp:[10,16,70], passeios:[10,20,60], passagem:[4200,6000,21000]},
+  espanha:  {em:"na Espanha", nome:"Espanha (Madri, Barcelona)", hosp:[65,130,400], alim:[30,55,140], transp:[12,18,80], passeios:[14,28,80], passagem:[4600,6500,23000]},
+};
+const COMPRAS_EUR = [100, 300, 1500];
+const MULT_CUSTOM = [0.6, 1, 2.6];          // cenários derivados dos valores digitados (que valem como "médio")
+SIMS.push({
+  id:"viagem", nav:"Orçamento de viagem",
+  title:"Quanto vai custar a viagem: econômica, média ou de luxo?",
+  lede:"Compara três cenários de gastos diários (econômico, médio e luxo) para destinos europeus prontos ou para valores seus. Converte os gastos pelo câmbio com IOF, mostra quanto guardar por mês e se compensa pagar à vista ou parcelar.",
+  fields:[
+    {k:"destino",label:"Destino",def:"italia",opts:[...Object.entries(DESTINOS).map(([k,d])=>[k,d.nome]),["custom","Personalizado (digitar os valores)"]],wide:true},
+    {k:"moeda",label:"Moeda do destino",def:"EUR",opts:[["BRL","Real (viagem nacional)"],["USD","Dólar americano"],["EUR","Euro"],["OUT","Outra"]],when:["destino","custom"]},
+    {k:"cotEUR",label:"Euro comercial",def:5.8,pre:"R$",when:st=>st.destino!=="custom"||st.moeda==="EUR"},
+    {k:"cotUSD",label:"Dólar comercial",def:5.0,pre:"R$",mkt:"dolar",when:st=>st.destino==="custom"&&st.moeda==="USD"},
+    {k:"cotX",label:"Cotação comercial",def:1,pre:"R$",when:st=>st.destino==="custom"&&st.moeda==="OUT"},
+    {k:"fx",label:"Spread + IOF",def:5.1,suf:"%",hint:"conta global; cartão de crédito chega a 9%",when:st=>!(st.destino==="custom"&&st.moeda==="BRL")},
+    {k:"pessoas",label:"Pessoas",def:2,suf:"pessoas"},
+    {k:"dias",label:"Dias de viagem",def:10,suf:"dias"},
+    {k:"cenario",label:"Cenário do plano",def:"med",opts:CENARIOS.map(([k,n])=>[k,n]),hint:"usado no plano de poupança e no pagamento"},
+    {sect:"Seus valores (cenário médio)",when:["destino","custom"]},
+    {k:"passagem",label:"Passagem por pessoa",def:6500,pre:"R$",hint:"ida e volta, com bagagem",when:["destino","custom"]},
+    {k:"diaria",label:"Hospedagem por noite",def:120,suf:"/quarto",hint:"na moeda do destino",when:["destino","custom"]},
+    {k:"alim",label:"Alimentação",def:50,suf:"/pessoa/dia",when:["destino","custom"]},
+    {k:"transp",label:"Transporte local",def:25,suf:"/dia",hint:"para o grupo",when:["destino","custom"]},
+    {k:"passeios",label:"Passeios e ingressos",def:400,suf:"total",when:["destino","custom"]},
+    {k:"compras",label:"Compras",def:300,suf:"total",when:["destino","custom"]},
+    {sect:"Comum aos cenários"},
+    {k:"quartos",label:"Quartos",def:1,suf:"quartos"},
+    {k:"seguro",label:"Seguro-viagem",def:25,pre:"R$",suf:"/pessoa/dia",hint:"obrigatório na Europa"},
+    {k:"docs",label:"Documentos e vistos",def:0,pre:"R$",hint:"passaporte, visto, vacinas"},
+    {k:"imprev",label:"Reserva para imprevistos",def:10,suf:"%"},
+    {sect:"Plano para juntar o dinheiro"},
+    {k:"meses",label:"Meses até a viagem",def:8,suf:"meses"},
+    {k:"guardo",label:"Consigo guardar",def:2500,pre:"R$",suf:"/mês",sobra:true},
+    {k:"rend",label:"Rendimento líquido",def:10,suf:"% a.a.",mkt:"investLiq",hz:v=>Math.max(1,v.meses)},
+    {k:"desc",label:"Desconto à vista",def:5,suf:"%",hint:"na passagem e na hospedagem"},
+    {k:"parc",label:"Ou parcelado sem juros em",def:10,suf:"vezes"},
+  ],
+  run(v){
+    const custom = v.destino==="custom", Dst = DESTINOS[v.destino];
+    const moeda = custom ? v.moeda : "EUR", nac = moeda==="BRL";
+    const cot = nac ? 1 : moeda==="USD" ? v.cotUSD : moeda==="EUR" ? v.cotEUR : v.cotX;
+    if (!(cot>0)) return {error:"Informe a cotação da moeda do destino."};
+    const P = Math.max(1, Math.round(v.pessoas)), D = Math.max(1, Math.round(v.dias)), noites = Math.max(0, D-1), Q = Math.max(1, Math.round(v.quartos));
+    const conv = nac ? 1 : cot*(1+v.fx/100), simb = nac ? "R$" : moeda==="USD" ? "US$" : moeda==="EUR" ? "€" : "";
+    const loc = x => nac ? money(x) : `${simb} ${nf(x,0)}`;
+    /* Custos de um cenário (0 econômico, 1 médio, 2 luxo). */
+    const custos = c => {
+      const g = custom ? {passagem:v.passagem*MULT_CUSTOM[c], hosp:v.diaria*MULT_CUSTOM[c], alim:v.alim*MULT_CUSTOM[c], transp:v.transp*MULT_CUSTOM[c], passeiosTot:v.passeios*MULT_CUSTOM[c], compras:v.compras*MULT_CUSTOM[c]}
+                       : {passagem:Dst.passagem[c], hosp:Dst.hosp[c], alim:Dst.alim[c], transp:Dst.transp[c], passeiosTot:Dst.passeios[c]*P*D, compras:COMPRAS_EUR[c]};
+      const it = [
+        {nome:"Passagens", brl:g.passagem*P, color:C.s1, det:`${P} × ${money(g.passagem)}`},
+        {nome:"Hospedagem", local:g.hosp*noites*Q, color:C.s2, det:`${noites} noites × ${Q} quarto(s) × ${loc(g.hosp)}`},
+        {nome:"Alimentação", local:g.alim*P*D, color:C.s3, det:`${P} pessoas × ${D} dias × ${loc(g.alim)}`},
+        {nome:"Transporte local", local:g.transp*D, color:C.s4, det:`${D} dias × ${loc(g.transp)}`},
+        {nome:"Passeios e ingressos", local:g.passeiosTot, color:"var(--accent)", det:custom?"total":`${P} pessoas × ${D} dias × ${loc(Dst.passeios[c])}`},
+        {nome:"Compras", local:g.compras, color:"var(--muted)", det:"total"},
+        {nome:"Seguro-viagem", brl:v.seguro*P*D, color:"var(--ink-2)", det:`${P} × ${D} dias × ${money(v.seguro)}`},
+        {nome:"Documentos e vistos", brl:v.docs, color:"var(--axis)", det:"total"},
+      ].map(i=>({...i, reais: i.brl!=null ? i.brl : i.local*conv}));
+      const sub = it.reduce((a,i)=>a+i.reais,0), imp = sub*v.imprev/100;
+      it.push({nome:"Imprevistos", reais:imp, color:"repeating-linear-gradient(45deg,var(--muted) 0 3px,transparent 3px 6px)", det:`${nf(v.imprev)}% do total`});
+      const diario = it.filter(i=>i.local!=null && i.nome!=="Compras").reduce((a,i)=>a+i.reais,0)/D;
+      return {it, total:sub+imp, diario, local:it.filter(i=>i.local!=null).reduce((a,i)=>a+i.local,0)};
+    };
+    const cen = CENARIOS.map(([k,nome,color],c)=>({k, nome, color, ...custos(c)}));
+    const sel = cen.find(c=>c.k===v.cenario) || cen[1], itens = sel.it.filter(i=>i.reais>0), total = sel.total;
+    // Plano
+    const n = Math.max(0, Math.round(v.meses)), r = aToM(v.rend/100);
+    const fv = (g, m) => r>0 ? g*(Math.pow(1+r,m)-1)/r : g*m;
+    const junta = fv(v.guardo, n);
+    const mensalDe = T => n<1 ? T : (r>0 ? T*r/(Math.pow(1+r,n)-1) : T/n);
+    const mesesDe = T => v.guardo>0 ? (r>0 ? Math.ceil(Math.log(1+T*r/v.guardo)/Math.log(1+r)) : Math.ceil(T/v.guardo)) : null;
+    const falta = Math.max(0, total-junta), mensal = mensalDe(total), mesesPrecisa = mesesDe(total);
+    // À vista × parcelado (passagens + hospedagem do cenário escolhido)
+    const pacote = sel.it.filter(i=>i.nome==="Passagens"||i.nome==="Hospedagem").reduce((a,i)=>a+i.reais,0);
+    const N = Math.max(1, Math.round(v.parc)), pvParc = pacote/N * (r>0 ? (1-Math.pow(1+r,-N))/r : N);
+    const aVista = pacote*(1-v.desc/100), descEquil = 1 - pvParc/pacote, vistaMelhor = aVista <= pvParc;
+    const maxCen = Math.max(...cen.map(c=>c.total)), max = Math.max(...itens.map(i=>i.reais));
+    const cats = cen[0].it.map(i=>i.nome).filter(nm=>cen.some(c=>c.it.find(i=>i.nome===nm).reais>0));
+    const destNome = custom ? "no seu destino" : `${Dst.em} (${Dst.nome.replace(/^[^(]*\(|\)$/g,"")})`;
+    return {
+      html: (Dst?.aviso ? verdict("Atenção", Dst.aviso, "", true) : "") +
+        verdict(`Cenário ${sel.nome.toLowerCase()}`,
+          `${D} dias ${esc(destNome)} para ${P} ${P===1?"pessoa":"pessoas"}: de <b>${money(cen[0].total)}</b> no cenário econômico a <b>${money(cen[2].total)}</b> no de luxo, passando por ${money(cen[1].total)} no médio. No destino, o gasto diário vai de ${money(cen[0].diario)} a ${money(cen[2].diario)} para o grupo.`,
+          `${n>0?(falta>1?`No cenário ${sel.nome.toLowerCase()} (${money(total)}), guardando ${money(v.guardo)}/mês por ${yrs(n)} você junta ${money(junta)}: faltam <b>${money(falta)}</b>. Guarde <b>${money(mensal)}/mês</b>${mesesPrecisa?`, ou mantenha os ${money(v.guardo)} e viaje daqui a ${yrs(mesesPrecisa)}`:""}.`:`No cenário ${sel.nome.toLowerCase()} (${money(total)}), guardando ${money(v.guardo)}/mês por ${yrs(n)} você junta ${money(junta)}, o suficiente.`):""} Na passagem e na hospedagem, ${vistaMelhor?`<b>pagar à vista com ${nf(v.desc,1)}% de desconto</b> sai melhor que ${N}× sem juros`:`<b>parcelar em ${N}× sem juros</b> sai melhor que o desconto de ${nf(v.desc,1)}%`} (desconto que empata: ${pct(descEquil,1)}).`) +
+        `<div class="kpis">${cen.map(c=>kpi(c.nome+(c.k===sel.k?" · seu plano":""), money(c.total), `${money(c.total/P)} por pessoa · ${money(c.diario)}/dia no destino`, c.color)).join("")}${kpi("Guardar por mês", n>0?money(mensal):"—", n>0?`cenário ${sel.nome.toLowerCase()}, em ${yrs(n)}`:"informe os meses até a viagem")}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>Os três cenários lado a lado</h3><div class="sub">Custo total da viagem por categoria, em reais${nac?"":` (moeda a ${money2(conv)} com spread e IOF)`}</div></div>${legend(cats.map(nm=>[nm, cen[0].it.find(i=>i.nome===nm).color]))}</div>
+          <div class="stk">${cen.map(c=>`<div class="stkrow"><span class="stkl">${c.nome}</span><span class="stkbar">${c.it.filter(i=>i.reais>0).map(i=>`<i style="width:${i.reais/maxCen*100}%;background:${i.color}" title="${esc(i.nome)}: ${money(i.reais)}"></i>`).join("")}</span><span class="v">${money(c.total)}</span></div>`).join("")}</div></section>` +
+        `<section class="panel"><div class="phead"><div><h3>Comparação por categoria</h3><div class="sub">Em reais${custom?"; econômico e luxo derivados dos seus valores (×0,6 e ×2,6)":"; estimativas de referência para o destino"}</div></div></div><div class="tablewrap"><table><thead><tr><th>Item</th>${cen.map(c=>`<th class="n">${c.nome}</th>`).join("")}</tr></thead><tbody>
+        ${cats.map(nm=>`<tr><td>${nm}</td>${cen.map(c=>`<td class="n num">${money(c.it.find(i=>i.nome===nm).reais)}</td>`).join("")}</tr>`).join("")}
+          <tr class="best"><td><b>Total</b></td>${cen.map(c=>`<td class="n num"><b>${money(c.total)}</b></td>`).join("")}</tr>
+          <tr><td>Por pessoa</td>${cen.map(c=>`<td class="n num">${money(c.total/P)}</td>`).join("")}</tr>
+          <tr><td>Gasto diário no destino (grupo)</td>${cen.map(c=>`<td class="n num">${money(c.diario)}</td>`).join("")}</tr>
+          <tr><td>Guardar por mês${n>0?` (${yrs(n)})`:""}</td>${cen.map(c=>`<td class="n num">${n>0?money(mensalDe(c.total)):"—"}</td>`).join("")}</tr>
+        </tbody></table></div></section>` +
+        `<section class="panel"><div class="phead"><div><h3>Para onde vai o dinheiro no cenário ${sel.nome.toLowerCase()}</h3></div></div><div class="bars">${itens.map(i=>`<div class="bar"><span>${esc(i.nome)} <small>${pct(i.reais/total,0)}</small></span><span class="track"><i style="width:${Math.max(2,i.reais/max*100)}%;background:${i.color}"></i></span><span class="v">${money(i.reais)}</span></div>`).join("")}</div></section>` +
+        `<section class="panel"><div class="phead"><div><h3>Detalhamento do cenário ${sel.nome.toLowerCase()}</h3></div></div><div class="tablewrap"><table><thead><tr><th>Item</th><th>Como foi calculado</th>${nac?"":`<th class="n">Na moeda</th>`}<th class="n">Em reais</th></tr></thead><tbody>
+        ${itens.map(i=>`<tr><td>${i.nome}</td><td>${i.det}</td>${nac?"":`<td class="n num">${i.local!=null?loc(i.local):"—"}</td>`}<td class="n num">${money(i.reais)}</td></tr>`).join("")}
+          <tr class="best"><td><b>Total</b></td><td></td>${nac?"":"<td></td>"}<td class="n num"><b>${money(total)}</b></td></tr>
+        </tbody></table></div></section>` +
+        notes(["Cenários: econômico (hostel ou hotel simples, mercado e lanchonetes, transporte público, passagem promocional), médio (hotel 3 ou 4 estrelas, restaurantes comuns, alguns passeios pagos) e luxo (hotel 5 estrelas, restaurantes sofisticados, táxi e transfers, passagem em classe executiva).",
+          "Valores dos destinos: estimativas de referência em euros para 2026, com base em médias de preços de viagem. Variam muito com temporada, cidade e antecedência: ajuste com cotações reais.",
+          "No Leste Europeu (Chéquia, Hungria, Polônia), na Noruega e na Rússia a moeda local não é o euro; os valores estão convertidos para euro só para comparar. Pague na moeda local para evitar conversões duplas.",
+          "Gastos no destino convertidos pela cotação comercial mais spread e IOF. Passagens (saindo do Brasil, ida e volta), seguro e documentos são em reais.",
+          "Plano: valor mensal investido até a viagem ao rendimento líquido informado. À vista × parcelado: as parcelas são trazidas a valor presente; se o desconto à vista superar o desconto que empata, pague à vista.",
+          "Seguro-viagem é obrigatório para os países do Acordo de Schengen, com cobertura médica mínima de 30 mil euros."]),
+    };
+  }
+});
+
+/* ================= shell ================= */
+const store = {
+  get(k){ try { return JSON.parse(localStorage.getItem(k)||"null"); } catch { return null; } },
+  set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+let current=null, alvo=null;
+
+function defaults(sim){
+  const s={}; for (const f of sim.fields) if (f.k) s[f.k]=fmtIn(f.def);
+  if (sim.fields.some(f=>f.debts)) s.debts = DEF_DEBTS.map(d=>({nome:d.nome, saldo:fmtIn(d.saldo), juros:fmtIn(d.juros), min:fmtIn(d.min)}));
+  return s;
+}
+function loadState(sim){ const s=store.get("sim:"+sim.id); const d=defaults(sim); return s ? {...d, ...s} : d; }
+
+function debtsHTML(sim, st){
+  return `<div class="debts" id="debts">${st.debts.map((d,i)=>`
+    <div class="debt" data-i="${i}">
+      <div class="name"><input id="${sim.id}-d${i}-nome" data-f="nome" value="${esc(d.nome)}" aria-label="Nome da dívida" maxlength="40"><button class="rm" type="button" data-rm="${i}">Remover</button></div>
+      <div class="field"><label for="${sim.id}-d${i}-saldo">Saldo</label><div class="inp"><span>R$</span><input id="${sim.id}-d${i}-saldo" data-f="saldo" inputmode="decimal" value="${esc(d.saldo)}"></div></div>
+      <div class="field"><label for="${sim.id}-d${i}-juros">Juros</label><div class="inp"><input id="${sim.id}-d${i}-juros" data-f="juros" inputmode="decimal" value="${esc(d.juros)}"><span>% a.m.</span></div></div>
+      <div class="field" style="grid-column:1/-1"><label for="${sim.id}-d${i}-min">Parcela mínima</label><div class="inp"><span>R$</span><input id="${sim.id}-d${i}-min" data-f="min" inputmode="decimal" value="${esc(d.min)}"><span>/mês</span></div></div>
+    </div>`).join("")}
+    <button class="addbtn" type="button" id="addDebt">+ Adicionar dívida</button></div>`;
+}
+
+let edited = {};
+function renderSim(sim){
+  current = sim;
+  const st = loadState(sim);
+  edited = st._ed || {};
+  const fieldsHTML = sim.fields.map(f=>{
+    if (f.sect) return `<div class="sect"${f.when?` data-sw="${sim.fields.indexOf(f)}"`:""}>${f.sect}</div>`;
+    if (f.debts) return debtsHTML(sim, st);
+    const id=`${sim.id}-${f.k}`, cls = `field${f.wide?" wide":""}`;
+    if (f.opts) return `<div class="${cls}"><label for="${id}">${f.label}</label><select id="${id}" data-k="${f.k}">${f.opts.map(([val,l])=>`<option value="${val}" ${String(st[f.k])===val?"selected":""}>${l}</option>`).join("")}</select>${f.hint?`<small>${f.hint}</small>`:""}</div>`;
+    const sobra = f.sobra && SOBRA ? `<button type="button" class="linkbtn" data-sobra="${f.k}">Usar minha sobra média do Livro-Caixa: ${money(SOBRA.valor)}</button>` : "";
+    return `<div class="${cls}"><label for="${id}">${f.label}</label><div class="inp">${f.pre?`<span>${f.pre}</span>`:""}<input id="${id}" data-k="${f.k}" ${f.type?`type="${f.type}"`:`inputmode="decimal"`} value="${esc(st[f.k])}">${f.suf?`<span>${f.suf}</span>`:""}</div><small id="${id}-h">${f.hint||""}</small>${sobra}</div>`;
+  }).join("");
+  alvo.innerHTML = `<div class="sim">
+    <section class="panel inputs" aria-label="Dados da simulação">
+      <div style="display:flex;flex-direction:column;gap:6px"><h2>${sim.title}</h2><p class="lede">${sim.lede}</p></div>
+      <div class="fields" id="fields">${fieldsHTML}</div>
+      <div class="rowbtns"><span class="sub">Os resultados atualizam enquanto você digita.</span><button class="textbtn" type="button" id="reset">Restaurar exemplo</button></div>
+    </section>
+    <div class="results" id="results" aria-live="polite"></div>
+  </div>${window.renderGuia ? renderGuia(sim.id, "") : ""}`;
+  const fields = $("#fields");
+  let t;
+  const onChange = () => { clearTimeout(t); t=setTimeout(()=>{ if (current===sim) compute(sim); },120); };
+  fields.addEventListener("input", e=>{ const k=e.target.dataset?.k; if (k) edited[k]=true; onChange(); });
+  fields.addEventListener("change", onChange);
+  fields.addEventListener("click", e=>{
+    const sb = e.target.closest("[data-sobra]");
+    if (sb){ const k=sb.dataset.sobra; document.getElementById(`${sim.id}-${k}`).value = fmtIn(SOBRA.valor); edited[k]=true; compute(sim); return; }
+    const um = e.target.closest("[data-mkt]");
+    if (um){ edited[um.dataset.mkt]=false; compute(sim); return; }
+    const rm = e.target.closest("[data-rm]");
+    if (rm){ const s=readState(sim); s.debts.splice(+rm.dataset.rm,1); store.set("sim:"+sim.id,s); renderSim(sim); return; }
+    if (e.target.id==="addDebt"){ const s=readState(sim); s.debts.push({nome:`Dívida ${s.debts.length+1}`, saldo:"1.000", juros:"5", min:"100"}); store.set("sim:"+sim.id,s); renderSim(sim); }
+  });
+  $("#reset").addEventListener("click", ()=>{ store.set("sim:"+sim.id,null); renderSim(sim); });
+  compute(sim);
+}
+function readState(sim){
+  const s={};
+  document.querySelectorAll("#fields [data-k]").forEach(el=>{ s[el.dataset.k]=el.value; });
+  if (sim.fields.some(f=>f.debts)){
+    s.debts = [...document.querySelectorAll("#debts .debt")].map(row=>{ const o={}; row.querySelectorAll("[data-f]").forEach(el=>o[el.dataset.f]=el.value); return o; });
+  }
+  return s;
+}
+function compute(sim){
+  const st = readState(sim);
+  const v={}; let missing=null;
+  for (const f of sim.fields){
+    if (!f.k) continue;
+    v[f.k] = f.opts || f.type ? st[f.k] : parseNum(st[f.k]);
+  }
+  // Campos de mercado: seguem o dado atual até o usuário digitar outro valor.
+  for (const f of sim.fields){
+    if (!f.mkt) continue;
+    const el = document.getElementById(`${sim.id}-${f.k}`), h = document.getElementById(`${sim.id}-${f.k}-h`);
+    const m = MKT ? MKT_FIELDS[f.mkt](MKT, v, f) : null;
+    if (!m){ continue; }
+    if (!edited[f.k]){
+      el.value = fmtIn(r2(m.valor)); st[f.k] = el.value; v[f.k] = r2(m.valor);
+      h.innerHTML = `<span class="mk">● ${esc(m.hint)}</span>`;
+    } else if (Math.abs(v[f.k]-m.valor) > 0.005){
+      h.innerHTML = `Valor seu. Mercado: ${nf(m.valor,2)}. <button type="button" class="linkbtn" data-mkt="${f.k}">Usar mercado</button>`;
+    } else h.innerHTML = `<span class="mk">● ${esc(m.hint)}</span>`;
+  }
+  // Campos condicionais: aparecem só quando o seletor indicado tem o valor certo.
+  // when: [seletor, valor] ou função (st => mostrar?); whenNot inverte a regra do par.
+  const off = f => f.when && (typeof f.when==="function" ? !f.when(st) : (st[f.when[0]]===f.when[1]) === !!f.whenNot);
+  sim.fields.forEach((f,i)=>{ if (!f.when) return; const el = f.k ? document.getElementById(`${sim.id}-${f.k}`).closest(".field") : document.querySelector(`#fields [data-sw="${i}"]`); if (el) el.hidden = off(f); });
+  st._ed = edited;
+  store.set("sim:"+sim.id, st);
+  for (const f of sim.fields){
+    if (!f.k || f.opts || f.type || off(f)) continue;
+    const bad = !isFinite(v[f.k]) || (v[f.k]<0 && !f.neg);
+    document.getElementById(`${sim.id}-${f.k}`).closest(".inp").classList.toggle("bad", bad);
+    if (bad && !missing) missing=f.label;
+  }
+  const out = $("#results");
+  for (const el of [...charts.keys()]) if (!el.isConnected) charts.delete(el);
+  if (missing){ out.innerHTML = verdict("Falta um dado", `Preencha “${esc(missing)}” com um número válido, como 1.500 ou 12,5.`, "", true); return; }
+  let r;
+  try { r = sim.run(v, st); } catch(e){ r = {error:"Não foi possível calcular com esses valores. Confira os campos destacados."}; console.error(e); }
+  if (r.error){ out.innerHTML = verdict("Confira os dados", r.error, "", true); return; }
+  out.innerHTML = r.html;
+  r.after && r.after();
+}
+
+/* Faixa de indicadores e atualização dos simuladores quando o mercado chega. */
+Mercado.carregar().then(m=>{
+  MKT = m;
+  const i = m.indicadores, f = m.focus, anos = Object.keys(f.selic).sort().slice(0,4);
+  const fonte = m.aoVivo ? `Ao vivo do Banco Central · Focus de ${Mercado.dataBR(f.data)}`
+    : m.fonte==="arquivo" ? `Dados de ${Mercado.dataBR(m.atualizado)} (arquivo diário)` : "Valores de referência: sem conexão com o Banco Central";
+  if ($("#mkt")) $("#mkt").innerHTML = `<span class="st ${m.referencia?"off":"on"}"><i></i>${fonte}</span>
+    <span><b>Selic</b> <span class="num">${nf(i.selic.valor,2)}%</span></span>
+    <span><b>CDI</b> <span class="num">${nf(i.cdi.valor,2)}%</span></span>
+    <span><b>IPCA 12m</b> <span class="num">${nf(i.ipca12.valor,2)}%</span></span>
+    <span><b>Selic esperada</b> ${anos.map(a=>`<span class="num">${nf(f.selic[a],2)}%</span> <small>${a}</small>`).join(" → ")}</span>
+    <span><b>IPCA esperado</b> ${anos.map(a=>`<span class="num">${nf(f.ipca[a],2)}%</span> <small>${a}</small>`).join(" → ")}</span>`;
+  if (current) compute(current);
+});
+window.SimLib = {
+  SIMS, tem: id => SIMS.some(s=>s.id===id), get: id => SIMS.find(s=>s.id===id),
+  montar(id, el){ const sim = SIMS.find(s=>s.id===id); if (!sim) return false; alvo = el; renderSim(sim); return true; },
+  desmontar(){ current = null; alvo = null; },
+};
+})();

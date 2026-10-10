@@ -297,7 +297,7 @@ window.GUIAS = {
 },
 "imovel": {
   usar: ["Informe o valor do imóvel, a entrada, o FGTS e o prazo.", "Escolha SAC ou Price e ajuste juros, TR, seguros MIP e DFI e taxa de administração.", "Inclua amortizações extras anuais e escolha reduzir prazo ou parcela."],
-  entenda: [["Custos além dos juros", "O financiamento imobiliário tem seguros obrigatórios (morte e invalidez e danos ao imóvel), taxa de administração e correção pela TR. O CET mostra o custo real."], ["SAC ou Price", "O SAC tem parcelas iniciais maiores e paga menos juros; a Price começa com parcelas menores. Veja também o simulador de amortização na aba Calculadoras."]],
+  entenda: [["Custos além dos juros", "O financiamento imobiliário tem seguros obrigatórios (morte e invalidez e danos ao imóvel), taxa de administração e correção pela TR. O CET mostra o custo real."], ["SAC ou Price", "O SAC tem parcelas iniciais maiores e paga menos juros; a Price começa com parcelas menores. Veja também o simulador de amortização, no mesmo grupo."]],
   faq: [["Qual renda o banco exige?", "Em geral, a primeira parcela não pode passar de 30% da renda bruta familiar."]]
 },
 "cdb": {
