@@ -357,6 +357,110 @@ window.GUIAS = {
 }
 };
 
+/* ===================== Calculadoras novas ===================== */
+Object.assign(window.GUIAS, {
+"pj": {
+  usar: ["Informe quanto sua empresa vai faturar por mês.", "Informe o custo do contador e o ISS do seu município, usado no Lucro Presumido.", "Compare o líquido de cada regime e veja o detalhamento de impostos, pró-labore e lucro distribuído."],
+  entenda: [["Os regimes para quem presta serviço", "<ul><li><b>MEI</b>: imposto fixo mensal, mas só para atividades permitidas e até R$ 81 mil por ano.</li><li><b>Simples Nacional</b>: guia única com alíquota que cresce com o faturamento. Serviços intelectuais pagam pelo Anexo V, ou pelo Anexo III se a folha (incluindo o pró-labore) for de pelo menos 28% do faturamento.</li><li><b>Lucro Presumido</b>: o imposto incide sobre um lucro presumido de 32% para serviços, mais PIS, Cofins e ISS. Costuma valer a pena em faturamentos mais altos.</li></ul>"], ["Pró-labore e lucro", "O pró-labore é o salário do sócio e paga INSS e IR. O restante pode ser distribuído como lucro, isento até R$ 50 mil por mês por empresa desde 2026."]],
+  faq: [["Qual regime escolher?", "O que deixar mais dinheiro com segurança. Confirme com um contador, que também avalia a atividade (CNAE) e as regras do município."]]
+},
+"custo-clt": {
+  usar: ["Informe o salário bruto do funcionário.", "Escolha o regime tributário da empresa: no Simples o INSS patronal já está no DAS.", "Inclua vale-refeição, vale-transporte e plano de saúde.", "Veja o custo mensal, anual e quantas vezes o salário ele representa."],
+  entenda: [["Por que o custo é maior que o salário", "Além do salário, a empresa provisiona 13º e férias com um terço, deposita 8% de FGTS e, fora do Simples, paga cerca de 28% de INSS patronal, RAT e terceiros. Benefícios somam ao custo. No Simples, um funcionário costuma custar de 1,5 a 1,8 vez o salário; no Lucro Presumido ou Real, de 1,8 a 2,2 vezes."]],
+  faq: [["O vale-transporte é custo da empresa?", "Em parte: a empresa pode descontar até 6% do salário do funcionário e paga o restante."]]
+},
+"ferias-prop": {
+  usar: ["Informe o salário e as médias de variáveis.", "Informe o início do período aquisitivo (a data de admissão ou o último aniversário dela) e a data do cálculo.", "Informe as faltas injustificadas no período.", "Veja os avos, os dias e o valor com o terço."],
+  entenda: [["Avos de férias", "Cada mês trabalhado no período aquisitivo vale 1/12 das férias; a fração de 15 dias ou mais conta como mês inteiro."], ["Faltas reduzem as férias", "Até 5 faltas injustificadas mantêm os 30 dias; de 6 a 14, 24 dias; de 15 a 23, 18 dias; de 24 a 32, 12 dias; acima de 32, o empregado perde o direito naquele período."]],
+  faq: [["Quem pede demissão recebe férias proporcionais?", "Sim, com o terço. Só quem é demitido por justa causa perde as proporcionais."]]
+},
+"inss": {
+  usar: ["Escolha o tipo de segurado.", "Informe o salário ou a remuneração, se for empregado ou autônomo.", "Veja a contribuição, a alíquota efetiva e, para empregados, o cálculo faixa por faixa."],
+  entenda: [["Alíquota progressiva", "Desde 2020, cada parte do salário paga a alíquota da sua faixa: 7,5%, 9%, 12% e 14%. Por isso quem ganha R$ 5 mil paga cerca de 10%, e não 14% sobre tudo."], ["Autônomos e MEI", "O contribuinte individual paga 20% sobre o que ganha, até o teto. Há planos reduzidos de 11% e 5% do salário mínimo, que não dão direito à aposentadoria por tempo de contribuição."]],
+  faq: [["Qual o teto do INSS?", "É o maior salário de contribuição e de benefício. Acima dele, não há desconto adicional."]]
+},
+"fgts": {
+  usar: ["Informe o salário e o saldo atual do FGTS (veja no aplicativo FGTS).", "Escolha por quantos anos projetar, o reajuste salarial e o rendimento do fundo.", "Veja o saldo futuro, o valor do saque-aniversário e a multa de 40%."],
+  entenda: [["Como o FGTS rende", "A empresa deposita 8% do salário todo mês, inclusive sobre o 13º e o terço de férias. O saldo rende 3% ao ano mais a TR e recebe parte do lucro do fundo quando há distribuição."], ["Saque-aniversário ou saque-rescisão", "No saque-aniversário você retira uma parte do saldo todo ano, no mês do aniversário, mas se for demitido só recebe a multa de 40%, não o saldo. No saque-rescisão (padrão), o saldo fica guardado e pode ser sacado na demissão sem justa causa."]],
+  faq: [["Posso usar o FGTS para comprar imóvel?", "Sim, na compra da casa própria, na amortização e na quitação do financiamento, respeitando as regras do SFH."]]
+},
+"horas": {
+  usar: ["Informe o salário e a jornada mensal (220 horas para 44 horas semanais).", "Informe as horas extras a 50% e a 100% e as horas noturnas.", "Informe os dias úteis e os domingos e feriados do mês para calcular o DSR."],
+  entenda: [["Valor da hora extra", "A hora extra vale no mínimo 50% a mais que a hora normal (salário ÷ jornada). Domingos e feriados trabalhados sem folga compensatória são pagos em dobro."], ["DSR", "As horas extras habituais também aumentam o descanso semanal remunerado: o valor das extras é dividido pelos dias úteis e multiplicado pelos domingos e feriados do mês."]],
+  faq: [["Qual o limite de horas extras?", "Em regra, até 2 horas por dia, salvo acordo de compensação ou situações excepcionais previstas em lei."]]
+},
+"seguro": {
+  usar: ["Informe os três últimos salários antes da demissão.", "Informe os meses trabalhados e se é a 1ª, 2ª ou 3ª solicitação.", "Veja o valor e o número de parcelas."],
+  entenda: [["Quem tem direito", "Quem foi demitido sem justa causa e não tem outra renda própria suficiente. É preciso ter trabalhado 12 meses nos últimos 18 na 1ª solicitação, 9 meses nos últimos 12 na 2ª e 6 meses antes da dispensa a partir da 3ª."], ["Prazo para pedir", "De 7 a 120 dias após a demissão, pela carteira de trabalho digital, pelo portal gov.br ou numa unidade do Sine."]],
+  faq: [["Posso trabalhar recebendo o seguro?", "Não com carteira assinada: o benefício é suspenso ao conseguir novo emprego formal."]]
+},
+"isencao": {
+  usar: ["Informe o salário bruto e os dependentes.", "Compare o IR retido em 2025 e em 2026 e a economia no ano.", "O gráfico mostra o imposto para salários de R$ 2 mil a R$ 10 mil."],
+  entenda: [["O que mudou em 2026", "A Lei 15.270/2025 manteve a tabela do IR, mas criou um redutor: quem ganha até R$ 5.000 por mês fica isento, e o desconto diminui até sumir em R$ 7.350. Para compensar, rendas muito altas passaram a ter um imposto mínimo e dividendos acima de R$ 50 mil por mês são tributados na fonte."]],
+  faq: [["Preciso declarar mesmo isento?", "Depende das outras regras de obrigatoriedade da declaração anual, como rendimentos totais, bens e operações em bolsa."]]
+},
+"juros-simples": {
+  usar: ["Informe o capital, a taxa e se ela é mensal ou anual.", "Informe o prazo em meses.", "Compare os juros simples com os compostos no gráfico."],
+  entenda: [["Simples × compostos", "Nos juros simples, a taxa incide sempre sobre o capital inicial: J = C × i × n. Nos compostos, incide sobre o saldo acumulado. No curto prazo a diferença é pequena; no longo prazo, enorme."]],
+  faq: [["Onde se usam juros simples?", "Em juros de mora de contas atrasadas e em alguns cálculos de curto prazo."]]
+},
+"poup-selic": {
+  usar: ["Informe o valor e o prazo.", "Informe quanto o CDB paga em % do CDI.", "Compare o valor líquido da poupança, do Tesouro Selic e do CDB."],
+  entenda: [["Por que a poupança perde", "Com a Selic acima de 8,5%, a poupança rende 0,5% ao mês mais TR, cerca de 6,2% ao ano mais TR, bem abaixo do CDI. Mesmo pagando IR, o Tesouro Selic e um CDB a 100% do CDI rendem mais."]],
+  faq: [["A poupança tem alguma vantagem?", "É isenta de IR, simples e tem liquidez, mas só rende no aniversário mensal do depósito."]]
+},
+"rentab": {
+  usar: ["Informe o valor inicial, o aporte mensal e o prazo.", "Escolha a forma da rentabilidade e a taxa.", "Escolha se há IR regressivo ou se é isento.", "Veja o valor bruto, o líquido e em reais de hoje."],
+  entenda: [["Nominal, líquido e real", "O valor nominal é o que aparece no extrato. O líquido desconta o IR. O real desconta também a inflação, mostrando o que o dinheiro compra. Investir só vale a pena de verdade se o rendimento real for positivo."]],
+  faq: [["Qual inflação é usada?", "A projeção mês a mês do Boletim Focus."]]
+},
+"cdb-calc": {
+  usar: ["Informe o valor investido.", "Informe a rentabilidade em % do CDI e o prazo.", "Veja o valor líquido, o IR e a LCI equivalente."],
+  entenda: [["Como um CDB pós-fixado rende", "Um CDB a 110% do CDI rende 1,1 vez o CDI de cada dia. O IR regressivo incide só no resgate, de 22,5% a 15% conforme o prazo. Para comparar com uma LCI isenta, veja a taxa equivalente."]],
+  faq: [["CDB tem garantia?", "Sim, do FGC, até R$ 250 mil por CPF e por instituição."]]
+},
+"marcacao": {
+  usar: ["Escolha o título: Prefixado ou IPCA+.", "Informe o valor, a taxa na compra, o prazo do título e quanto tempo já passou.", "Informe a taxa de mercado de hoje (no site do Tesouro Direto).", "Veja quanto o título vale hoje e o ganho ou perda em relação à curva."],
+  entenda: [["Por que o preço muda", "O título paga um valor definido no vencimento. Se os juros de mercado sobem, esse valor futuro vale menos hoje, e o preço cai; se os juros caem, o preço sobe. Quem leva até o vencimento recebe a taxa contratada, sem efeito da marcação."], ["Duration", "Quanto mais tempo falta para o vencimento, maior o efeito de uma mudança de taxa no preço. Títulos longos oscilam muito mais."]],
+  faq: [["Dá para lucrar com a marcação?", "Sim, vendendo antes quando os juros caem. Mas é uma aposta: se os juros subirem, a venda dá prejuízo."]]
+},
+"avista": {
+  usar: ["Informe o preço, o desconto à vista e o número de parcelas.", "Se o parcelamento tiver juros, informe a taxa mensal.", "Informe quanto o seu dinheiro rende e veja qual opção compensa."],
+  entenda: [["Valor presente", "Pagar parcelado permite deixar o dinheiro rendendo até cada vencimento. Trazendo as parcelas para hoje, descontadas pelo rendimento, dá para comparar com o preço à vista. O desconto mínimo que compensa pagar à vista aparece no resultado."]],
+  faq: [["Sem juros é sempre melhor parcelar?", "Não. Se o desconto à vista for maior que o rendimento do dinheiro no período, pagar à vista ganha."]]
+},
+"pix": {
+  usar: ["Escolha se você sabe o valor da parcela ou a taxa de juros.", "Informe o valor do Pix e o número de parcelas.", "Veja a taxa mensal e anual, o total pago e a tabela de pagamento."],
+  entenda: [["O que é o Pix parcelado", "O banco paga o recebedor na hora e você devolve em parcelas com juros e IOF. É uma operação de crédito como outra qualquer, e a taxa embutida pode ser alta."]],
+  faq: [["Como saber se a taxa é boa?", "Compare com o cartão sem juros, o crédito pessoal e o consignado. Acima de 5% ao mês, é crédito caro."]]
+},
+"dias": {
+  usar: ["Escolha a data inicial e a data final.", "Veja os dias corridos, as semanas e a diferença em anos, meses e dias.", "Para descobrir uma data futura, informe quantos dias somar."],
+  entenda: [["Contando prazos", "Na maioria dos prazos, exclui-se o dia do início e inclui-se o do fim. Para contar as duas datas, some um dia."]],
+  faq: [["E prazos em dias úteis?", "Use o contador de dias úteis, que desconta fins de semana e feriados nacionais."]]
+},
+"dias-uteis": {
+  usar: ["Escolha a data inicial e a data final.", "Escolha se o Carnaval conta como feriado (os bancos não abrem).", "Veja os dias úteis e a lista de feriados no período."],
+  entenda: [["Feriados nacionais", "Confraternização Universal, Carnaval (ponto facultativo), Sexta-feira Santa, Tiradentes, Dia do Trabalho, Corpus Christi, Independência, Nossa Senhora Aparecida, Finados, Proclamação da República, Consciência Negra e Natal. Feriados estaduais e municipais não entram."]],
+  faq: [["Por que contar dias úteis?", "Prazos bancários, de boletos, de liquidação de investimentos (D+1, D+2) e muitos prazos legais são contados em dias úteis."]]
+},
+"veiculo-ev": {
+  usar: ["Informe a quilometragem anual, o prazo da comparação e o rendimento do dinheiro.", "Preencha os dados do carro a combustão e do elétrico: preço, consumo, energia, manutenção, seguro, IPVA e desvalorização.", "Compare o custo total e o custo por quilômetro."],
+  entenda: [["O custo total de ter um carro", "Além da energia, contam o seguro, o IPVA, a manutenção, a desvalorização e o rendimento que o dinheiro do carro deixaria de ganhar. O elétrico gasta muito menos por quilômetro, mas custa mais caro: quem roda muito tende a compensar a diferença mais rápido."]],
+  faq: [["Elétrico paga IPVA?", "Depende do estado: alguns isentam, outros reduzem a alíquota."]]
+},
+"custos": {
+  usar: ["Informe sua renda líquida mensal.", "Preencha os gastos fixos de cada categoria.", "Veja quanto da renda está comprometido e onde está o maior peso."],
+  entenda: [["Regra 50-30-20", "Uma referência simples: até 50% da renda para necessidades, 30% para desejos e 20% para investir ou quitar dívidas. Custos fixos acima de 60% da renda deixam pouca margem para imprevistos."]],
+  faq: [["Como reduzir os custos fixos?", "Comece pelos maiores: moradia, transporte e planos. Renegocie contratos, troque de plano e revise assinaturas."]]
+},
+"cartoes": {
+  usar: ["Informe quanto gasta por mês no cartão, a cotação do dólar e o valor do milheiro.", "Preencha anuidade, isenção, pontos por dólar e cashback de até três cartões.", "Veja qual deixa mais benefício líquido por ano."],
+  entenda: [["Pontos × cashback", "Pontos são convertidos pelo dólar e valem conforme o uso: passagens em promoção valorizam mais. Cashback é dinheiro de volta, simples e previsível. Anuidade só compensa se os benefícios forem maiores que ela."]],
+  faq: [["Vale gastar mais para isentar a anuidade?", "Não: gastar mais só para ganhar pontos ou isenção quase sempre custa mais do que o benefício."]]
+}
+});
+
 window.renderGuia = (id, titulo) => {
   const g = window.GUIAS[id];
   if (!g) return "";
