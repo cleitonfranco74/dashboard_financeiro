@@ -45,3 +45,22 @@ header.top h1 em{font-style:normal;color:var(--accent)}
 .ccard small{color:var(--ink-2);font-size:13px;line-height:1.45}
 
 footer.autor{border-top:1px solid var(--line)}
+
+/* guias: como usar, entenda e perguntas frequentes */
+.guia{margin-top:28px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:16px;align-items:start}
+.guia-lado{display:flex;flex-direction:column;gap:16px;min-width:0}
+@media (max-width:860px){.guia{grid-template-columns:minmax(0,1fr)}}
+.guia-col{background:var(--surface);border:1px solid var(--ring);border-radius:20px;padding:20px 22px;min-width:0}
+.guia h2{margin:0 0 12px;font-size:18px;letter-spacing:-.02em;font-weight:800}
+.guia h3{margin:16px 0 6px;font-size:14.5px;font-weight:800;color:var(--ink)}
+.guia h3:first-of-type{margin-top:0}
+.guia p,.guia li{color:var(--ink-2);font-size:14px;line-height:1.6}
+.guia p{margin:0 0 8px}
+.guia ul,.guia ol{margin:0 0 8px;padding-left:20px}
+.guia ol.passos{counter-reset:p;list-style:none;padding:0;display:flex;flex-direction:column;gap:10px}
+.guia ol.passos li{counter-increment:p;display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start}
+.guia ol.passos li::before{content:counter(p);width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:800;font-size:12.5px}
+.guia b{color:var(--ink)}
+.guia details{border-bottom:1px solid var(--line);padding:10px 0}
+.guia summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--ink)}
+.guia details p{margin:8px 0 0}

@@ -190,6 +190,7 @@ details[open] summary{margin-bottom:8px}
       <div class="verdict"><span class="tag">Carregando</span><p>Buscando o histórico de preços e as taxas de mercado…</p></div>
     </div>
   </div>
+  <div id="guia"></div>
 </div>
 
 <footer class="autor">
@@ -197,6 +198,8 @@ details[open] summary{margin-bottom:8px}
   <span>© 2026 · Ferramenta educacional, não é recomendação de investimento</span>
 </footer>
 <script src="assets/mercado.js"></script>
+<script src="assets/guias.js"></script>
+<script>document.getElementById("guia").innerHTML = window.renderGuia ? renderGuia("carteira", "") : "";</script>
 <script src="assets/graficos.js"></script>
 <script>
 (() => {

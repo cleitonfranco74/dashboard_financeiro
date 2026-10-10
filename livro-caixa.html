@@ -375,12 +375,15 @@ tfoot td{font-weight:600;border-bottom:0}
       </table>
     </div>
   </section>
+  <div id="guia"></div>
 </div>
 <footer class="autor">
   <span>Desenvolvido por <b>Prof. Dr. Cleiton Franco</b> · Doutor em Economia · Professor Adjunto da UNEMAT, Câmpus de Sinop</span>
   <span>© 2026 · Ferramenta educacional, não é recomendação de investimento</span>
 </footer>
 <div class="toast" id="toast" hidden></div>
+<script src="assets/guias.js"></script>
+<script>document.getElementById("guia").innerHTML = window.renderGuia ? renderGuia("livro-caixa", "") : "";</script>
 
 <script>
 (() => {

@@ -471,6 +471,60 @@ Object.assign(window.GUIAS, {
 }
 });
 
+/* ===================== Livro-Caixa e Carteira ===================== */
+Object.assign(window.GUIAS, {
+"livro-caixa": {
+  usar: [
+    "<b>Escolha o mês</b> nas setas ao lado do título; “Mês atual” volta para hoje. Tudo o que aparece na página é do mês escolhido.",
+    "<b>Lance receitas e despesas</b> em “Lançar receitas e despesas”: escolha receita ou despesa, a data, a descrição, a categoria e o valor. Os atalhos “+ Lançar receita” e “+ Lançar despesa” levam direto ao formulário.",
+    "<b>Importe a fatura do cartão</b>, se preferir: baixe a fatura no aplicativo do banco em OFX (mais confiável), CSV, Excel ou PDF, escolha o mês e confira a prévia antes de importar. Importe as compras <b>ou</b> lance o pagamento da fatura, nunca os dois, para não contar os gastos duas vezes.",
+    "<b>Acompanhe o resumo</b>: receitas, despesas, resultado e taxa de poupança do mês, comparados com o mês anterior.",
+    "<b>Ajuste o orçamento</b> em “Orçamento por categoria”: clique em “Editar limites”, defina quanto quer gastar em cada categoria e salve. As barras avisam quando o gasto se aproxima ou passa do limite. “Lançar como despesas do mês” transforma o orçamento em lançamentos previstos.",
+    "<b>Informe quanto já tem guardado</b> em “Reserva de emergência” para ver quantos meses de despesas estão cobertos e quanto falta.",
+    "<b>Use o fluxo de caixa</b> para comparar os últimos 6 meses; clique num mês para abri-lo.",
+    "<b>Exporte para planilha</b> com “Exportar CSV”. Use a busca e os filtros da lista para encontrar lançamentos e “Excluir” para apagar um deles."
+  ],
+  entenda: [
+    ["Por que registrar os gastos", "Quem anota para onde vai o dinheiro descobre gastos que não percebia e consegue decidir o que cortar. Não é preciso ser perfeito: registrar os gastos grandes e as contas fixas já mostra o quadro geral. Em poucos meses, a média vira a base do orçamento e da reserva de emergência."],
+    ["Regime de competência", "O Livro-Caixa organiza os lançamentos pelo mês a que pertencem. A data da compra decide o mês; na fatura do cartão, você escolhe se usa a data de cada compra ou o vencimento."],
+    ["Taxa de poupança", "É a parte da renda que sobra no mês: (receitas − despesas) ÷ receitas. Uma meta comum é guardar pelo menos 20%. É essa sobra que forma a reserva e os investimentos."],
+    ["Orçamento por categoria", "Definir um limite por categoria transforma a intenção em regra. Comece pelos gastos do último mês, reduza um pouco as categorias de desejo (lazer, compras) e acompanhe ao longo do mês, não só no fim."],
+    ["Reserva de emergência", "O Livro-Caixa calcula a despesa média dos últimos 3 meses e mostra quantos meses ela cobre. O mínimo recomendado é de 3 a 6 meses para quem tem renda estável e 12 para autônomos. Guarde em aplicações seguras com liquidez diária, como Tesouro Selic."],
+    ["Seus dados", "Os lançamentos ficam salvos só neste navegador: nada é enviado a servidores. Se trocar de computador, limpar os dados do navegador ou usar uma janela anônima, eles não aparecem. Exporte o CSV de tempos em tempos para ter uma cópia."]
+  ],
+  faq: [
+    ["O que são os dados de exemplo?", "Lançamentos fictícios para mostrar como o painel funciona. Eles somem assim que você registra o primeiro lançamento."],
+    ["Posso usar no celular?", "Sim. Os dados de cada aparelho ficam separados, porque são salvos no navegador."],
+    ["A fatura em PDF funciona?", "Funciona, inclusive com senha, mas a leitura depende do layout do banco. Prefira OFX ou CSV e sempre confira a prévia antes de importar."],
+    ["Como lançar uma compra parcelada?", "Lance cada parcela no mês em que ela cai na fatura, ou importe a fatura de cada mês."]
+  ]
+},
+"carteira": {
+  usar: [
+    "Informe o <b>valor a investir</b> e o <b>horizonte</b> em anos.",
+    "Escolha um <b>perfil de risco</b> (conservador, moderado, arrojado ou máximo Sharpe) ou ajuste o <b>risco máximo aceito</b>, a volatilidade anual que você tolera.",
+    "Em <b>Estimativas</b>, escolha como calcular o retorno esperado: “Mercado hoje + CAPM” (recomendado) usa as taxas atuais do Tesouro, o CDI do Focus e prêmios de risco; “Média histórica” repete o passado da janela escolhida.",
+    "Ajuste os prêmios de risco do Brasil e global, a janela de dados (3, 5 ou 10 anos), o peso máximo por ação e o tipo de covariância.",
+    "Leia o resultado: o retorno esperado, a volatilidade, o índice de Sharpe, a perda em um ano ruim e a faixa de valores em 5 anos.",
+    "Clique na <b>fronteira eficiente</b> para escolher outro nível de risco e veja a <b>composição</b> mudar. As linhas finas mostram quanto os pesos variam com pequenas mudanças nos dados.",
+    "Confira o <b>teste histórico</b>, as <b>correlações</b> e as <b>premissas por ativo</b>. Nas premissas, desmarque ativos que não quer ou digite o seu próprio retorno esperado."
+  ],
+  entenda: [
+    ["A ideia de Markowitz", "Harry Markowitz mostrou em 1952 que o risco de uma carteira não é a média do risco dos ativos: ativos que não sobem e caem juntos se compensam. Combinando-os, dá para ter o mesmo retorno com menos risco. A <b>fronteira eficiente</b> reúne as carteiras que entregam o maior retorno esperado para cada nível de risco; qualquer carteira abaixo dela é ineficiente."],
+    ["Retorno, risco e Sharpe", "O <b>retorno esperado</b> é o que se espera ganhar por ano em média. A <b>volatilidade</b> mede quanto o resultado oscila em torno disso. O <b>índice de Sharpe</b> divide o retorno acima do CDI pela volatilidade: quanto maior, mais retorno por unidade de risco. A carteira de máximo Sharpe é a mais eficiente; misturá-la com CDI ajusta o risco sem perder eficiência."],
+    ["Correlação e diversificação", "A correlação vai de −1 a 1. Perto de 1, os ativos andam juntos e pouco se protegem; perto de 0 ou negativa, um compensa o outro. Ações no exterior (IVVB11) e títulos públicos costumam ter correlação baixa com a bolsa brasileira, por isso ajudam a reduzir o risco."],
+    ["Por que não usar só o passado", "Retornos passados são um péssimo previsor: o ativo que mais subiu em 5 anos domina a carteira e pode ser o próximo a cair. Por isso o modo recomendado usa as taxas de hoje para a renda fixa e o CAPM (CDI + beta × prêmio de risco) para as ações, e encolhe as covariâncias (Ledoit-Wolf) para reduzir o ruído estatístico."],
+    ["Estabilidade dos pesos", "Pequenas mudanças nos dados podem mudar muito a carteira ótima. A página refaz a otimização 40 vezes com dados reamostrados (método de Michaud) e mostra a faixa de cada peso: trate os pesos como faixas, não como números exatos."],
+    ["Limites", "O teste histórico usa pesos calculados com dados do próprio período e serve para ver quedas e oscilações, não para provar desempenho. O IR não foi descontado, e a carteira usa apenas alguns ativos representativos. É uma ferramenta educacional, não uma recomendação."]
+  ],
+  faq: [
+    ["Qual perfil escolher?", "O que você aguentaria ver no pior ano sem vender tudo. Olhe o “ano ruim”: se a perda indicada tiraria seu sono, escolha um risco menor."],
+    ["Preciso seguir os pesos à risca?", "Não. Use a composição como referência para dividir entre caixa, renda fixa, ações no Brasil e no exterior. Rebalanceie uma ou duas vezes por ano."],
+    ["Onde investir em cada classe?", "Caixa em Tesouro Selic ou CDB de liquidez diária; renda fixa em Tesouro Prefixado e IPCA+; ações via BOVA11 ou ações individuais; exterior via IVVB11. Os simuladores e as calculadoras ajudam a comparar cada opção."]
+  ]
+}
+});
+
 window.renderGuia = (id, titulo) => {
   const g = window.GUIAS[id];
   if (!g) return "";
