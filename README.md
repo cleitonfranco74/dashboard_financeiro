@@ -18,9 +18,10 @@ Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória es
 - Dados salvos no `localStorage` do navegador.
 
 ### Calculadoras (`calculadoras.html`)
-10 calculadoras rápidas em 2 grupos, inspiradas nas calculadoras do Investidor Sardinha:
+11 calculadoras rápidas em 2 grupos, inspiradas nas calculadoras do Investidor Sardinha:
 - **Trabalho e salário:** CLT vs PJ (Simples Anexo III com fator R, Anexo V ou MEI, com o faturamento PJ que empata), salário líquido, férias (abono pecuniário e adiantamento do 13º), 13º salário e rescisão (aviso prévio proporcional, avos, multa e saque do FGTS).
-- **Investimentos:** juros compostos, reserva de emergência, viver de renda, preço-teto (Bazin e Graham) e número mágico.
+- **Investimentos:** primeiro milhão, juros compostos, reserva de emergência, viver de renda, preço-teto (Bazin e Graham) e número mágico.
+- **Primeiro milhão:** calcula o prazo, o aporte mensal ou a taxa necessária, com gráfico e tabela ano a ano. Sugere três carteiras (conservadora, moderada e arrojada) que misturam Tesouro Selic, IPCA+, Prefixado, previdência, fundos imobiliários, ações no Brasil e no exterior e criptomoedas. A alocação muda com o tempo que falta até a meta e com o juro real esperado; a rentabilidade usa o Focus e as taxas do Tesouro, o risco usa 10 anos de retornos mensais, e 800 cenários simulados dão a chance de atingir a meta.
 - INSS e IR pelas tabelas de 2026, com o redutor da Lei 15.270/2025. Links como `calculadoras.html#clt-pj` abrem direto a calculadora.
 
 ### Simuladores (`simuladores.html`)
