@@ -181,6 +181,52 @@ form.campos.wide .reset{grid-column:1/-1}
 .cmp-t th .hd{display:inline-flex;align-items:center;gap:6px;color:var(--ink);font-family:var(--mono);font-size:12.5px;letter-spacing:0}
 .cmp-t th .hd i{width:9px;height:9px;border-radius:2px}
 .cmp-t td.best{color:var(--accent);font-weight:600}
+
+/* guias: como usar, entenda e perguntas frequentes */
+.guia{margin-top:28px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:16px;align-items:start}
+.guia-lado{display:flex;flex-direction:column;gap:16px;min-width:0}
+@media (max-width:860px){.guia{grid-template-columns:minmax(0,1fr)}}
+.guia-col{background:var(--surface);border:1px solid var(--ring);border-radius:20px;padding:20px 22px;min-width:0}
+.guia h2{margin:0 0 12px;font-size:18px;letter-spacing:-.02em;font-weight:800}
+.guia h3{margin:16px 0 6px;font-size:14.5px;font-weight:800;color:var(--ink)}
+.guia h3:first-of-type{margin-top:0}
+.guia p,.guia li{color:var(--ink-2);font-size:14px;line-height:1.6}
+.guia p{margin:0 0 8px}
+.guia ul,.guia ol{margin:0 0 8px;padding-left:20px}
+.guia ol.passos{counter-reset:p;list-style:none;padding:0;display:flex;flex-direction:column;gap:10px}
+.guia ol.passos li{counter-increment:p;display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start}
+.guia ol.passos li::before{content:counter(p);width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:800;font-size:12.5px}
+.guia b{color:var(--ink)}
+.guia table{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 10px;display:block;overflow-x:auto}
+.guia th,.guia td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;color:var(--ink-2)}
+.guia th{color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em}
+.guia details{border-bottom:1px solid var(--line);padding:10px 0}
+.guia summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--ink)}
+.guia details p{margin:8px 0 0}
+
+/* simulador de amortização */
+.am{display:flex;flex-direction:column;gap:16px}
+.mods{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:760px){.mods{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.mods button{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:center;text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px 14px;color:var(--ink)}
+.mods button svg{grid-row:1;color:var(--ink-2)}
+.mods button b{font-size:14.5px}
+.mods button small{grid-column:1/-1;color:var(--muted);font-size:12.5px}
+.mods button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.mods button[aria-pressed="true"] svg{color:var(--accent)}
+.am-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px}
+.am-grid > .f:first-child{grid-column:1/-1}
+@media (max-width:640px){.am-grid{grid-template-columns:minmax(0,1fr)}}
+.xbox{background:var(--bg-2);border:1px solid var(--ring);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.xhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+.xrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto auto;gap:10px;align-items:end;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+@media (max-width:760px){.xrow{grid-template-columns:1fr 1fr}}
+.chk{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink-2);height:44px;white-space:nowrap}
+.chk input{width:18px;height:18px;accent-color:var(--accent)}
+.xrm{border:0;background:var(--surface-2);color:var(--ink-2);width:36px;height:36px;border-radius:50%;font-size:18px;margin-bottom:4px}
+.xrm:hover{color:var(--ink)}
+.addx{align-self:flex-start;border:1px dashed var(--line);background:none;color:var(--accent);font-weight:700;border-radius:12px;padding:10px 14px}
+.addx:hover{border-color:var(--accent)}
 i.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;vertical-align:-1px}
 
 .notes{margin:0;padding:16px 18px 16px 34px;background:var(--bg-2);border:1px solid var(--ring);border-radius:18px;color:var(--ink-2);font-size:13px;display:flex;flex-direction:column;gap:6px}
@@ -227,7 +273,7 @@ footer.autor b{color:var(--ink-2);font-weight:700}
   <section class="top">
     <span class="eyebrow">Calculadoras</span>
     <h1>Contas rápidas para <em>decisões do dia a dia</em>.</h1>
-    <p class="lead">CLT ou PJ, salário líquido, férias, 13º, rescisão, primeiro milhão com carteiras sugeridas, juros compostos, reserva de emergência e quanto falta para viver de renda. Tudo com as tabelas de INSS e IR de 2026, calculado no seu navegador.</p>
+    <p class="lead">CLT ou PJ, salário líquido, férias, 13º, rescisão, primeiro milhão com carteiras sugeridas, amortização de financiamentos, comparadores de renda fixa e de ações. Cada calculadora traz o passo a passo e a explicação dos conceitos. Tudo com as tabelas de INSS e IR de 2026, calculado no seu navegador.</p>
   </section>
 
   <div class="navcalc">
@@ -236,6 +282,7 @@ footer.autor b{color:var(--ink-2);font-weight:700}
   </div>
 
   <main id="main" aria-live="polite"></main>
+  <div id="guia"></div>
 
   <footer class="autor">
     <span>Desenvolvido por <b>Prof. Dr. Cleiton Franco</b> · Doutor em Economia · Professor Adjunto da UNEMAT, Câmpus de Sinop</span>
@@ -244,6 +291,7 @@ footer.autor b{color:var(--ink-2);font-weight:700}
 </div>
 
 <script src="assets/mercado.js"></script>
+<script src="assets/guias.js"></script>
 <script>
 (() => {
 /* ================= utilidades ================= */
@@ -1198,10 +1246,160 @@ def({
   }
 });
 
+/* ---------- Simulador de amortização ---------- */
+const MODALIDADES = {
+  imob:   {nome:"Imobiliário", desc:"Casa ou apartamento, prazos longos", icone:'<path d="M4 11l8-6 8 6v9H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 20v-5h4v5" fill="none" stroke="currentColor" stroke-width="1.8"/>',
+           v:{valor:300000, sistema:"sac", taxa:11.5, per:"ano", n:360, corr:"tr", extras:[{valor:5000, de:12, ate:360, cada:12, rec:true}]}},
+  veic:   {nome:"Veículos", desc:"Carro, moto ou caminhão", icone:'<path d="M4 15l1.5-5h13L20 15v3H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8" cy="18" r="1.6" fill="currentColor"/><circle cx="16" cy="18" r="1.6" fill="currentColor"/>',
+           v:{valor:60000, sistema:"price", taxa:1.9, per:"mes", n:48, corr:"nenhuma", extras:[]}},
+  consig: {nome:"Consignado", desc:"Desconto em folha ou benefício", icone:'<path d="M4 9l8-4 8 4M5 10v7M9.5 10v7M14.5 10v7M19 10v7M4 19h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+           v:{valor:20000, sistema:"price", taxa:1.8, per:"mes", n:72, corr:"nenhuma", extras:[]}},
+  pessoal:{nome:"Pessoal", desc:"Mais flexível, sem garantia", icone:'<rect x="4" y="6" width="16" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15 12.5h5" stroke="currentColor" stroke-width="1.8"/>',
+           v:{valor:10000, sistema:"price", taxa:5.5, per:"mes", n:24, corr:"nenhuma", extras:[]}},
+};
+const TR_MES = .0015;   // TR estimada: cerca de 1,8% ao ano
+const pmt = (S, i, n) => n<=0 ? S : i ? S*i/(1-Math.pow(1+i,-n)) : S/n;
+function amortizar(p, comExtras){
+  const i = p.per==="ano" ? Math.pow(1+p.taxa/100,1/12)-1 : p.taxa/100, n = Math.max(1, Math.round(p.n));
+  const T = trajetorias();
+  const corr = t => p.corr==="tr" ? TR_MES : p.corr==="ipca" ? Math.pow(1+T.ipca(t),1/12)-1 : 0;
+  const extraEm = k => !comExtras ? 0 : p.extras.reduce((s,e)=>{ const de = Math.max(1, Math.round(e.de||1));
+    if (!(e.valor>0)) return s; if (!e.rec) return s + (k===de ? e.valor : 0);
+    const ate = Math.round(e.ate||n), cada = Math.max(1, Math.round(e.cada||1));
+    return s + (k>=de && k<=ate && (k-de)%cada===0 ? e.valor : 0); }, 0);
+  const A0 = p.valor/n, P0 = pmt(p.valor, i, n);
+  let S = p.valor, fator = 1; const rows = [];
+  for (let k=1; k<=n && S>0.005; k++){
+    const c = corr(k), cAmt = S*c; S += cAmt; fator *= 1+c;
+    const J = S*i, rem = n-k+1;
+    let A;
+    if (p.sistema==="sac") A = p.efeito==="parcela" ? S/rem : Math.min(S, A0*fator);
+    else { const P = p.efeito==="parcela" ? pmt(S,i,rem) : P0*fator; A = Math.min(S, Math.max(0, P-J)); }
+    S -= A;
+    const E = Math.min(S, extraEm(k)); S -= E;
+    rows.push({k, parcela:A+J, juros:J, amort:A, extra:E, corr:cAmt, saldo:Math.max(0,S)});
+  }
+  const soma = f => rows.reduce((s,r)=>s+r[f],0);
+  return {rows, i, n, juros:soma("juros"), parcelas:soma("parcela"), extras:soma("extra"), corr:soma("corr"), meses:rows.length,
+    primeira:rows[0]?.parcela||0, ultima:rows[rows.length-1]?.parcela||0, sobra:S};
+}
+const mesAno = (ini, k) => { const [y,m] = (ini||"2026-10").split("-").map(Number); const d = new Date(y, m-1+k-1, 1); return d.toLocaleDateString("pt-BR",{month:"short",year:"numeric"}).replace(". de "," ").replace(" de "," "); };
+def({
+  id:"amortizacao", grupo:"credito", nav:"Amortização", titulo:"Simulador de amortização de financiamentos e empréstimos", custom:true,
+  desc:"Calcule as parcelas em SAC ou Price, com correção pela TR ou pelo IPCA, e veja quanto os aportes extras reduzem o prazo, a parcela e os juros da sua dívida.",
+  mount(el){
+    const hoje = new Date(), iniPad = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,"0")}`;
+    const padrao = () => ({mod:"imob", inicio:iniPad, efeito:"prazo", ...JSON.parse(JSON.stringify(MODALIDADES.imob.v))});
+    let st = Object.assign(padrao(), store.get("calc:amortizacao") || {});
+    const salvar = () => store.set("calc:amortizacao", st);
+    const num = (k, label, val, o={}) => `<div class="f"><label for="am-${k}">${label}</label><div class="in">${o.pre?`<span>${o.pre}</span>`:""}<input id="am-${k}" data-am="${k}" type="number" inputmode="decimal" step="any" min="0" value="${val}">${o.suf?`<span>${o.suf}</span>`:""}</div>${o.hint?`<small>${o.hint}</small>`:""}</div>`;
+    const sel = (k, label, val, opts, hint) => `<div class="f"><label for="am-${k}">${label}</label><div class="in"><select id="am-${k}" data-am="${k}">${opts.map(([a,b])=>`<option value="${a}"${val===a?" selected":""}>${b}</option>`).join("")}</select></div>${hint?`<small>${hint}</small>`:""}</div>`;
+    const extrasHtml = () => st.extras.map((e,j)=>`<div class="xrow" data-x="${j}">
+        ${num(`x${j}-valor`, "Valor do aporte", e.valor, {pre:"R$"})}${num(`x${j}-de`, "Na parcela nº", e.de)}
+        ${e.rec ? num(`x${j}-ate`, "Até a parcela nº", e.ate) + num(`x${j}-cada`, "A cada", e.cada, {suf:"meses"}) : ""}
+        <label class="chk"><input type="checkbox" data-xrec="${j}"${e.rec?" checked":""}> Recorrente</label>
+        <button type="button" class="xrm" data-xrm="${j}" aria-label="Remover aporte">×</button></div>`).join("");
+    const form = () => {
+      el.innerHTML = `<form class="card am" id="amf" onsubmit="return false">
+        <div class="grp-t">Modalidade <span style="text-transform:none;letter-spacing:0;font-weight:600">(opcional, preenche valores típicos)</span></div>
+        <div class="mods">${Object.entries(MODALIDADES).map(([k,m])=>`<button type="button" data-mod="${k}" aria-pressed="${st.mod===k}"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">${m.icone}</svg><b>${m.nome}</b><small>${m.desc}</small></button>`).join("")}</div>
+        <div class="am-grid">
+          ${num("valor","Valor do empréstimo ou saldo devedor", st.valor, {pre:"R$", hint:"Contrato em andamento? Use o saldo devedor de hoje."})}
+          <div class="f"><label for="am-inicio">Mês da primeira parcela</label><div class="in"><input id="am-inicio" data-am="inicio" type="month" value="${st.inicio}"></div></div>
+          ${sel("sistema","Sistema de amortização", st.sistema, [["sac","SAC: parcelas decrescentes"],["price","Price: parcelas fixas"]])}
+          ${num("taxa","Taxa de juros", st.taxa, {suf:"%"})}
+          ${sel("per","Período dos juros", st.per, [["ano","Anual (a.a.)"],["mes","Mensal (a.m.)"]])}
+          ${num("n","Quantidade de parcelas", st.n, {suf:"meses"})}
+          ${sel("corr","Correção monetária", st.corr, [["nenhuma","Nenhuma"],["tr","TR (financiamento imobiliário)"],["ipca","IPCA (inflação esperada)"]], "A correção aumenta o saldo devedor todo mês.")}
+        </div>
+        <div class="xbox"><div class="xhead"><div><b>Amortização extra</b><p class="mini" style="margin:2px 0 0">Aportes para reduzir o prazo ou o valor das parcelas.</p></div>
+          <div class="seg" style="min-width:240px"><button type="button" data-ef="prazo" aria-pressed="${st.efeito==="prazo"}">Reduzir prazo</button><button type="button" data-ef="parcela" aria-pressed="${st.efeito==="parcela"}">Reduzir parcela</button></div></div>
+          <div id="xlist">${extrasHtml()}</div>
+          <button type="button" class="addx" id="addx">+ Adicionar aporte</button></div>
+        <button type="button" class="reset" id="amreset">Restaurar valores padrão</button></form>
+        <div class="res" id="amres" style="margin-top:16px"></div>`;
+    };
+    const ler = () => {
+      el.querySelectorAll("[data-am]").forEach(i=>{ const k = i.dataset.am;
+        if (k.startsWith("x")){ const [, j, f] = k.match(/^x(\d+)-(\w+)$/); st.extras[+j][f] = +i.value || 0; }
+        else st[k] = i.type==="number" ? (+i.value || 0) : i.value; });
+    };
+    const calc = () => {
+      ler(); salvar();
+      const out = $("#amres", el);
+      if (!(st.valor>0) || !(st.n>=1) || !(st.taxa>=0)) { out.innerHTML = `<div class="warn">Preencha o valor, a taxa e a quantidade de parcelas.</div>`; return; }
+      const base = amortizar(st, false), com = amortizar(st, true), temX = com.extras > 0.5;
+      const outro = amortizar({...st, sistema: st.sistema==="sac" ? "price" : "sac"}, false);
+      const iAno = Math.pow(1+base.i,12)-1, T = trajetorias();
+      const cdiLiq = (T.cdi(1))*0.85;
+      const custoDiv = st.corr==="tr" ? (1+iAno)*Math.pow(1+TR_MES,12)-1 : st.corr==="ipca" ? (1+iAno)*(1+T.ipca(1))-1 : iAno;
+      const econ = base.juros + base.corr - com.juros - com.corr;
+      const verdict = temX
+        ? (st.efeito==="prazo"
+          ? `<div class="verdict">Com os aportes extras, você economiza <b>${money0(econ)}</b> em juros e quita a dívida <b>${base.meses-com.meses} ${base.meses-com.meses===1?"mês":"meses"} antes</b>, em ${mesAno(st.inicio, com.meses)} em vez de ${mesAno(st.inicio, base.meses)}.</div>`
+          : `<div class="verdict">Com os aportes extras, você economiza <b>${money0(econ)}</b> em juros e a última parcela cai de ${money(base.ultima)} para <b>${money(com.ultima)}</b>, mantendo o prazo de ${base.meses} meses.</div>`)
+        : `<div class="verdict">Parcela inicial de <b>${money(base.primeira)}</b> em ${base.meses} meses, com <b>${money0(base.juros)}</b> de juros no total${base.corr>1?` e ${money0(base.corr)} de correção monetária`:""}. Adicione aportes extras para ver quanto dá para economizar.</div>`;
+      const R = temX ? com : base;
+      const html = verdict +
+        `<div class="kpis">${kpi("Primeira parcela", money(R.primeira), mesAno(st.inicio,1), C.c1)}${(()=>{ const ult = R.rows[R.rows.length-1], pen = R.rows[R.rows.length-2];
+          return pen && ult.parcela < pen.parcela*0.5 ? kpi("Última parcela cheia", money(pen.parcela), `${mesAno(st.inicio,R.meses-1)}, mais um resíduo de ${money(ult.parcela)}`, C.c2) : kpi("Última parcela", money(R.ultima), mesAno(st.inicio,R.meses), C.c2); })()}${kpi("Total de juros", money0(R.juros), R.corr>1 ? `+ ${money0(R.corr)} de correção` : `taxa de ${pct(iAno,2)} ao ano`)}${kpi(temX?"Economia com os aportes":"Total pago", money0(temX ? econ : R.parcelas), temX ? `${pct(econ/Math.max(1,base.juros+base.corr),0)} dos juros e correção` : `${nf(R.parcelas/st.valor,2)} vezes o valor emprestado`, null, true)}</div>` +
+        `<div class="verdict" style="background:var(--surface);border-color:var(--ring)">${custoDiv > cdiLiq
+          ? `<b>Amortizar compensa:</b> a dívida custa cerca de ${pct(custoDiv,1)} ao ano, mais do que os ${pct(cdiLiq,1)} que o CDI rende hoje depois do IR. Cada real usado para amortizar “rende” a taxa da dívida, sem risco. Mantenha antes a reserva de emergência.`
+          : `<b>Amortizar pode não compensar:</b> a dívida custa cerca de ${pct(custoDiv,1)} ao ano, menos do que os ${pct(cdiLiq,1)} que o CDI rende hoje depois do IR. Investir a diferença tende a render mais, desde que você mantenha a disciplina.`}</div>` +
+        `<div class="card">${legend(temX ? [["Sem aportes",C.c1],["Com aportes",C.c2]] : [["Saldo devedor",C.c1]])}<h3 style="margin-top:6px">Saldo devedor</h3><div class="chart" id="ch"></div></div>` +
+        `<div class="card">${legend([["Amortização",C.c1],["Juros",C.c2]])}<h3 style="margin-top:6px">Composição das parcelas${temX?" com os aportes":""}</h3><div class="chart" id="ch2"></div></div>` +
+        `<div class="duo"><div class="card"><h3>${temX?"Sem e com amortização extra":"Resumo"}</h3><div class="tblwrap"><table><thead><tr><th></th><th class="n">Sem aportes</th>${temX?'<th class="n">Com aportes</th>':""}</tr></thead><tbody>
+          <tr><td>Prazo</td><td class="n">${base.meses} meses</td>${temX?`<td class="n">${com.meses} meses</td>`:""}</tr>
+          <tr><td>Quitação</td><td class="n">${mesAno(st.inicio,base.meses)}</td>${temX?`<td class="n">${mesAno(st.inicio,com.meses)}</td>`:""}</tr>
+          <tr><td>Primeira parcela</td><td class="n">${money(base.primeira)}</td>${temX?`<td class="n">${money(com.primeira)}</td>`:""}</tr>
+          <tr><td>Última parcela</td><td class="n">${money(base.ultima)}</td>${temX?`<td class="n">${money(com.ultima)}</td>`:""}</tr>
+          <tr><td>Juros</td><td class="n">${money0(base.juros)}</td>${temX?`<td class="n">${money0(com.juros)}</td>`:""}</tr>
+          ${base.corr>1?`<tr><td>Correção monetária</td><td class="n">${money0(base.corr)}</td>${temX?`<td class="n">${money0(com.corr)}</td>`:""}</tr>`:""}
+          ${temX?`<tr><td>Aportes extras</td><td class="n">—</td><td class="n">${money0(com.extras)}</td></tr>`:""}
+          <tr class="tot"><td>Total desembolsado</td><td class="n">${money0(base.parcelas)}</td>${temX?`<td class="n">${money0(com.parcelas+com.extras)}</td>`:""}</tr>
+        </tbody></table></div></div>
+        <div class="card"><h3>SAC ou Price?<span class="sub">sem aportes</span></h3><div class="tblwrap"><table><thead><tr><th></th><th class="n">SAC</th><th class="n">Price</th></tr></thead><tbody>${(()=>{ const S = st.sistema==="sac" ? base : outro, P = st.sistema==="sac" ? outro : base;
+          return `<tr><td>Primeira parcela</td><td class="n">${money(S.primeira)}</td><td class="n">${money(P.primeira)}</td></tr>
+          <tr><td>Última parcela</td><td class="n">${money(S.ultima)}</td><td class="n">${money(P.ultima)}</td></tr>
+          <tr><td>Total de juros</td><td class="n">${money0(S.juros)}</td><td class="n">${money0(P.juros)}</td></tr>
+          <tr class="tot"><td>Diferença de juros</td><td class="n" colspan="2">${money0(Math.abs(P.juros-S.juros))} a ${P.juros>S.juros?"menos no SAC":"menos na Price"}</td></tr>`; })()}</tbody></table></div></div></div>` +
+        `<div class="card"><h3>Parcela a parcela<span class="sub">${R.meses} parcelas</span></h3><div class="tblwrap tscroll"><table><thead><tr><th>Nº</th><th>Mês</th><th class="n">Parcela</th><th class="n">Juros</th><th class="n">Amortização</th>${temX?'<th class="n">Extra</th>':""}${R.corr>1?'<th class="n">Correção</th>':""}<th class="n">Saldo devedor</th></tr></thead><tbody>${
+          R.rows.map(r=>`<tr${r.extra>0?' class="meta"':""}><td>${r.k}</td><td>${mesAno(st.inicio,r.k)}</td><td class="n">${money(r.parcela)}</td><td class="n">${money(r.juros)}</td><td class="n">${money(r.amort)}</td>${temX?`<td class="n">${r.extra>0?money(r.extra):"—"}</td>`:""}${R.corr>1?`<td class="n">${money(r.corr)}</td>`:""}<td class="n">${money(r.saldo)}</td></tr>`).join("")}</tbody></table></div></div>` +
+        notas(["Parcelas sem seguros (MIP e DFI), taxa de administração e IOF, que o contrato pode cobrar à parte. O simulador de financiamento imobiliário, na aba Simuladores, inclui esses custos.",
+          `Correção pela TR estimada em ${pct(TR_MES,2)} ao mês; pelo IPCA, a inflação mês a mês esperada pelo Boletim Focus.`,
+          "Reduzir prazo mantém a parcela (corrigida) e encurta a dívida; reduzir parcela mantém o número de parcelas e recalcula o valor a cada aporte. O banco pode aplicar regras próprias: peça a simulação oficial antes de pagar.",
+          "Valores típicos das modalidades são aproximados; ajuste à taxa e ao prazo do seu contrato."]);
+      out.innerHTML = html;
+      const ys = (X, n) => { const a = [st.valor]; for (let k=0;k<n;k++) a.push(X.rows[k] ? X.rows[k].saldo : 0); return a; };
+      const xs = Array.from({length:base.meses+1},(_,k)=>k);
+      const anosX = base.meses > 36;
+      const xf = k => anosX ? `${Math.round(k/12)}a` : `${k}m`, xt = anosX ? ticksX(0, base.meses/12, el_w()<520?4:8).map(a=>Math.round(a*12)) : undefined;
+      lineChart($("#ch", el), {xs, series: temX ? [{name:"Sem aportes",color:C.c1,ys:ys(base,base.meses)},{name:"Com aportes",color:C.c2,ys:ys(com,base.meses)}] : [{name:"Saldo",color:C.c1,ys:ys(base,base.meses)}],
+        noEndLabels:true, xfmt:xf, xticks:xt, yfmt:y=>curto(y), tipfmt:y=>money0(y), tipTitle:k=>`Parcela ${k} · ${mesAno(st.inicio,Math.max(1,k))}`, label:"Saldo devedor ao longo do contrato"});
+      const xs2 = R.rows.map(r=>r.k);
+      lineChart($("#ch2", el), {xs:xs2, stack:true, series:[{name:"Amortização",color:C.c1,ys:R.rows.map(r=>r.amort)},{name:"Juros",color:C.c2,ys:R.rows.map(r=>r.juros)}],
+        noEndLabels:true, xfmt:xf, xticks: anosX ? ticksX(0, R.meses/12, el_w()<520?4:8).map(a=>Math.max(1,Math.round(a*12))) : undefined, yfmt:y=>curto(y), tipfmt:y=>money(y), tipTitle:k=>`Parcela ${k} · ${mesAno(st.inicio,k)}`, label:"Juros e amortização em cada parcela"});
+    };
+    const montar = () => { form(); calc(); };
+    el.addEventListener("input", e=>{ if (e.target.closest("#amf")) calc(); });
+    el.addEventListener("change", e=>{ if (e.target.matches("[data-xrec]")){ ler(); const x = st.extras[+e.target.dataset.xrec]; x.rec = e.target.checked; if (x.rec && !x.ate) { x.ate = st.n; x.cada = x.cada || 12; } salvar(); montar(); } else if (e.target.closest("#amf")) calc(); });
+    el.addEventListener("click", e=>{
+      const m = e.target.closest("[data-mod]"); if (m){ ler(); st = {...st, mod:m.dataset.mod, ...JSON.parse(JSON.stringify(MODALIDADES[m.dataset.mod].v))}; salvar(); montar(); return; }
+      const f = e.target.closest("[data-ef]"); if (f){ ler(); st.efeito = f.dataset.ef; salvar(); montar(); return; }
+      const r = e.target.closest("[data-xrm]"); if (r){ ler(); st.extras.splice(+r.dataset.xrm,1); salvar(); montar(); return; }
+      if (e.target.id==="addx"){ ler(); st.extras.push({valor: Math.round(st.valor*0.02/100)*100 || 1000, de:12, ate:Math.round(st.n), cada:12, rec:true}); salvar(); montar(); return; }
+      if (e.target.id==="amreset"){ st = padrao(); salvar(); montar(); }
+    });
+    this.redraw = () => calc();
+    montar();
+  }
+});
+
 /* ================= navegação e formulário ================= */
 const GRUPOS = [
   {id:"trabalho", nome:"Trabalho e salário"},
   {id:"invest", nome:"Investimentos"},
+  {id:"credito", nome:"Crédito"},
   {id:"comp", nome:"Comparadores"},
 ].map(g=>({...g, calcs: CALCS.filter(c=>c.grupo===g.id)}));
 let atual = null;
@@ -1253,6 +1451,7 @@ function calcular(salvar){
 }
 function abrir(id, push){
   const c = CALCS.find(x=>x.id===id) || CALCS[0]; atual = c;
+  $("#guia").innerHTML = window.renderGuia ? renderGuia(c.id, "") : "";
   const g = GRUPOS.find(x=>x.id===c.grupo);
   $("#grupos").innerHTML = GRUPOS.map(x=>`<button role="tab" data-g="${x.id}" aria-selected="${x===g}">${esc(x.nome)}<small>${x.calcs.length}</small></button>`).join("");
   $("#tabs").innerHTML = g.calcs.map(x=>`<button role="tab" data-c="${x.id}" aria-selected="${x===c}">${esc(x.nav)}</button>`).join("");

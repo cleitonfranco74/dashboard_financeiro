@@ -18,14 +18,17 @@ Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória es
 - Dados salvos no `localStorage` do navegador.
 
 ### Calculadoras (`calculadoras.html`)
-13 calculadoras em 3 grupos, inspiradas nas calculadoras do Investidor Sardinha:
+14 calculadoras em 4 grupos, inspiradas nas calculadoras do Investidor Sardinha:
 - **Trabalho e salário:** CLT vs PJ (Simples Anexo III com fator R, Anexo V ou MEI, com o faturamento PJ que empata), salário líquido, férias (abono pecuniário e adiantamento do 13º), 13º salário e rescisão (aviso prévio proporcional, avos, multa e saque do FGTS).
 - **Investimentos:** primeiro milhão, juros compostos, reserva de emergência, viver de renda, preço-teto (Bazin e Graham) e número mágico.
 - **Primeiro milhão:** calcula o prazo, o aporte mensal ou a taxa necessária, com gráfico e tabela ano a ano. Sugere três carteiras (conservadora, moderada e arrojada) que misturam Tesouro Selic, IPCA+, Prefixado, previdência, fundos imobiliários, ações no Brasil e no exterior e criptomoedas. A alocação muda com o tempo que falta até a meta e com o juro real esperado; a rentabilidade usa o Focus e as taxas do Tesouro, o risco usa 10 anos de retornos mensais, e 800 cenários simulados dão a chance de atingir a meta.
+- **Crédito:** simulador de amortização de financiamentos e empréstimos (imobiliário, veículos, consignado ou pessoal), em SAC ou Price, com correção pela TR ou pelo IPCA e aportes extras únicos ou recorrentes para reduzir prazo ou parcela. Mostra a economia de juros, a nova data de quitação, o saldo devedor com e sem aportes, a composição das parcelas, SAC × Price e a tabela parcela a parcela.
 - **Comparadores:**
   - **Renda fixa:** dois investimentos lado a lado (CDB, LCI, LCA, Tesouro, LC, debêntures, CRI, CRA ou poupança; pré, % do CDI ou IPCA+), com IR regressivo, isenções, custódia do Tesouro, CDI e IPCA do Focus, a taxa que empata e o CDB equivalente.
   - **Ações:** até 5 ativos de uma categoria (ações da B3, stocks, FIIs ou ETFs internacionais), com gráfico de desempenho em base 100, retorno, volatilidade, maior queda, P/L, P/VP, dividend yield, ROE, margem, dívida e valor de mercado. Dados em `data/acoes.json`, gerado por `scripts/atualizar_acoes.py` na mesma rotina diária.
 - INSS e IR pelas tabelas de 2026, com o redutor da Lei 15.270/2025. Links como `calculadoras.html#clt-pj` abrem direto a calculadora.
+
+Cada calculadora e cada simulador traz abaixo dos resultados um **Como usar** (passo a passo), um **Entenda** (os conceitos por trás da conta) e **Perguntas frequentes**. Os textos ficam em `assets/guias.js`, compartilhado pelas duas páginas.
 
 ### Simuladores (`simuladores.html`)
 22 simuladores em 5 grupos, com navegação em dois níveis (grupo e simulador):
