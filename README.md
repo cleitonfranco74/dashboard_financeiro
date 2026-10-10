@@ -26,7 +26,7 @@ Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória es
 
 Todas as páginas usam o mesmo visual escuro com destaque verde-limão e a mesma barra de navegação; Livro-Caixa, Simuladores e Carteira carregam o tema compartilhado `assets/tema.css`.
 
-Cada calculadora e cada simulador traz abaixo dos resultados um **Como usar** (passo a passo), um **Entenda** (os conceitos por trás da conta) e **Perguntas frequentes**. Os textos ficam em `assets/guias.js`, compartilhado pelas duas páginas.
+Cada calculadora, cada simulador, o Livro-Caixa e a Carteira trazem abaixo dos resultados um **Como usar** (passo a passo), um **Entenda** (os conceitos por trás da conta) e **Perguntas frequentes**. Os textos ficam em `assets/guias.js`, compartilhado pelas duas páginas.
 
 ### Simuladores (`simuladores.html`)
 22 simuladores em 5 grupos, abertos a partir de uma vitrine em cartões, com navegação em dois níveis (grupo e simulador):
