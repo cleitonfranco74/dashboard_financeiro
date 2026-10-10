@@ -1,0 +1,47 @@
+/* Tema compartilhado: visual escuro com destaque verde-limão, igual à página inicial e às calculadoras.
+ * Carregado depois do <style> de cada página, sobrepõe a tipografia, o cabeçalho e os componentes comuns. */
+html{--tbh:64px}
+@media (max-width:860px){html{--tbh:106px}}
+body{font-family:var(--sans);-webkit-font-smoothing:antialiased;padding-top:0!important;overflow-x:hidden}
+
+/* barra de navegação fixa */
+.topbar{position:sticky;top:0;z-index:40;margin:0 -16px 8px;background:rgba(8,9,11,.78);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--ring)}
+.topbar .tb-in{max-width:1200px;margin:0 auto;padding-inline:16px;display:flex;justify-content:space-between;align-items:center;gap:12px;height:64px}
+@media (min-width:720px){.topbar .tb-in{padding-inline:28px}}
+.topbar .tb-brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:17px;letter-spacing:-.02em;color:var(--ink)}
+.topbar nav{display:flex;gap:2px}
+.topbar nav a{text-decoration:none;color:var(--ink-2);font-weight:600;font-size:14px;padding:8px 14px;border-radius:999px}
+.topbar nav a:hover{color:var(--ink)}
+.topbar nav a[aria-current="page"]{color:var(--accent-ink);background:var(--accent)}
+.topbar .tb-cta{display:inline-flex;align-items:center;height:38px;padding:0 16px;border-radius:999px;border:1px solid var(--line);color:var(--ink);font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap}
+.topbar .tb-cta:hover{border-color:var(--ink-2)}
+@media (max-width:860px){.topbar nav{display:none}}
+.topbar .tb-menu{display:none}
+@media (max-width:860px){.topbar .tb-menu{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:0 16px 10px;max-width:100%}
+  .topbar .tb-menu a{flex:none;text-decoration:none;color:var(--ink-2);font-weight:600;font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--line)}
+  .topbar .tb-menu a[aria-current="page"]{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}}
+
+/* títulos */
+header.top{padding-top:clamp(20px,4vw,40px)}
+header.top .eyebrow{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+header.top h1{font-size:clamp(30px,4.6vw,52px);line-height:1.02;letter-spacing:-.04em;font-weight:800;text-wrap:balance}
+header.top h1 em{font-style:normal;color:var(--accent)}
+.lead-top{margin:6px 0 0;color:var(--ink-2);max-width:68ch;font-size:15.5px}
+
+/* superfícies */
+.panel,.card{border-radius:20px}
+.verdict{border:1px solid rgba(200,242,80,.22);background:linear-gradient(135deg,rgba(200,242,80,.12),rgba(200,242,80,.03))}
+
+/* vitrine em cartões */
+.vit{margin:8px 0 36px;scroll-margin-top:170px}
+.vit h2{margin:0;font-size:clamp(19px,2.3vw,24px);letter-spacing:-.02em;font-weight:800;text-transform:uppercase}
+.vit > p{margin:4px 0 16px;color:var(--ink-2)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:12px}
+.ccard{display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--ring);border-radius:18px;padding:18px;min-height:150px;font:inherit;cursor:pointer;transition:border-color .15s,transform .15s}
+.ccard:hover{border-color:rgba(200,242,80,.45)}
+@media (prefers-reduced-motion:no-preference){.ccard:hover{transform:translateY(-2px)}}
+.cic{width:42px;height:42px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;margin-bottom:4px}
+.ccard b{font-size:15.5px;letter-spacing:-.01em}
+.ccard small{color:var(--ink-2);font-size:13px;line-height:1.45}
+
+footer.autor{border-top:1px solid var(--line)}
