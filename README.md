@@ -17,6 +17,12 @@ Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória es
 - Fluxo de caixa dos últimos 6 meses, orçamento por categoria e livro de lançamentos com exportação para CSV.
 - Dados salvos no `localStorage` do navegador.
 
+### Calculadoras (`calculadoras.html`)
+10 calculadoras rápidas em 2 grupos, inspiradas nas calculadoras do Investidor Sardinha:
+- **Trabalho e salário:** CLT vs PJ (Simples Anexo III com fator R, Anexo V ou MEI, com o faturamento PJ que empata), salário líquido, férias (abono pecuniário e adiantamento do 13º), 13º salário e rescisão (aviso prévio proporcional, avos, multa e saque do FGTS).
+- **Investimentos:** juros compostos, reserva de emergência, viver de renda, preço-teto (Bazin e Graham) e número mágico.
+- INSS e IR pelas tabelas de 2026, com o redutor da Lei 15.270/2025. Links como `calculadoras.html#clt-pj` abrem direto a calculadora.
+
 ### Simuladores (`simuladores.html`)
 22 simuladores em 5 grupos, com navegação em dois níveis (grupo e simulador):
 - **Tesouro Direto:** comparar títulos, Tesouro Selic, IPCA+, Prefixado e Educa+ (faculdade dos filhos).

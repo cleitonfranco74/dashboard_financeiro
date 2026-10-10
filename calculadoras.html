@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="author" content="Prof. Dr. Cleiton Franco">
+<meta name="description" content="Calculadoras financeiras: CLT vs PJ, salário líquido, férias, 13º salário, rescisão, juros compostos, reserva de emergência, viver de renda, preço-teto e número mágico.">
+<meta name="theme-color" content="#08090b">
+<title>Calculadoras Livro-Caixa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap">
+<style>
+html,body{margin:0}
+[hidden]{display:none!important}
+:root{
+  color-scheme:dark;
+  --bg:#08090b; --bg-2:#0e1013; --surface:#121418; --surface-2:#1a1d22; --ink:#f4f6f2; --ink-2:#a9afb4; --muted:#72787e;
+  --line:#23272d; --ring:rgba(255,255,255,.07); --axis:#3a3f46;
+  --accent:#c8f250; --accent-ink:#0b0d06; --accent-soft:rgba(200,242,80,.10); --glow:rgba(200,242,80,.14);
+  --c1:#3987e5; --c2:#d95926; --c3:#7aa61f;
+  --good:#34d399; --crit:#f87171;
+  --sans:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Spline Sans Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.wrap{max-width:1200px;margin:0 auto;padding-inline:16px}
+@media (min-width:720px){.wrap{padding-inline:28px}}
+
+/* navegação (igual à página inicial) */
+.bar{position:sticky;top:0;z-index:30;background:rgba(8,9,11,.78);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--ring)}
+.bar .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:17px;letter-spacing:-.02em}
+.bar nav{display:flex;gap:2px}
+.bar nav a{text-decoration:none;color:var(--ink-2);font-weight:600;font-size:14px;padding:8px 14px;border-radius:999px}
+.bar nav a:hover{color:var(--ink)}
+.bar nav a[aria-current="page"]{color:var(--accent-ink);background:var(--accent)}
+.bar .cta-mini{display:inline-flex;align-items:center;height:38px;padding:0 16px;border-radius:999px;border:1px solid var(--line);color:var(--ink);font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap}
+.bar .cta-mini:hover{border-color:var(--ink-2)}
+@media (max-width:860px){.bar nav{display:none}}
+
+/* cabeçalho */
+.top{position:relative;padding:clamp(36px,6vw,64px) 0 clamp(20px,3vw,28px);isolation:isolate}
+.top::before{content:"";position:absolute;left:0;top:-40px;width:min(700px,100%);height:340px;z-index:-1;background:radial-gradient(closest-side,var(--glow),transparent 70%)}
+.eyebrow{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1{font-size:clamp(34px,5.4vw,60px);line-height:1;letter-spacing:-.04em;font-weight:800;margin:12px 0 14px;text-wrap:balance}
+h1 em{font-style:normal;color:var(--accent)}
+.lead{font-size:clamp(15.5px,1.5vw,17.5px);color:var(--ink-2);max-width:64ch;margin:0}
+
+/* abas */
+.navcalc{position:sticky;top:64px;z-index:20;background:var(--bg);padding-block:10px 12px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--line)}
+nav.grupos{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+nav.grupos button{flex:none;border:1px solid var(--line);background:transparent;color:var(--ink-2);padding:7px 14px;border-radius:999px;font-weight:700;font-size:13.5px;white-space:nowrap}
+nav.grupos button small{font-weight:600;color:var(--muted);margin-left:6px}
+nav.grupos button:hover{color:var(--ink);border-color:var(--ink-2)}
+nav.grupos button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+nav.grupos button[aria-selected="true"] small{color:var(--accent-ink);opacity:.6}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav.tabs button{flex:none;border:0;background:none;color:var(--ink-2);padding:6px 12px;border-radius:10px;font-weight:600;font-size:14px;white-space:nowrap}
+nav.tabs button:hover{color:var(--ink);background:var(--surface)}
+nav.tabs button[aria-selected="true"]{color:var(--ink);background:var(--surface-2)}
+
+/* calculadora */
+main{padding-top:24px}
+.calc-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:8px 24px;margin-bottom:18px}
+.calc-head h2{margin:0;font-size:clamp(24px,3vw,34px);letter-spacing:-.03em;line-height:1.1;font-weight:800}
+.calc-head p{margin:6px 0 0;color:var(--ink-2);max-width:70ch}
+.grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--ring);border-radius:22px;padding:20px}
+form.campos{display:flex;flex-direction:column;gap:14px}
+@media (min-width:901px){form.campos{position:sticky;top:178px}}
+.grp-t{font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:6px 0 -4px;padding-top:10px;border-top:1px solid var(--line)}
+.grp-t:first-child{border-top:0;padding-top:0;margin-top:0}
+.f label{display:block;font-size:13px;font-weight:600;color:var(--ink-2);margin-bottom:6px}
+.f .in{display:flex;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:12px;height:44px;padding-inline:12px;gap:8px;transition:border-color .15s}
+.f .in:focus-within{border-color:var(--accent)}
+.f .in span{color:var(--muted);font-size:13px;white-space:nowrap}
+.f input,.f select{flex:1;min-width:0;width:100%;border:0;background:transparent;outline:none;height:100%;font-family:var(--mono);font-size:15px}
+.f input[type=date]{color-scheme:dark}
+.f select{font-family:var(--sans);font-weight:600;cursor:pointer}
+.f select option{background:var(--surface)}
+.f small{display:block;font-size:12px;color:var(--muted);margin-top:5px}
+.seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:none;color:var(--ink-2);height:36px;border-radius:9px;font-weight:700;font-size:13px;padding-inline:6px}
+.seg button[aria-pressed="true"]{background:var(--surface-2);color:var(--ink)}
+.reset{align-self:flex-start;border:0;background:none;color:var(--muted);font-size:12.5px;padding:0;text-decoration:underline;text-underline-offset:3px}
+.reset:hover{color:var(--ink)}
+
+.res{display:flex;flex-direction:column;gap:16px;min-width:0}
+.verdict{border-radius:22px;padding:20px 22px;background:linear-gradient(135deg,rgba(200,242,80,.14),rgba(200,242,80,.03));border:1px solid rgba(200,242,80,.25);font-size:16px;line-height:1.5}
+.verdict b{color:var(--accent)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--ring);border-radius:18px;padding:16px 18px;min-width:0}
+.kpi span{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.kpi span i{width:10px;height:10px;border-radius:3px;flex:none}
+.kpi b{display:block;font-family:var(--mono);font-weight:500;font-size:clamp(20px,2.4vw,26px);letter-spacing:-.03em;margin-top:6px;overflow-wrap:anywhere}
+.kpi small{display:block;font-size:12.5px;color:var(--ink-2);margin-top:2px}
+.kpi.hl b{color:var(--accent)}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:640px){.duo{grid-template-columns:1fr}}
+.card h3{margin:0 0 12px;font-size:15px;letter-spacing:-.01em;font-weight:800;display:flex;align-items:center;gap:8px}
+.card h3 i{width:10px;height:10px;border-radius:3px}
+.card h3 .sub{font-weight:600;color:var(--muted);font-size:13px;margin-left:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+td,th{padding:8px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+td small{color:var(--muted);display:block;font-size:12px}
+tr.neg td.n{color:var(--ink-2)}
+tr.tot td{font-weight:800;border-bottom:0;padding-top:10px}
+tr.tot td.n{color:var(--ink)}
+.tblwrap{overflow-x:auto}
+.notes{margin:0;padding:16px 18px 16px 34px;background:var(--bg-2);border:1px solid var(--ring);border-radius:18px;color:var(--ink-2);font-size:13px;display:flex;flex-direction:column;gap:6px}
+.warn{padding:12px 16px;border-radius:14px;border:1px solid rgba(248,113,113,.35);background:rgba(248,113,113,.08);color:var(--ink);font-size:13.5px}
+.warn::before{content:"⚠ ";color:var(--crit)}
+
+/* gráfico */
+.chart{position:relative}
+.chart svg{display:block;width:100%;overflow:visible}
+.chart text{font-family:var(--sans);font-size:11px;fill:var(--muted)}
+.chart .tn{font-family:var(--mono);font-size:10.5px}
+.chart .dl{font-family:var(--sans);font-size:11.5px;font-weight:700;fill:var(--ink)}
+.legend{display:flex;gap:14px;font-size:12.5px;color:var(--ink-2);flex-wrap:wrap;margin-bottom:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:4px;border-radius:2px}
+.tip{position:absolute;pointer-events:none;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:12px;box-shadow:0 12px 30px -10px rgba(0,0,0,.7);min-width:150px;z-index:2}
+.tip b{display:block;font-size:12px;margin-bottom:4px;color:var(--ink)}
+.tip div{display:flex;justify-content:space-between;gap:12px;color:var(--ink-2)}
+.tip div i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.tip div em{font-style:normal;font-family:var(--mono);color:var(--ink)}
+
+footer.autor{margin-top:72px;border-top:1px solid var(--line);padding-block:24px 32px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;font-size:12.5px;color:var(--muted)}
+footer.autor b{color:var(--ink-2);font-weight:700}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="Livro-Caixa, início">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect x="3" y="3" width="24" height="24" rx="7" fill="var(--accent)"/><path d="M9 11h12M9 15h12M9 19h8" stroke="var(--accent-ink)" stroke-width="2" stroke-linecap="round"/><path d="M12 7v16" stroke="var(--accent-ink)" stroke-opacity=".45" stroke-width="1.6"/></svg>
+      Livro-Caixa
+    </a>
+    <nav aria-label="Ferramentas">
+      <a href="livro-caixa.html">Livro-Caixa</a>
+      <a href="simuladores.html">Simuladores</a>
+      <a href="calculadoras.html" aria-current="page">Calculadoras</a>
+      <a href="carteira.html">Carteira</a>
+    </nav>
+    <a class="cta-mini" href="index.html">← Início</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="top">
+    <span class="eyebrow">Calculadoras</span>
+    <h1>Contas rápidas para <em>decisões do dia a dia</em>.</h1>
+    <p class="lead">CLT ou PJ, salário líquido, férias, 13º, rescisão, juros compostos, reserva de emergência e quanto falta para viver de renda. Tudo com as tabelas de INSS e IR de 2026, calculado no seu navegador.</p>
+  </section>
+
+  <div class="navcalc">
+    <nav class="grupos" id="grupos" role="tablist" aria-label="Grupos de calculadoras"></nav>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="Calculadoras do grupo"></nav>
+  </div>
+
+  <main id="main" aria-live="polite"></main>
+
+  <footer class="autor">
+    <span>Desenvolvido por <b>Prof. Dr. Cleiton Franco</b> · Doutor em Economia · Professor Adjunto da UNEMAT, Câmpus de Sinop</span>
+    <span>© 2026 · Ferramenta educacional, não é recomendação de investimento nem consultoria trabalhista</span>
+  </footer>
+</div>
+
+<script src="assets/mercado.js"></script>
+<script>
+(() => {
+/* ================= utilidades ================= */
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const brl = new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
+const brl0 = new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
+const nf = (v,d=2) => v.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
+const money = v => (v<0?"−":"") + brl.format(Math.abs(v));
+const money0 = v => (v<0?"−":"") + brl0.format(Math.abs(v));
+const pct = (v,d=1) => nf(v*100,d) + "%";
+const curto = v => { const a=Math.abs(v); return a>=1e6 ? "R$ "+nf(v/1e6,a>=1e7?0:1)+" mi" : a>=1e3 ? "R$ "+nf(v/1e3,0)+" mil" : "R$ "+nf(v,0); };
+const C = {c1:"var(--c1)", c2:"var(--c2)", c3:"var(--c3)"};
+const store = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }, set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+
+/* ================= tabelas de 2026 ================= */
+const SM = 1621.00;                                           // salário mínimo de 2026
+const INSS = [[1621.00,.075],[2902.84,.09],[4354.27,.12],[8475.55,.14]];   // empregado, 2026
+const TETO = INSS[INSS.length-1][0];
+const IRF = [[2428.80,0,0],[2826.65,.075,182.16],[3751.05,.15,394.16],[4664.68,.225,675.49],[Infinity,.275,908.73]];
+const SIMPLIF = 607.20, DEP = 189.59;
+const RED = {ate:5000, max:312.89, fim:7350, a:978.62, b:0.133145};   // redutor da Lei 15.270/2025
+
+const inss = s => { let c=0, ant=0; for (const [lim,a] of INSS){ if (s>ant) c += (Math.min(s,lim)-ant)*a; ant=lim; } return c; };
+const irTabela = base => { for (const [lim,a,d] of IRF) if (base<=lim) return Math.max(0, base*a-d); return 0; };
+const redutor = renda => renda<=RED.ate ? RED.max : renda<=RED.fim ? Math.max(0, RED.a-RED.b*renda) : 0;
+/* IR retido: maior entre deduções legais e desconto simplificado; redutor sobre o rendimento tributável */
+function irMes(bruto, prev, dep=0, pensao=0){
+  const legais = prev + dep*DEP + pensao, ded = Math.max(legais, SIMPLIF);
+  const base = Math.max(0, bruto - ded), tab = irTabela(base), red = Math.min(tab, redutor(bruto));
+  return {ir: Math.max(0, tab-red), base, ded, simplif: SIMPLIF>legais, tab, red};
+}
+const liquido = (bruto, dep=0, pensao=0) => { const p = inss(bruto), r = irMes(bruto, p, dep, pensao); return {bruto, inss:p, ...r, liq: bruto-p-r.ir-pensao}; };
+
+/* Simples Nacional: alíquota efetiva = (RBT12 × nominal − dedução) / RBT12 */
+const ANEXO = {
+  III:[[180e3,.06,0],[360e3,.112,9360],[720e3,.135,17640],[1.8e6,.16,35640],[3.6e6,.21,125640],[4.8e6,.33,648000]],
+  V:  [[180e3,.155,0],[360e3,.18,4500],[720e3,.195,9900],[1.8e6,.205,17100],[3.6e6,.23,62100],[4.8e6,.305,540000]],
+};
+const aliqSimples = (rbt12, an) => { const t = ANEXO[an]; const f = t.find(x=>rbt12<=x[0]) || t[t.length-1]; return rbt12<=0 ? t[0][1] : (rbt12*f[1]-f[2])/rbt12; };
+const DAS_MEI = SM*0.05 + 5;                                   // INSS 5% do mínimo + ISS
+const LIM_MEI = 81000;
+
+/* ================= gráfico de linhas/áreas com dica ao passar o mouse ================= */
+function lineChart(el, o){
+  const W = Math.max(280, el.clientWidth||600), H = o.h||260, pad = {t:16,r:o.padR??70,b:30,l:62};
+  const n = o.xs.length, xmin = o.xs[0], xmax = o.xs[n-1];
+  const tops = o.stack ? o.xs.map((_,i)=>o.series.reduce((s,se)=>s+se.ys[i],0)) : o.series.flatMap(s=>s.ys);
+  let ymax = Math.max(...tops, ...(o.refs||[]).map(r=>r.y), 1), ymin = o.stack ? 0 : Math.min(0, ...o.series.flatMap(s=>s.ys));
+  const step = niceStep((ymax-ymin)/4); ymax = Math.ceil(ymax/step)*step; ymin = Math.floor(ymin/step)*step;
+  const X = x => pad.l + (x-xmin)/(xmax-xmin||1)*(W-pad.l-pad.r);
+  const Y = y => pad.t + (ymax-y)/(ymax-ymin||1)*(H-pad.t-pad.b);
+  let g = "";
+  for (let v=ymin; v<=ymax+1e-9; v+=step) g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(${Math.abs(v)<1e-9?"--axis":"--line"})"/><text class="tn" x="${pad.l-8}" y="${Y(v)+3.5}" text-anchor="end">${o.yfmt(v)}</text>`;
+  const xt = o.xticks || ticksX(xmin, xmax, W<520 ? 3 : 5);
+  xt.forEach(x => g += `<text x="${X(x)}" y="${H-8}" text-anchor="middle">${o.xfmt(x)}</text>`);
+  if (o.stack){
+    let base = o.xs.map(()=>0);
+    o.series.forEach(se=>{
+      const top = base.map((b,i)=>b+se.ys[i]);
+      const d = "M"+o.xs.map((x,i)=>`${X(x).toFixed(1)},${Y(top[i]).toFixed(1)}`).join("L") + "L" + o.xs.map((x,i)=>`${X(x).toFixed(1)},${Y(base[i]).toFixed(1)}`).reverse().join("L") + "Z";
+      g += `<path d="${d}" fill="${se.color}" opacity=".85" stroke="var(--surface)" stroke-width="2" stroke-linejoin="round"/>`;
+      base = top;
+    });
+  } else {
+    o.series.forEach(se=>{
+      g += `<path d="${"M"+o.xs.map((x,i)=>`${X(x).toFixed(1)},${Y(se.ys[i]).toFixed(1)}`).join("L")}" fill="none" stroke="${se.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"${se.dash?' stroke-dasharray="6 5"':""}/>`;
+    });
+  }
+  (o.refs||[]).forEach(r => g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(r.y)}" y2="${Y(r.y)}" stroke="${r.color}" stroke-width="2" stroke-dasharray="6 5"/><text class="dl" x="${W-pad.r+6}" y="${Y(r.y)+4}">${esc(r.label)}</text>`);
+  // rótulos diretos no fim de cada série
+  if (!o.noEndLabels){
+    let acc = 0;
+    o.series.forEach(se=>{ const v = se.ys[n-1]; acc = o.stack ? acc+v : v; const mid = o.stack ? acc - v/2 : v;
+      g += `<text class="dl" x="${W-pad.r+6}" y="${Y(mid)+4}">${esc(se.name)}</text>`; });
+  }
+  (o.marks||[]).forEach(m => { g += `<line x1="${X(m.x)}" x2="${X(m.x)}" y1="${pad.t}" y2="${H-pad.b}" stroke="var(--ink-2)" stroke-dasharray="2 4"/>`;
+    if (m.y!=null) g += `<circle cx="${X(m.x)}" cy="${Y(m.y)}" r="5" fill="${m.color}" stroke="var(--surface)" stroke-width="2"/>`;
+    g += `<text class="dl" x="${X(m.x)+(m.anchor==="end"?-6:6)}" y="${pad.t+10}" text-anchor="${m.anchor||"start"}">${esc(m.label)}</text>`; });
+  g += `<g class="hov" visibility="hidden"><line class="hl" y1="${pad.t}" y2="${H-pad.b}" stroke="var(--ink)" stroke-opacity=".35"/>${o.series.map(se=>`<circle r="4.5" fill="${se.color}" stroke="var(--surface)" stroke-width="2"/>`).join("")}</g>`;
+  g += `<rect x="${pad.l}" y="${pad.t}" width="${W-pad.l-pad.r}" height="${H-pad.t-pad.b}" fill="transparent" class="hit"/>`;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${esc(o.label||"")}">${g}</svg><div class="tip" hidden></div>`;
+  const svg = $("svg", el), tip = $(".tip", el), hov = $(".hov", svg);
+  const show = ev => {
+    const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width;
+    let i = 0, best = Infinity; o.xs.forEach((x,k)=>{ const d = Math.abs(X(x)-px); if (d<best){best=d;i=k;} });
+    const cx = X(o.xs[i]); hov.setAttribute("visibility","visible");
+    $(".hl", hov).setAttribute("x1",cx); $(".hl", hov).setAttribute("x2",cx);
+    let acc = 0; [...hov.querySelectorAll("circle")].forEach((c,k)=>{ const v = o.series[k].ys[i]; acc = o.stack ? acc+v : v; c.setAttribute("cx",cx); c.setAttribute("cy",Y(acc)); });
+    tip.innerHTML = `<b>${esc(o.tipTitle ? o.tipTitle(o.xs[i]) : o.xfmt(o.xs[i]))}</b>` + o.series.map(se=>`<div><span><i style="background:${se.color}"></i>${esc(se.name)}</span><em>${o.tipfmt(se.ys[i])}</em></div>`).join("") + (o.tipExtra ? o.tipExtra(i) : "");
+    tip.hidden = false;
+    const left = cx * r.width / W, tw = tip.offsetWidth;
+    tip.style.left = Math.min(Math.max(0, left + (left > r.width/2 ? -tw-12 : 12)), r.width - tw) + "px"; tip.style.top = "8px";
+  };
+  svg.addEventListener("pointermove", show); svg.addEventListener("pointerdown", show);
+  svg.addEventListener("pointerleave", ()=>{ hov.setAttribute("visibility","hidden"); tip.hidden = true; });
+}
+const el_w = () => $("#ch")?.clientWidth || 600;
+function niceStep(raw){ const p = Math.pow(10, Math.floor(Math.log10(Math.max(raw,1e-9)))), f = raw/p; return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p; }
+function ticksX(a,b,k){ const s = niceStep((b-a)/k); const out=[]; for (let x=Math.ceil(a/s)*s; x<=b+1e-9; x+=s) out.push(x); return out; }
+const legend = items => `<div class="legend">${items.map(([n,c,dash])=>`<span><i style="background:${dash?`repeating-linear-gradient(90deg,${c} 0 5px,transparent 5px 8px)`:c}"></i>${esc(n)}</span>`).join("")}</div>`;
+
+/* ================= blocos de resultado ================= */
+const kpi = (label, val, sub, cor, hl) => `<div class="kpi${hl?" hl":""}"><span>${cor?`<i style="background:${cor}"></i>`:""}${esc(label)}</span><b>${val}</b>${sub?`<small>${sub}</small>`:""}</div>`;
+const linhas = (rows, total) => `<div class="tblwrap"><table><tbody>${rows.filter(Boolean).map(([l,v,neg,sub])=>`<tr${neg?' class="neg"':""}><td>${l}${sub?`<small>${sub}</small>`:""}</td><td class="n">${neg&&v>0?"−":""}${money(Math.abs(v))}</td></tr>`).join("")}${total?`<tr class="tot"><td>${total[0]}</td><td class="n">${money(total[1])}</td></tr>`:""}</tbody></table></div>`;
+const notas = arr => `<ul class="notes">${arr.map(t=>`<li>${t}</li>`).join("")}</ul>`;
+
+/* ================= datas ================= */
+const D = s => { const [y,m,d] = String(s).split("-").map(Number); return new Date(y, (m||1)-1, d||1); };
+const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const addDias = (d,n) => new Date(d.getFullYear(), d.getMonth(), d.getDate()+n);
+const addMeses = (d,n) => { const r = new Date(d.getFullYear(), d.getMonth()+n, 1); r.setDate(Math.min(d.getDate(), new Date(r.getFullYear(), r.getMonth()+1, 0).getDate())); return r; };
+const dias = (a,b) => Math.round((b-a)/864e5) + 1;            // inclusivo
+/* avos do 13º: meses do ano da saída com 15 dias ou mais trabalhados */
+function avos13(adm, fim){
+  let n = 0;
+  for (let m=0; m<=fim.getMonth(); m++){
+    const ini = new Date(fim.getFullYear(), m, 1), fimM = new Date(fim.getFullYear(), m+1, 0);
+    const a = adm>ini ? adm : ini, b = fim<fimM ? fim : fimM;
+    if (b>=a && dias(a,b) >= 15) n++;
+  }
+  return n;
+}
+/* avos de férias proporcionais: meses desde o último aniversário da admissão (fração de 15 dias conta) */
+function avosFerias(adm, fim){
+  let anos = fim.getFullYear()-adm.getFullYear(); let ani = addMeses(adm, 12*anos); if (ani>fim) ani = addMeses(adm, 12*(--anos));
+  let n = 0, d = ani;
+  while (n<12 && addDias(addMeses(d,1),-1) <= fim){ n++; d = addMeses(d,1); }
+  if (n<12 && dias(d, fim) >= 15) n++;
+  return {avos:n, anos:Math.max(0,anos)};
+}
+
+/* ================= calculadoras ================= */
+const CALCS = [];
+const def = c => CALCS.push(c);
+let M = null;          // dados de mercado
+
+/* ---------- CLT vs PJ ---------- */
+function cltAnual(v){
+  const s = v.salario, m = liquido(s, v.dep), fer = liquido(s*4/3, v.dep), d13 = decimo(s, 12, v.dep);
+  const fgts = 0.08 * (12*s + s/3 + s);
+  const benef = 12*(v.vr + v.outrosBen) + v.plr;
+  const total = 11*m.liq + fer.liq + d13.liq + benef + (v.fgts==="sim" ? fgts : 0);
+  return {m, fer, d13, fgts, benef, total};
+}
+function pjMes(f, v){
+  const rbt = f*12; let das, pro = 0, aliq = 0, aviso = "";
+  if (v.regime==="mei"){ das = DAS_MEI; if (rbt > LIM_MEI) aviso = `O faturamento anual de ${money0(rbt)} passa do limite do MEI (${money0(LIM_MEI)}).`; }
+  else if (v.regime==="III"){ pro = Math.max(SM, 0.28*f); aliq = aliqSimples(rbt,"III"); das = aliq*f; }
+  else { pro = SM; aliq = aliqSimples(rbt,"V"); das = aliq*f; }
+  if (rbt > 4.8e6) aviso = "Faturamento acima do teto do Simples Nacional (R$ 4,8 milhões por ano).";
+  const inssPro = Math.min(pro, TETO)*0.11, ir = pro ? irMes(pro, inssPro, v.dep).ir : 0;
+  const lucro = Math.max(0, f - das - pro - v.contador - v.custos);
+  const irDiv = Math.max(0, lucro - 50000)*0.10;
+  const liq = pro - inssPro - ir + lucro - irDiv - v.plano;
+  return {f, rbt, das, aliq, pro, inssPro, ir, lucro, irDiv, liq, anual: liq*v.meses, aviso};
+}
+def({
+  id:"clt-pj", grupo:"trabalho", nav:"CLT vs PJ", titulo:"CLT ou PJ: qual paga mais?",
+  desc:"Compara o que sobra no ano com carteira assinada (salário, 13º, férias, FGTS e benefícios) com o líquido de uma empresa no Simples Nacional ou MEI, e mostra o faturamento PJ que empata com a proposta CLT.",
+  campos:[
+    {g:"Proposta CLT"},
+    {k:"salario",label:"Salário bruto mensal",t:"brl",def:8000},
+    {k:"vr",label:"Vale-refeição/alimentação",t:"brl",def:800,suf:"/mês"},
+    {k:"outrosBen",label:"Outros benefícios em dinheiro",t:"brl",def:0,suf:"/mês",hint:"Auxílio home office, bônus fixo etc."},
+    {k:"plr",label:"PLR ou bônus anual líquido",t:"brl",def:0,suf:"/ano"},
+    {k:"fgts",label:"Contar o FGTS como renda?",t:"seg",def:"sim",opts:[["sim","Sim"],["nao","Não"]]},
+    {g:"Proposta PJ"},
+    {k:"fat",label:"Faturamento mensal (nota fiscal)",t:"brl",def:11000},
+    {k:"regime",label:"Regime tributário",t:"sel",def:"III",opts:[["III","Simples, Anexo III (fator R)"],["V","Simples, Anexo V"],["mei","MEI"]],hint:"Anexo III exige pró-labore de pelo menos 28% do faturamento."},
+    {k:"contador",label:"Contador",t:"brl",def:300,suf:"/mês"},
+    {k:"plano",label:"Plano de saúde por conta própria",t:"brl",def:450,suf:"/mês",hint:"Use 0 se o emprego CLT também não oferece plano."},
+    {k:"custos",label:"Outros custos da empresa",t:"brl",def:0,suf:"/mês"},
+    {k:"meses",label:"Meses faturados no ano",t:"num",def:12,min:1,max:12,hint:"PJ não tem férias remuneradas: use 11 se for tirar um mês de folga."},
+    {g:"Pessoal"},
+    {k:"dep",label:"Dependentes no IR",t:"num",def:0,min:0,max:10},
+  ],
+  calc(v){
+    const clt = cltAnual(v), pj = pjMes(v.fat, v);
+    let lo = 0, hi = 2e6; for (let k=0;k<70;k++){ const mid=(lo+hi)/2; pjMes(mid,v).anual < clt.total ? lo=mid : hi=mid; }
+    const eq = hi, dif = pj.anual - clt.total, ganha = dif >= 0;
+    const html =
+      `<div class="verdict">${Math.abs(dif) < 1 ? "As duas propostas empatam." : ganha
+        ? `A proposta <b>PJ</b> rende <b>${money0(dif)}</b> a mais por ano (${money0(dif/12)} por mês).`
+        : `A proposta <b>CLT</b> rende <b>${money0(-dif)}</b> a mais por ano (${money0(-dif/12)} por mês).`}
+        Para empatar com a CLT, a nota fiscal mensal precisa ser de <b>${money0(eq)}</b>, ${nf(eq/v.salario,2).replace(/,?0+$/,"")} vezes o salário bruto.</div>` +
+      (pj.aviso ? `<div class="warn">${esc(pj.aviso)}</div>` : "") +
+      (v.regime==="mei" && eq*12 > LIM_MEI ? `<div class="warn">A nota que empata (${money0(eq)}/mês) passa do limite do MEI: nesse nível de renda, compare pelo Simples Nacional.</div>` : "") +
+      `<div class="kpis">${kpi("Total CLT no ano", money0(clt.total), `${money0(clt.total/12)} por mês`, C.c1)}${kpi("Total PJ no ano", money0(pj.anual), `${money0(pj.anual/12)} por mês`, C.c2)}${kpi("Nota PJ que empata", money0(eq), "faturamento mensal", null, true)}</div>` +
+      `<div class="card">${legend([["Líquido PJ no ano",C.c2],["Total CLT no ano",C.c1,true]])}<div class="chart" id="ch"></div></div>` +
+      `<div class="duo">
+        <div class="card"><h3><i style="background:${C.c1}"></i>CLT<span class="sub">por ano</span></h3>${linhas([
+          ["11 salários líquidos", 11*clt.m.liq, 0, `${money(clt.m.liq)}/mês após INSS ${money(clt.m.inss)} e IR ${money(clt.m.ir)}`],
+          ["Férias + 1/3 líquidas", clt.fer.liq, 0, `bruto ${money(v.salario*4/3)}`],
+          ["13º salário líquido", clt.d13.liq],
+          v.vr||v.outrosBen ? ["Benefícios", 12*(v.vr+v.outrosBen), 0, `${money(v.vr+v.outrosBen)}/mês`] : null,
+          v.plr ? ["PLR/bônus", v.plr] : null,
+          v.fgts==="sim" ? ["FGTS depositado", clt.fgts, 0, "8% sobre salários, férias e 13º"] : null,
+        ], ["Total", clt.total])}</div>
+        <div class="card"><h3><i style="background:${C.c2}"></i>PJ<span class="sub">por mês</span></h3>${linhas([
+          ["Faturamento", pj.f],
+          [v.regime==="mei" ? "DAS do MEI" : `Simples Nacional (${pct(pj.aliq,2)})`, pj.das, 1],
+          ["Contador e outros custos", v.contador+v.custos, 1],
+          pj.pro ? ["Pró-labore bruto", pj.pro, 0, v.regime==="III" ? "28% do faturamento (fator R)" : "um salário mínimo"] : null,
+          pj.pro ? ["INSS do pró-labore (11%)", pj.inssPro, 1] : null,
+          pj.pro ? ["IR do pró-labore", pj.ir, 1] : null,
+          ["Lucro distribuído", pj.lucro, 0, "isento até R$ 50 mil por mês"],
+          pj.irDiv ? ["IR de 10% sobre dividendos", pj.irDiv, 1, "parte acima de R$ 50 mil/mês"] : null,
+          v.plano ? ["Plano de saúde", v.plano, 1] : null,
+        ], ["Líquido no mês", pj.liq])}<p style="margin:10px 0 0;font-size:12.5px;color:var(--muted)">× ${v.meses} meses = ${money0(pj.anual)} no ano</p></div>
+      </div>` +
+      notas(["CLT: 11 meses de salário e um mês de férias com 1/3, mais o 13º. INSS e IR pelas tabelas de 2026, com o redutor que isenta quem ganha até R$ 5 mil. O FGTS fica retido e só é sacado em situações previstas em lei.",
+        "PJ no Simples: no Anexo III o pró-labore é de 28% do faturamento para atender ao fator R; no Anexo V é de um salário mínimo. O pró-labore paga 11% de INSS e IR; o restante sai como lucro isento até R$ 50 mil por mês por empresa (Lei 15.270/2025).",
+        "Fica de fora: multa de 40% do FGTS, seguro-desemprego e estabilidade da CLT; aposentadoria diferente (o PJ contribui sobre o pró-labore); e o imposto mínimo anual para rendas acima de R$ 600 mil.",
+        `O MEI só vale para as atividades permitidas e faturamento até ${money0(LIM_MEI)} por ano; o DAS de 2026 é de cerca de ${money(DAS_MEI)} por mês.`]);
+    return {html, after(){
+      const max = Math.max(eq*2, v.fat*1.3, 2000), N = 60, xs = Array.from({length:N+1},(_,i)=>i*max/N);
+      const ys = xs.map(x=>pjMes(x,v).anual);
+      lineChart($("#ch"), {xs, series:[{name:"PJ",color:C.c2,ys}], refs:[{y:clt.total,color:C.c1,label:"CLT"}],
+        marks:[{x:eq,label:`empate: ${money0(eq)}`,anchor: eq>max*.6?"end":"start"}], noEndLabels:false,
+        xfmt:x=>curto(x), yfmt:y=>curto(y), tipfmt:y=>money0(y), tipTitle:x=>`Nota de ${money0(x)}/mês`,
+        tipExtra:i=>`<div><span><i style="background:${C.c1}"></i>CLT</span><em>${money0(clt.total)}</em></div>`,
+        label:"Líquido anual do PJ conforme o faturamento mensal, comparado ao total CLT"});
+    }};
+  }
+});
+
+/* ---------- Salário líquido ---------- */
+def({
+  id:"salario", grupo:"trabalho", nav:"Salário líquido", titulo:"Salário líquido",
+  desc:"Quanto cai na conta depois do INSS e do imposto de renda retido na fonte, com o redutor de 2026.",
+  campos:[
+    {k:"salario",label:"Salário bruto",t:"brl",def:5500},
+    {k:"dep",label:"Dependentes",t:"num",def:0,min:0,max:10},
+    {k:"pensao",label:"Pensão alimentícia",t:"brl",def:0,suf:"/mês"},
+    {k:"outros",label:"Outros descontos",t:"brl",def:0,suf:"/mês",hint:"Vale-transporte, plano de saúde, coparticipação etc."},
+  ],
+  calc(v){
+    const r = liquido(v.salario, v.dep, v.pensao), liq = r.liq - v.outros;
+    const html = `<div class="kpis">${kpi("Salário líquido", money(liq), `${pct(liq/v.salario)} do bruto`, null, true)}${kpi("INSS", money(r.inss), `alíquota efetiva ${pct(r.inss/v.salario)}`)}${kpi("Imposto de renda", money(r.ir), r.ir<0.005 ? "isento" : `alíquota efetiva ${pct(r.ir/v.salario)}`)}</div>` +
+      `<div class="card">${linhas([
+        ["Salário bruto", v.salario],
+        ["INSS", r.inss, 1, "tabela progressiva de 2026"],
+        ["Imposto de renda", r.ir, 1, `base ${money(r.base)} (${r.simplif?"desconto simplificado":"deduções legais"} de ${money(r.ded)})${r.red>0.005?`; redutor de ${money(r.red)}`:""}`],
+        v.pensao ? ["Pensão alimentícia", v.pensao, 1] : null,
+        v.outros ? ["Outros descontos", v.outros, 1] : null,
+      ], ["Líquido", liq])}</div>` +
+      notas(["INSS de 2026: 7,5% até um salário mínimo (R$ 1.621), 9%, 12% e 14% nas faixas seguintes, até o teto de " + money(TETO) + ".",
+        "IR: vale o maior entre as deduções legais (INSS, dependentes de R$ 189,59 e pensão) e o desconto simplificado de R$ 607,20. Quem ganha até R$ 5.000 fica isento pelo redutor; ele diminui até sumir em R$ 7.350."]);
+    return {html};
+  }
+});
+
+/* ---------- Férias ---------- */
+def({
+  id:"ferias", grupo:"trabalho", nav:"Férias", titulo:"Cálculo de férias",
+  desc:"Valor das férias com o terço constitucional, a venda de 10 dias (abono pecuniário) e o adiantamento do 13º.",
+  campos:[
+    {k:"salario",label:"Salário bruto",t:"brl",def:5000},
+    {k:"medias",label:"Médias de horas extras e adicionais",t:"brl",def:0,suf:"/mês"},
+    {k:"vender",label:"Vender 10 dias (abono pecuniário)?",t:"seg",def:"nao",opts:[["nao","Não"],["sim","Sim"]]},
+    {k:"adiant",label:"Adiantar a 1ª parcela do 13º?",t:"seg",def:"nao",opts:[["nao","Não"],["sim","Sim"]]},
+    {k:"dep",label:"Dependentes",t:"num",def:0,min:0,max:10},
+  ],
+  calc(v){
+    const base = v.salario + v.medias, dGozo = v.vender==="sim" ? 20 : 30;
+    const fer = base/30*dGozo, terco = fer/3;
+    const abono = v.vender==="sim" ? base/30*10 : 0, tercoAb = abono/3;
+    const p = inss(fer+terco), r = irMes(fer+terco, p, v.dep);
+    const ad13 = v.adiant==="sim" ? base/2 : 0;
+    const liq = fer + terco + abono + tercoAb + ad13 - p - r.ir;
+    const html = `<div class="kpis">${kpi("Você recebe", money(liq), "até 2 dias antes do início", null, true)}${kpi("Dias de descanso", String(dGozo), v.vender==="sim"?"10 dias vendidos":"férias completas")}${kpi("Descontos", money(p+r.ir), "INSS e IR sobre férias + 1/3")}</div>` +
+      `<div class="card">${linhas([
+        [`Férias (${dGozo} dias)`, fer],
+        ["1/3 constitucional", terco],
+        abono ? ["Abono pecuniário (10 dias)", abono, 0, "isento de INSS e IR"] : null,
+        abono ? ["1/3 do abono", tercoAb, 0, "isento de INSS e IR"] : null,
+        ad13 ? ["Adiantamento do 13º", ad13, 0, "sem descontos agora; INSS e IR saem em dezembro"] : null,
+        ["INSS", p, 1],
+        ["Imposto de renda", r.ir, 1, r.ir<0.005 ? "isento" : `base ${money(r.base)}`],
+      ], ["Líquido", liq])}</div>` +
+      notas(["As médias de horas extras, adicional noturno e comissões dos últimos 12 meses entram na base das férias.",
+        "O abono pecuniário e seu terço são isentos de IR e INSS. O pedido de venda deve ser feito até 15 dias antes do fim do período aquisitivo.",
+        "Lembre que o salário do mês seguinte vem menor: os dias de férias já foram pagos antes."]);
+    return {html};
+  }
+});
+
+/* ---------- 13º ---------- */
+function decimo(base, meses, dep){
+  const bruto = base*meses/12, p = inss(bruto), r = irMes(bruto, p, dep);
+  return {bruto, p1: bruto/2, inss:p, ir:r.ir, base:r.base, liq: bruto-p-r.ir, p2: bruto/2 - p - r.ir};
+}
+def({
+  id:"decimo", grupo:"trabalho", nav:"13º salário", titulo:"13º salário",
+  desc:"Primeira e segunda parcelas do 13º, proporcional aos meses trabalhados no ano.",
+  campos:[
+    {k:"salario",label:"Salário bruto",t:"brl",def:5000},
+    {k:"medias",label:"Médias de horas extras e adicionais",t:"brl",def:0,suf:"/mês"},
+    {k:"meses",label:"Meses trabalhados no ano",t:"num",def:12,min:1,max:12,hint:"Conta o mês com 15 dias ou mais de trabalho."},
+    {k:"dep",label:"Dependentes",t:"num",def:0,min:0,max:10},
+  ],
+  calc(v){
+    const d = decimo(v.salario+v.medias, v.meses, v.dep);
+    const html = `<div class="kpis">${kpi("1ª parcela", money(d.p1), "até 30 de novembro, sem descontos", C.c1)}${kpi("2ª parcela", money(d.p2), "até 20 de dezembro", C.c2)}${kpi("13º líquido", money(d.liq), `de ${money(d.bruto)} bruto`, null, true)}</div>` +
+      `<div class="card">${linhas([
+        [`13º bruto (${v.meses}/12)`, d.bruto],
+        ["INSS", d.inss, 1, "descontado na 2ª parcela"],
+        ["Imposto de renda", d.ir, 1, d.ir<0.005 ? "isento" : `tributação exclusiva, base ${money(d.base)}`],
+      ], ["Líquido total", d.liq])}</div>` +
+      notas(["O IR do 13º é calculado separadamente do salário (tributação exclusiva na fonte). Esta calculadora aplica a tabela mensal e o redutor de 2026 sobre o 13º; confira o tratamento vigente na sua folha.",
+        "A 1ª parcela também pode ser paga junto com as férias, se pedida em janeiro."]);
+    return {html};
+  }
+});
+
+/* ---------- Rescisão ---------- */
+def({
+  id:"rescisao", grupo:"trabalho", nav:"Rescisão", titulo:"Rescisão de contrato",
+  desc:"Verbas da saída: saldo de salário, aviso prévio, 13º e férias proporcionais, multa e saque do FGTS.",
+  campos:[
+    {k:"salario",label:"Último salário bruto",t:"brl",def:4000},
+    {k:"adm",label:"Data de admissão",t:"date",def:"2022-03-01"},
+    {k:"saida",label:"Último dia de trabalho",t:"date",def:"2026-10-10"},
+    {k:"tipo",label:"Motivo da saída",t:"sel",def:"sem",opts:[["sem","Demissão sem justa causa"],["pedido","Pedido de demissão"],["acordo","Acordo (art. 484-A)"],["justa","Demissão por justa causa"]]},
+    {k:"aviso",label:"Aviso prévio",t:"sel",def:"indenizado",opts:[["indenizado","Indenizado"],["trabalhado","Trabalhado"]],hint:"No pedido de demissão, o aviso não cumprido é descontado."},
+    {k:"vencidas",label:"Férias vencidas não tiradas",t:"num",def:0,min:0,max:2,hint:"Períodos de 12 meses completos sem gozo."},
+    {k:"fgts",label:"Saldo do FGTS",t:"brl",def:0,hint:"Deixe 0 para estimar pelos depósitos de 8%."},
+    {k:"dep",label:"Dependentes",t:"num",def:0,min:0,max:10},
+  ],
+  calc(v){
+    const adm = D(v.adm), saida = D(v.saida), s = v.salario;
+    if (!(saida > adm)) return {html:`<div class="warn">A data de saída precisa ser posterior à admissão.</div>`};
+    const tipo = v.tipo, justa = tipo==="justa";
+    const anosComp = avosFerias(adm, saida).anos;
+    const diasAviso = Math.min(90, 30 + 3*anosComp);
+    let aviso = 0, descAviso = 0, projDias = 0;
+    if (tipo==="sem" && v.aviso==="indenizado"){ aviso = s/30*diasAviso; projDias = diasAviso; }
+    if (tipo==="acordo" && v.aviso==="indenizado"){ aviso = s/30*diasAviso/2; projDias = diasAviso; }
+    if (tipo==="pedido" && v.aviso==="indenizado") descAviso = s;
+    const fimProj = addDias(saida, projDias);                   // o aviso indenizado conta como tempo de serviço
+    const saldoDias = Math.min(30, saida.getDate()), saldo = s/30*saldoDias;
+    const a13 = justa ? 0 : avos13(adm, fimProj), v13 = s*a13/12;
+    const af = justa ? 0 : avosFerias(adm, fimProj).avos, fProp = s*af/12;
+    const fVenc = s*v.vencidas;
+    const meses = Math.max(0, (saida.getFullYear()-adm.getFullYear())*12 + saida.getMonth()-adm.getMonth());
+    const fgtsSaldo = v.fgts>0 ? v.fgts : 0.08*s*(meses + meses/12*(1+1/3));
+    const fgtsResc = 0.08*(saldo + v13 + aviso);
+    const multaPct = tipo==="sem" ? .40 : tipo==="acordo" ? .20 : 0, multa = (fgtsSaldo+fgtsResc)*multaPct;
+    const saquePct = tipo==="sem" ? 1 : tipo==="acordo" ? .8 : 0, saque = (fgtsSaldo+fgtsResc)*saquePct;
+    const pS = inss(saldo), rS = irMes(saldo, pS, v.dep);
+    const p13 = inss(v13), r13 = irMes(v13, p13, v.dep);
+    const verbas = saldo + aviso + v13 + fProp + fProp/3 + fVenc + fVenc/3;
+    const desc = pS + rS.ir + p13 + r13.ir + descAviso;
+    const liq = verbas - desc;
+    const nomes = {sem:"Demissão sem justa causa", pedido:"Pedido de demissão", acordo:"Acordo entre as partes", justa:"Justa causa"};
+    const html = `<div class="kpis">${kpi("Rescisão líquida", money(liq), nomes[tipo], null, true)}${kpi("Multa do FGTS", money(multa), multaPct ? `${pct(multaPct,0)} do saldo` : "não se aplica", C.c1)}${kpi("Saque do FGTS", money(saque), saquePct ? `${pct(saquePct,0)} do saldo, multa à parte` : "fica retido na conta", C.c3)}</div>` +
+      `<div class="card"><h3>Verbas rescisórias<span class="sub">${anosComp} ${anosComp===1?"ano":"anos"} de casa</span></h3>${linhas([
+        [`Saldo de salário (${saldoDias} dias)`, saldo],
+        aviso ? [`Aviso prévio indenizado (${tipo==="acordo"?`metade de ${diasAviso}`:diasAviso} dias)`, aviso, 0, "30 dias + 3 por ano completo, até 90"] : null,
+        a13 ? [`13º proporcional (${a13}/12)`, v13] : null,
+        af ? [`Férias proporcionais (${af}/12)`, fProp] : null,
+        af ? ["1/3 sobre férias proporcionais", fProp/3] : null,
+        v.vencidas ? [`Férias vencidas (${v.vencidas})`, fVenc] : null,
+        v.vencidas ? ["1/3 sobre férias vencidas", fVenc/3] : null,
+        ["INSS", pS+p13, 1, "sobre saldo de salário e 13º"],
+        ["Imposto de renda", rS.ir+r13.ir, 1, "aviso indenizado e férias indenizadas são isentos"],
+        descAviso ? ["Desconto do aviso não cumprido", descAviso, 1] : null,
+      ], ["Total líquido", liq])}</div>` +
+      `<div class="card"><h3>FGTS</h3>${linhas([
+        ["Saldo estimado", fgtsSaldo, 0, v.fgts>0 ? "informado" : `8% por ${meses} meses, com 13º e férias`],
+        ["Depósito sobre a rescisão", fgtsResc],
+        multaPct ? [`Multa de ${pct(multaPct,0)}`, multa, 0, "paga pela empresa"] : null,
+      ], ["Disponível para saque", saque + multa])}</div>` +
+      notas(["Prazo de pagamento: até 10 dias após o término do contrato.",
+        "Sem justa causa: aviso prévio, multa de 40% e saque integral do FGTS, além do seguro-desemprego. No acordo (art. 484-A): metade do aviso indenizado, multa de 20% e saque de 80%, sem seguro-desemprego.",
+        "Pedido de demissão: sem multa nem saque do FGTS. Justa causa: apenas saldo de salário e férias vencidas com 1/3.",
+        "O aviso prévio indenizado projeta o fim do contrato e pode render mais um avo de 13º e de férias. Valores aproximados; confira no termo de rescisão (TRCT)."]);
+    return {html};
+  }
+});
+
+/* ---------- Juros compostos ---------- */
+function serie(ini, aporte, iMes, n){ const xs=[0], inv=[ini], tot=[ini]; let s=ini, a=ini; for (let k=1;k<=n;k++){ s = s*(1+iMes)+aporte; a += aporte; xs.push(k); inv.push(a); tot.push(s); } return {xs, inv, tot}; }
+def({
+  id:"juros", grupo:"invest", nav:"Juros compostos", titulo:"Juros compostos",
+  desc:"Quanto um investimento inicial e aportes mensais viram com o tempo, separando o que você aportou do que os juros fizeram.",
+  campos:[
+    {k:"ini",label:"Valor inicial",t:"brl",def:5000},
+    {k:"aporte",label:"Aporte mensal",t:"brl",def:500},
+    {k:"taxa",label:"Taxa de juros",t:"pct",def:13.65,mk:"cdi",hint:"Padrão: CDI atual."},
+    {k:"per",label:"A taxa é",t:"seg",def:"ano",opts:[["ano","ao ano"],["mes","ao mês"]]},
+    {k:"prazo",label:"Prazo",t:"num",def:10,min:1,max:80},
+    {k:"unid",label:"Prazo em",t:"seg",def:"anos",opts:[["anos","anos"],["meses","meses"]]},
+  ],
+  calc(v){
+    const iMes = v.per==="ano" ? Math.pow(1+v.taxa/100, 1/12)-1 : v.taxa/100;
+    const n = Math.round(v.unid==="anos" ? v.prazo*12 : v.prazo);
+    const S = serie(v.ini, v.aporte, iMes, n), fim = S.tot[n], inv = S.inv[n], juros = fim-inv;
+    const anual = n >= 24, passo = anual ? 12 : 1;
+    const idx = S.xs.filter(k => k%passo===0 || k===n);
+    const rows = idx.filter(k=>k>0).map(k=>`<tr><td>${anual ? `Ano ${nf(k/12, k%12?1:0)}` : `Mês ${k}`}</td><td class="n">${money0(S.inv[k])}</td><td class="n">${money0(S.tot[k]-S.inv[k])}</td><td class="n">${money0(S.tot[k])}</td></tr>`).join("");
+    const html = `<div class="kpis">${kpi("Valor final", money0(fim), `em ${anual?nf(n/12,n%12?1:0)+" anos":n+" meses"}`, null, true)}${kpi("Total aportado", money0(inv), "inicial + aportes", C.c1)}${kpi("Juros ganhos", money0(juros), `${pct(juros/Math.max(fim,1),0)} do valor final`, C.c3)}</div>` +
+      `<div class="card">${legend([["Aportado",C.c1],["Juros",C.c3]])}<div class="chart" id="ch"></div></div>` +
+      `<div class="card"><h3>Evolução</h3><div class="tblwrap"><table><thead><tr><th>Período</th><th class="n">Aportado</th><th class="n">Juros</th><th class="n">Total</th></tr></thead><tbody>${rows}</tbody></table></div></div>` +
+      notas([`Taxa mensal equivalente: ${pct(iMes,3)}. Aportes feitos no fim de cada mês.`,
+        "Valores nominais e brutos: não descontam inflação nem imposto de renda. Para isso, use os simuladores de CDB e Tesouro."]);
+    return {html, after(){
+      const xs = idx, yfmt = y=>curto(y);
+      lineChart($("#ch"), {xs, stack:true, series:[{name:"Aportado",color:C.c1,ys:xs.map(k=>S.inv[k])},{name:"Juros",color:C.c3,ys:xs.map(k=>S.tot[k]-S.inv[k])}],
+        xfmt:k=>anual?`${Math.round(k/12)}a`:`${k}m`, xticks: anual ? ticksX(0, n/12, el_w()<520 ? 4 : 6).map(a=>a*12).filter(k=>k<=n) : undefined,
+        yfmt, tipfmt:y=>money0(y), tipTitle:k=>anual?`Ano ${nf(k/12,k%12?1:0)}`:`Mês ${k}`,
+        tipExtra:i=>`<div><span>Total</span><em>${money0(S.tot[xs[i]])}</em></div>`, label:"Valor aportado e juros acumulados ao longo do tempo"});
+    }};
+  }
+});
+
+/* ---------- Reserva de emergência ---------- */
+def({
+  id:"reserva", grupo:"invest", nav:"Reserva de emergência", titulo:"Reserva de emergência",
+  desc:"O tamanho ideal da reserva para o seu tipo de renda e em quanto tempo você chega lá.",
+  campos:[
+    {k:"custo",label:"Custo de vida mensal",t:"brl",def:4000},
+    {k:"perfil",label:"Sua situação",t:"sel",def:"clt",opts:[["publico","Servidor público (3 meses)"],["clt","CLT (6 meses)"],["pj","Autônomo, PJ ou empresário (12 meses)"]]},
+    {k:"atual",label:"Quanto já tem guardado",t:"brl",def:5000},
+    {k:"aporte",label:"Quanto pode guardar por mês",t:"brl",def:800},
+    {k:"taxa",label:"Rendimento líquido",t:"pct",def:11.6,mk:"cdiLiq",suf:"a.a.",hint:"Padrão: 100% do CDI menos 15% de IR."},
+  ],
+  calc(v){
+    const meses = {publico:3, clt:6, pj:12}[v.perfil], alvo = v.custo*meses, falta = Math.max(0, alvo - v.atual);
+    const i = Math.pow(1+v.taxa/100,1/12)-1;
+    let n = 0, s = v.atual; const xs=[0], ys=[s];
+    while (s < alvo && n < 600){ s = s*(1+i)+v.aporte; n++; xs.push(n); ys.push(s); if (v.aporte<=0 && i<=0) break; }
+    const chega = s >= alvo;
+    const html = `<div class="verdict">${falta<=0 ? `Sua reserva está <b>completa</b>: ${money0(v.atual)} cobre ${nf(v.atual/v.custo,1)} meses de custo de vida.` :
+        chega ? `Guardando ${money0(v.aporte)} por mês, você completa a reserva em <b>${n} ${n===1?"mês":"meses"}</b>${n>=12?` (${nf(n/12,1)} anos)`:""}.` : `Com o aporte atual, a reserva não fica pronta em 50 anos. Aumente o valor guardado por mês.`}</div>` +
+      `<div class="kpis">${kpi("Reserva ideal", money0(alvo), `${meses} meses de custo de vida`, null, true)}${kpi("Já tem", money0(v.atual), `${pct(Math.min(1,v.atual/alvo),0)} da meta`, C.c1)}${kpi("Falta", money0(falta), falta>0?"para completar":"meta atingida")}</div>` +
+      (falta>0 && chega && n>1 ? `<div class="card">${legend([["Reserva acumulada",C.c1],["Meta",C.c3,true]])}<div class="chart" id="ch"></div></div>` : "") +
+      notas(["Onde guardar: aplicações de liquidez diária e baixo risco, como Tesouro Selic, CDB de banco grande com liquidez diária ou fundos DI de taxa baixa.",
+        "Quanto mais instável a renda, maior a reserva. Quem tem dependentes ou gastos de saúde previsíveis pode preferir o próximo degrau.",
+        "Custo de vida é o que você gasta, não o que ganha. O Livro-Caixa calcula esse valor pela média das suas despesas."]);
+    return {html, after(){ const el = $("#ch"); if (!el) return;
+      lineChart(el, {xs, series:[{name:"Reserva",color:C.c1,ys}], refs:[{y:alvo,color:C.c3,label:"Meta"}], noEndLabels:true,
+        xfmt:k=>`${k}m`, yfmt:y=>curto(y), tipfmt:y=>money0(y), tipTitle:k=>`Mês ${k}`, label:"Evolução da reserva até a meta"}); }};
+  }
+});
+
+/* ---------- Viver de renda ---------- */
+def({
+  id:"renda", grupo:"invest", nav:"Viver de renda", titulo:"Quanto preciso para viver de renda?",
+  desc:"O patrimônio que paga a renda desejada sem consumir o principal, e quanto tempo leva para juntar.",
+  campos:[
+    {k:"renda",label:"Renda mensal desejada",t:"brl",def:10000,hint:"Em valores de hoje."},
+    {k:"real",label:"Rentabilidade real (acima da inflação)",t:"pct",def:5,suf:"a.a.",hint:"Tesouro IPCA+ longo paga perto de 7%; 4% a 5% é conservador."},
+    {k:"atual",label:"Patrimônio atual",t:"brl",def:50000},
+    {k:"aporte",label:"Aporte mensal",t:"brl",def:2000},
+  ],
+  calc(v){
+    const alvo = v.renda*12/(v.real/100), i = Math.pow(1+v.real/100,1/12)-1, r4 = v.renda*12/0.04;
+    let n = 0, s = v.atual; const xs=[0], ys=[s];
+    while (s < alvo && n < 12*70){ s = s*(1+i)+v.aporte; n++; if (n%12===0){ xs.push(n/12); ys.push(s); } }
+    if (n%12){ xs.push(n/12); ys.push(s); }
+    const chega = s >= alvo, anos = n/12;
+    const html = `<div class="verdict">${v.atual>=alvo ? `Você <b>já pode viver de renda</b>: o patrimônio paga ${money0(v.atual*(v.real/100)/12)} por mês.` :
+        chega ? `Aportando ${money0(v.aporte)} por mês, você atinge a meta em <b>${nf(anos,1)} anos</b>.` : "Com esse aporte, a meta não é atingida em 70 anos. Aumente o aporte ou reveja a renda desejada."}</div>` +
+      `<div class="kpis">${kpi("Patrimônio necessário", money0(alvo), `renda de ${money0(v.renda)} a ${pct(v.real/100,1)} real`, null, true)}${kpi("Pela regra dos 4%", money0(r4), "25 vezes a despesa anual")}${kpi("Renda que o patrimônio atual paga", money0(v.atual*(v.real/100)/12), "por mês, sem consumir o principal", C.c1)}</div>` +
+      (chega && xs.length>2 ? `<div class="card">${legend([["Patrimônio",C.c1],["Meta",C.c3,true]])}<div class="chart" id="ch"></div></div>` : "") +
+      notas(["Tudo em valores de hoje: a rentabilidade é real, já descontada a inflação, e a renda mantém o poder de compra.",
+        "Perpetuidade: o patrimônio rende a renda desejada sem diminuir. A regra dos 4% (estudo Trinity) admite consumir o principal em 30 anos e serve como referência.",
+        "Para incluir INSS, idade e prazo da aposentadoria, use o simulador de aposentadoria."]);
+    return {html, after(){ const el = $("#ch"); if (!el) return;
+      lineChart(el, {xs, series:[{name:"Patrimônio",color:C.c1,ys}], refs:[{y:alvo,color:C.c3,label:"Meta"}], noEndLabels:true,
+        xfmt:a=>`${Math.round(a)}a`, xticks:ticksX(0, xs[xs.length-1], el_w()<520 ? 4 : 6), yfmt:y=>curto(y), tipfmt:y=>money0(y), tipTitle:a=>`Ano ${nf(a,a%1?1:0)}`, label:"Evolução do patrimônio até a meta de renda"}); }};
+  }
+});
+
+/* ---------- Preço-teto ---------- */
+def({
+  id:"teto", grupo:"invest", nav:"Preço-teto", titulo:"Preço-teto: Bazin e Graham",
+  desc:"Dois métodos clássicos para estimar o preço máximo a pagar por uma ação: pelos dividendos (Décio Bazin) e pelo lucro e patrimônio (Benjamin Graham).",
+  campos:[
+    {k:"preco",label:"Cotação atual",t:"brl",def:35},
+    {g:"Bazin"},
+    {k:"dpa",label:"Dividendos por ação (média anual)",t:"brl",def:2.4,hint:"Use a média dos últimos 3 a 5 anos."},
+    {k:"dy",label:"Dividend yield mínimo",t:"pct",def:6,suf:"a.a."},
+    {g:"Graham"},
+    {k:"lpa",label:"Lucro por ação (LPA)",t:"brl",def:4.2},
+    {k:"vpa",label:"Valor patrimonial por ação (VPA)",t:"brl",def:28},
+  ],
+  calc(v){
+    const bazin = v.dy>0 ? v.dpa/(v.dy/100) : 0;
+    const graham = v.lpa>0 && v.vpa>0 ? Math.sqrt(22.5*v.lpa*v.vpa) : 0;
+    const marg = t => t>0 ? (t - v.preco)/t : null;
+    const tag = t => t<=0 ? "não se aplica" : marg(t)>=0 ? `margem de segurança de ${pct(marg(t),1)}` : `cotação ${pct(v.preco/t-1,1)} acima do teto`;
+    const html = `<div class="kpis">${kpi("Preço-teto Bazin", bazin?money(bazin):"—", tag(bazin), C.c1, bazin>=v.preco&&bazin>0)}${kpi("Preço justo Graham", graham?money(graham):"—", graham ? tag(graham) : "exige LPA e VPA positivos", C.c3, graham>=v.preco&&graham>0)}${kpi("Dividend yield atual", v.preco>0?pct(v.dpa/v.preco,2):"—", `com dividendos de ${money(v.dpa)} por ação`)}</div>` +
+      `<div class="card"><div class="tblwrap"><table><thead><tr><th>Método</th><th>Fórmula</th><th class="n">Valor</th></tr></thead><tbody>
+        <tr><td>Bazin</td><td>dividendo ÷ yield mínimo = ${money(v.dpa)} ÷ ${pct(v.dy/100,1)}</td><td class="n">${bazin?money(bazin):"—"}</td></tr>
+        <tr><td>Graham</td><td>√(22,5 × LPA × VPA) = √(22,5 × ${nf(v.lpa)} × ${nf(v.vpa)})</td><td class="n">${graham?money(graham):"—"}</td></tr>
+        <tr><td>P/L e P/VP</td><td>indicadores na cotação atual</td><td class="n">${v.lpa>0?nf(v.preco/v.lpa,1):"—"} · ${v.vpa>0?nf(v.preco/v.vpa,2):"—"}</td></tr>
+      </tbody></table></div></div>` +
+      notas(["Bazin: só compre se o dividendo esperado render pelo menos o yield mínimo (6% na regra original). Funciona para pagadoras estáveis, como bancos e elétricas.",
+        "Graham: 22,5 é o produto do P/L máximo de 15 pelo P/VP máximo de 1,5. Não vale para empresas com prejuízo ou patrimônio negativo.",
+        "São estimativas simples, sensíveis aos dados de entrada. Use como filtro inicial, não como recomendação de compra."]);
+    return {html};
+  }
+});
+
+/* ---------- Número mágico ---------- */
+def({
+  id:"magico", grupo:"invest", nav:"Número mágico", titulo:"Número mágico",
+  desc:"Quantas cotas de um fundo imobiliário (ou ações) são necessárias para que os rendimentos comprem uma cota nova por mês, sozinhos.",
+  campos:[
+    {k:"preco",label:"Preço da cota",t:"brl",def:100},
+    {k:"rend",label:"Rendimento mensal por cota",t:"brl",def:0.85},
+    {k:"cotas",label:"Cotas que você já tem",t:"num",def:20,min:0},
+    {k:"aporte",label:"Aporte mensal",t:"brl",def:500},
+  ],
+  calc(v){
+    if (!(v.preco>0 && v.rend>0)) return {html:`<div class="warn">Informe preço e rendimento maiores que zero.</div>`};
+    const nm = Math.ceil(v.preco/v.rend), inv = nm*v.preco, dy = v.rend*12/v.preco;
+    let c = v.cotas, caixa = 0, n = 0; const xs=[0], ys=[c];
+    while (c < nm && n < 600){ caixa += v.aporte + c*v.rend; const novas = Math.floor(caixa/v.preco); c += novas; caixa -= novas*v.preco; n++; xs.push(n); ys.push(c); if (v.aporte<=0 && c*v.rend<=0) break; }
+    const chega = c >= nm;
+    const html = `<div class="verdict">${v.cotas>=nm ? `Você <b>já atingiu</b> o número mágico: os rendimentos compram uma cota nova por mês.` :
+        chega ? `Reinvestindo os rendimentos e aportando ${money0(v.aporte)} por mês, você chega lá em <b>${n} ${n===1?"mês":"meses"}</b>${n>=12?` (${nf(n/12,1)} anos)`:""}.` : "Com esse aporte, o número mágico não é atingido em 50 anos."}</div>` +
+      `<div class="kpis">${kpi("Número mágico", `${nf(nm,0)} cotas`, `preço ÷ rendimento = ${nf(v.preco/v.rend,1)}`, null, true)}${kpi("Investimento necessário", money0(inv), `${nf(nm,0)} × ${money(v.preco)}`, C.c1)}${kpi("Dividend yield", pct(dy,2)+" a.a.", `${pct(v.rend/v.preco,2)} ao mês`)}</div>` +
+      (chega && n>1 ? `<div class="card">${legend([["Cotas",C.c1],["Número mágico",C.c3,true]])}<div class="chart" id="ch"></div></div>` : "") +
+      notas(["Os rendimentos mensais dos FIIs são isentos de IR para pessoa física, nas condições da lei.",
+        "Rendimentos mudam com o tempo: o número mágico é uma meta de motivação, não uma garantia de renda.",
+        "Na simulação, as cotas são compradas inteiras; a sobra fica em caixa para o mês seguinte."]);
+    return {html, after(){ const el = $("#ch"); if (!el) return;
+      lineChart(el, {xs, series:[{name:"Cotas",color:C.c1,ys}], refs:[{y:nm,color:C.c3,label:"Mágico"}], noEndLabels:true,
+        xfmt:k=>`${k}m`, yfmt:y=>nf(y,0), tipfmt:y=>`${nf(y,0)} cotas`, tipTitle:k=>`Mês ${k}`, label:"Número de cotas até o número mágico"}); }};
+  }
+});
+
+/* ================= navegação e formulário ================= */
+const GRUPOS = [
+  {id:"trabalho", nome:"Trabalho e salário"},
+  {id:"invest", nome:"Investimentos"},
+].map(g=>({...g, calcs: CALCS.filter(c=>c.grupo===g.id)}));
+let atual = null;
+
+function valores(c){
+  const salvo = store.get("calc:"+c.id) || {};
+  const v = {};
+  c.campos.filter(f=>f.k).forEach(f=>{ v[f.k] = salvo[f.k] ?? mercadoDef(f) ?? f.def; });
+  return v;
+}
+function mercadoDef(f){
+  if (!M || !f.mk) return null;
+  const cdi = M.indicadores.cdi.valor;
+  return f.mk==="cdi" ? +cdi.toFixed(2) : f.mk==="cdiLiq" ? +(cdi*0.85).toFixed(2) : null;
+}
+function campo(f, val){
+  if (f.g) return `<div class="grp-t">${esc(f.g)}</div>`;
+  const id = "f-"+f.k, hint = f.hint ? `<small>${esc(f.hint)}</small>` : "";
+  if (f.t==="seg") return `<div class="f"><label id="${id}">${esc(f.label)}</label><div class="seg" role="group" aria-labelledby="${id}" data-k="${f.k}">${f.opts.map(([k,n])=>`<button type="button" data-v="${k}" aria-pressed="${val===k}">${esc(n)}</button>`).join("")}</div>${hint}</div>`;
+  if (f.t==="sel") return `<div class="f"><label for="${id}">${esc(f.label)}</label><div class="in"><select id="${id}" data-k="${f.k}">${f.opts.map(([k,n])=>`<option value="${k}"${val===k?" selected":""}>${esc(n)}</option>`).join("")}</select></div>${hint}</div>`;
+  if (f.t==="date") return `<div class="f"><label for="${id}">${esc(f.label)}</label><div class="in"><input id="${id}" type="date" data-k="${f.k}" value="${esc(val)}"></div>${hint}</div>`;
+  const pre = f.t==="brl" ? "<span>R$</span>" : "", suf = f.t==="pct" ? `<span>%${f.suf?" "+f.suf:""}</span>` : f.suf ? `<span>${esc(f.suf)}</span>` : "";
+  return `<div class="f"><label for="${id}">${esc(f.label)}</label><div class="in">${pre}<input id="${id}" type="number" inputmode="decimal" step="any" ${f.min!=null?`min="${f.min}"`:""} ${f.max!=null?`max="${f.max}"`:""} data-k="${f.k}" value="${val}">${suf}</div>${hint}</div>`;
+}
+function ler(c){
+  const v = {};
+  c.campos.filter(f=>f.k).forEach(f=>{
+    if (f.t==="seg") v[f.k] = $(`.seg[data-k="${f.k}"] [aria-pressed="true"]`)?.dataset.v ?? f.def;
+    else { const el = $(`[data-k="${f.k}"]`); if (f.t==="sel"||f.t==="date") v[f.k] = el.value || f.def;
+      else { let x = parseFloat(String(el.value).replace(",", ".")); if (!isFinite(x)) x = 0; if (f.min!=null) x = Math.max(f.min,x); if (f.max!=null) x = Math.min(f.max,x); v[f.k] = x; } }
+  });
+  return v;
+}
+function calcular(salvar){
+  const c = atual, v = ler(c);
+  if (salvar === true) store.set("calc:"+c.id, v);
+  const r = c.calc(v);
+  $("#res").innerHTML = r.html;
+  if (r.after) r.after();
+}
+function abrir(id, push){
+  const c = CALCS.find(x=>x.id===id) || CALCS[0]; atual = c;
+  const g = GRUPOS.find(x=>x.id===c.grupo);
+  $("#grupos").innerHTML = GRUPOS.map(x=>`<button role="tab" data-g="${x.id}" aria-selected="${x===g}">${esc(x.nome)}<small>${x.calcs.length}</small></button>`).join("");
+  $("#tabs").innerHTML = g.calcs.map(x=>`<button role="tab" data-c="${x.id}" aria-selected="${x===c}">${esc(x.nav)}</button>`).join("");
+  const v = valores(c);
+  $("#main").innerHTML = `<div class="calc-head"><div><h2>${esc(c.titulo)}</h2><p>${esc(c.desc)}</p></div></div>
+    <div class="grid"><form class="card campos" id="form" onsubmit="return false">${c.campos.map(f=>campo(f, v[f.k])).join("")}<button type="button" class="reset" id="reset">Restaurar valores padrão</button></form><div class="res" id="res"></div></div>`;
+  const form = $("#form");
+  form.addEventListener("input", ()=>calcular(true));
+  form.addEventListener("change", ()=>calcular(true));
+  form.addEventListener("click", e=>{ const b = e.target.closest(".seg button"); if (!b) return;
+    b.parentElement.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b)); calcular(true); });
+  $("#reset").addEventListener("click", ()=>{ try { localStorage.removeItem("calc:"+c.id); } catch {} abrir(c.id); });
+  if (push !== false && location.hash !== "#"+c.id) history.replaceState(null, "", "#"+c.id);
+  document.title = `${c.nav} · Calculadoras Livro-Caixa`;
+  calcular();
+}
+$("#grupos").addEventListener("click", e=>{ const b = e.target.closest("button"); if (!b) return; const g = GRUPOS.find(x=>x.id===b.dataset.g); abrir(g.calcs[0].id); });
+$("#tabs").addEventListener("click", e=>{ const b = e.target.closest("button"); if (b) abrir(b.dataset.c); });
+window.addEventListener("hashchange", ()=>abrir(location.hash.slice(1), false));
+let rt; window.addEventListener("resize", ()=>{ clearTimeout(rt); rt = setTimeout(()=>{ if (atual) calcular(); }, 120); });
+
+abrir(location.hash.slice(1) || "clt-pj", false);
+
+/* taxas do dia: só mudam campos que o usuário não editou */
+if (window.Mercado) Mercado.carregar().then(m=>{ M = m;
+  const c = atual; if (!c.campos.some(f=>f.mk)) return;
+  const salvo = store.get("calc:"+c.id);
+  if (!salvo) abrir(c.id, false);
+}).catch(()=>{});
+})();
+</script>
+</body>
+</html>
