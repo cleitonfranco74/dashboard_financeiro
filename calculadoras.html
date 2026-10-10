@@ -145,6 +145,42 @@ tr.meta td em{font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:
 .gl .aloc{height:18px}
 .gl small{text-align:right;color:var(--muted)}
 @media (max-width:640px){.gl{grid-template-columns:minmax(0,1fr)}.gl small{text-align:left}}
+
+/* formulário em duas colunas (comparador de renda fixa) */
+.grid.wide{grid-template-columns:minmax(0,1fr)}
+form.campos.wide{display:grid;grid-template-columns:1fr 1fr;gap:16px 28px;position:static}
+form.campos.wide [data-full]{grid-column:1/-1;max-width:calc(50% - 14px)}
+form.campos.wide .reset{grid-column:1/-1}
+.dsuf{color:var(--muted);font-size:13px;white-space:nowrap}
+@media (max-width:700px){form.campos.wide{grid-template-columns:minmax(0,1fr)}form.campos.wide [data-full]{max-width:none}
+  form.campos.wide [data-side="A"]{order:1}form.campos.wide [data-side="B"]{order:2}form.campos.wide [data-side="B"][data-w="tipoB"]{margin-top:10px;padding-top:16px;border-top:1px solid var(--line)}
+  form.campos.wide [data-full]{order:3}form.campos.wide .reset{order:4}}
+.mini-dl{margin:12px 0 0;border-top:1px solid var(--line)}
+.mini-dl div{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.mini-dl dt{color:var(--ink-2)}.mini-dl dd{margin:0;text-align:right}
+/* comparador de ações */
+.cmp{display:flex;flex-direction:column;gap:14px;margin-bottom:16px}
+.cats{max-width:720px}
+.cats{overflow-x:auto;scrollbar-width:none}
+.cats button{white-space:nowrap;flex:none;padding-inline:12px}
+@media (min-width:640px){.cats button{flex:1}}
+.busca{position:relative;max-width:620px}
+.sug{position:absolute;left:0;right:0;top:100%;margin:6px 0 0;padding:6px;list-style:none;background:var(--surface-2);border:1px solid var(--line);border-radius:14px;z-index:5;box-shadow:0 18px 40px -16px rgba(0,0,0,.8);max-height:320px;overflow-y:auto}
+.sug button{width:100%;display:flex;gap:10px;align-items:baseline;background:none;border:0;padding:9px 10px;border-radius:10px;text-align:left}
+.sug button:hover,.sug button:focus-visible{background:var(--surface)}
+.sug b{font-family:var(--mono);font-weight:600;min-width:64px}
+.sug span{color:var(--ink-2);font-size:13.5px}
+.sug .vazio{padding:9px 10px;color:var(--muted);font-size:13.5px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:8px 8px 8px 12px}
+.chip i{width:10px;height:10px;border-radius:3px}
+.chip b{font-family:var(--mono);font-weight:600;font-size:14px}
+.chip small{color:var(--muted);font-size:12.5px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip button{border:0;background:var(--surface-2);color:var(--ink-2);width:24px;height:24px;border-radius:50%;line-height:1;font-size:16px}
+.chip button:hover{color:var(--ink);background:var(--line)}
+.cmp-t th .hd{display:inline-flex;align-items:center;gap:6px;color:var(--ink);font-family:var(--mono);font-size:12.5px;letter-spacing:0}
+.cmp-t th .hd i{width:9px;height:9px;border-radius:2px}
+.cmp-t td.best{color:var(--accent);font-weight:600}
 i.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;vertical-align:-1px}
 
 .notes{margin:0;padding:16px 18px 16px 34px;background:var(--bg-2);border:1px solid var(--ring);border-radius:18px;color:var(--ink-2);font-size:13px;display:flex;flex-direction:column;gap:6px}
@@ -280,9 +316,11 @@ function lineChart(el, o){
   (o.refs||[]).forEach(r => g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(r.y)}" y2="${Y(r.y)}" stroke="${r.color}" stroke-width="2" stroke-dasharray="6 5"/><text class="dl" x="${W-pad.r+6}" y="${Y(r.y)+4}">${esc(r.label)}</text>`);
   // rótulos diretos no fim de cada série
   if (!o.noEndLabels){
-    let acc = 0;
-    o.series.forEach(se=>{ const v = se.ys[n-1]; acc = o.stack ? acc+v : v; const mid = o.stack ? acc - v/2 : v;
-      g += `<text class="dl" x="${W-pad.r+6}" y="${Y(mid)+4}">${esc(se.name)}</text>`; });
+    let acc = 0; const labs = [];
+    o.series.forEach(se=>{ const v = se.ys[n-1]; acc = o.stack ? acc+v : v; const mid = o.stack ? acc - v/2 : v; labs.push({y:Y(mid)+4, t:se.name}); });
+    labs.sort((a,b)=>a.y-b.y);                                  // afasta rótulos sobrepostos
+    for (let i=1;i<labs.length;i++) if (labs[i].y - labs[i-1].y < 13) labs[i].y = labs[i-1].y + 13;
+    labs.forEach(l => g += `<text class="dl" x="${W-pad.r+6}" y="${l.y}">${esc(l.t)}</text>`);
   }
   (o.marks||[]).forEach(m => { g += `<line x1="${X(m.x)}" x2="${X(m.x)}" y1="${pad.t}" y2="${H-pad.b}" stroke="var(--ink-2)" stroke-dasharray="2 4"/>`;
     if (m.y!=null) g += `<circle cx="${X(m.x)}" cy="${Y(m.y)}" r="5" fill="${m.color}" stroke="var(--surface)" stroke-width="2"/>`;
@@ -942,10 +980,228 @@ def({
   }
 });
 
+/* ---------- Comparador de renda fixa ---------- */
+const TIPOS_RF = [["cdb","CDB"],["lci","LCI"],["lca","LCA"],["tesouro","Tesouro Direto"],["lc","LC (Letra de Câmbio)"],["deb","Debênture"],["debinc","Debênture incentivada"],["cri","CRI"],["cra","CRA"],["poup","Poupança"]];
+const ISENTOS = new Set(["lci","lca","debinc","cri","cra","poup"]);
+const FGC = new Set(["cdb","lci","lca","lc","poup"]);
+const MODOS_RF = [["pre","pré-fixado"],["cdi","% do CDI"],["ipca","taxa fixada + IPCA"]];
+const irPrazo = dias => dias <= 180 ? .225 : dias <= 360 ? .20 : dias <= 720 ? .175 : .15;
+/* trajetórias mensais de CDI e IPCA (Focus); sem dados, usam o CDI de referência */
+function trajetorias(){
+  const cdi0 = M ? M.indicadores.cdi.valor/100 : .1365;
+  if (M && window.Mercado){ try { const s = Mercado.selicPath(M, M.indicadores.selic.valor), ip = Mercado.ipcaPath(M);
+    return {cdi: t => Math.max(0, s(t) - .001), ipca: ip, selic: s, ao:true}; } catch {} }
+  return {cdi: () => cdi0, ipca: () => .045, selic: () => cdi0 + .001, ao:false};
+}
+function rendaFixa(tipo, modo, taxa, meses, valor, T){
+  const n = Math.max(1, Math.round(meses)), serie = [valor];
+  let v = valor, cust = 0;
+  const isentoCust = tipo==="tesouro" && modo==="cdi";          // Tesouro Selic: sem custódia até R$ 10 mil
+  for (let t=1;t<=n;t++){
+    let i;
+    if (tipo==="poup") i = T.selic(t) > .085 ? .005 : Math.pow(1 + .7*T.selic(t), 1/12) - 1;
+    else if (modo==="pre") i = Math.pow(1+taxa/100, 1/12) - 1;
+    else if (modo==="cdi") i = Math.pow(1 + T.cdi(t)*taxa/100, 1/12) - 1;
+    else i = Math.pow((1+T.ipca(t))*(1+taxa/100), 1/12) - 1;
+    v *= 1+i;
+    if (tipo==="tesouro") cust += Math.max(0, isentoCust ? v - 10000 : v) * .002/12;
+    const ir = ISENTOS.has(tipo) ? 0 : (v - valor) * irPrazo(t*30);
+    serie.push(v - Math.max(0, ir) - cust);
+  }
+  const aliq = ISENTOS.has(tipo) ? 0 : irPrazo(n*30), ir = Math.max(0, (v-valor)*aliq), liq = v - ir - cust;
+  const anual = Math.pow(liq/valor, 12/n) - 1;
+  let cdiMed = 1; for (let t=1;t<=n;t++) cdiMed *= Math.pow(1+T.cdi(t), 1/12); cdiMed = Math.pow(cdiMed, 12/n) - 1;
+  const eqCdb = (Math.pow(1 + (Math.pow(liq/valor,1/n)-1) / (1-irPrazo(n*30)), 12) - 1) / cdiMed;   // % do CDI de um CDB equivalente
+  return {bruto:v, ir, aliq, cust, liq, anual, serie, cdiMed, eqCdb, n};
+}
+const nomeRF = (tipo, modo, taxa) => { const t = TIPOS_RF.find(x=>x[0]===tipo)[1];
+  if (tipo==="poup") return "Poupança"; return `${t} ${modo==="pre" ? `pré ${nf(taxa,2)}%` : modo==="cdi" ? `${nf(taxa,taxa%1?1:0)}% do CDI` : `IPCA + ${nf(taxa,2)}%`}`; };
+def({
+  id:"comp-rf", grupo:"comp", nav:"Renda fixa", titulo:"Comparador de renda fixa", layout:"wide",
+  desc:"Compare dois investimentos de renda fixa, pré-fixados, atrelados ao CDI ou à inflação, já descontando imposto de renda e custódia. A projeção usa o CDI e o IPCA esperados pelo Boletim Focus.",
+  campos:[
+    {k:"tipoA",label:"Qual é o tipo de investimento?",t:"sel",def:"cdb",opts:TIPOS_RF},
+    {k:"tipoB",label:"Você quer comparar com:",t:"sel",def:"lci",opts:TIPOS_RF},
+    {k:"modoA",label:"A rentabilidade está em",t:"seg",def:"cdi",opts:MODOS_RF,vis:v=>v.tipoA!=="poup"},
+    {k:"modoB",label:"A rentabilidade está em",t:"seg",def:"cdi",opts:MODOS_RF,vis:v=>v.tipoB!=="poup"},
+    {k:"taxaA",label:"Rentabilidade",t:"num",def:110,min:0,suf:"",vis:v=>v.tipoA!=="poup",dyn:v=>v.modoA},
+    {k:"taxaB",label:"Rentabilidade",t:"num",def:92,min:0,suf:"",vis:v=>v.tipoB!=="poup",dyn:v=>v.modoB},
+    {k:"prazoA",label:"Tempo de investimento (meses)",t:"num",def:24,min:1,max:600},
+    {k:"prazoB",label:"Tempo de investimento (meses)",t:"num",def:24,min:1,max:600},
+    {k:"valor",label:"Valor investido",t:"brl",def:10000,full:true},
+  ],
+  calc(v){
+    const T = trajetorias();
+    const A = rendaFixa(v.tipoA, v.modoA, v.taxaA, v.prazoA, v.valor, T), B = rendaFixa(v.tipoB, v.modoB, v.taxaB, v.prazoB, v.valor, T);
+    const nA = nomeRF(v.tipoA, v.modoA, v.taxaA), nB = nomeRF(v.tipoB, v.modoB, v.taxaB);
+    const mesmo = A.n === B.n, ganhaA = mesmo ? A.liq >= B.liq : A.anual >= B.anual;
+    const W = ganhaA ? A : B, L = ganhaA ? B : A, nW = ganhaA ? nA : nB, nL = ganhaA ? nB : nA;
+    // taxa de empate: quanto B precisaria pagar para igualar A (na mesma modalidade de B)
+    let empate = null;
+    if (v.tipoB !== "poup"){ let lo = 0, hi = v.modoB==="cdi" ? 400 : 60;
+      for (let k=0;k<60;k++){ const mid=(lo+hi)/2, r = rendaFixa(v.tipoB, v.modoB, mid, v.prazoB, v.valor, T); (mesmo ? r.liq < A.liq : r.anual < A.anual) ? lo=mid : hi=mid; } empate = hi; }
+    const fmtTaxa = (modo, x) => modo==="pre" ? `${nf(x,2)}% ao ano` : modo==="cdi" ? `${nf(x,1)}% do CDI` : `IPCA + ${nf(x,2)}%`;
+    const dif = mesmo ? `<b>${money(W.liq - L.liq)}</b> a mais no fim` : `<b>${nf((W.anual-L.anual)*100,2)} p.p.</b> a mais por ano`;
+    const lado = (X, nome, tipo, modo, cor) => `<div class="card"><h3><i style="background:${cor}"></i>${esc(nome)}<span class="sub">${X.n} ${X.n===1?"mês":"meses"}</span></h3>${linhas([
+        ["Valor investido", v.valor],
+        ["Rendimento bruto", X.bruto - v.valor],
+        ["Imposto de renda", X.ir, 1, ISENTOS.has(tipo) ? "isento para pessoa física" : `${pct(X.aliq,1)} pela tabela regressiva`],
+        tipo==="tesouro" ? ["Taxa de custódia da B3", X.cust, 1, modo==="cdi" ? "0,20% a.a. acima de R$ 10 mil (Tesouro Selic)" : "0,20% ao ano"] : null,
+      ], ["Valor líquido", X.liq])}
+      <dl class="mini-dl"><div><dt>Rentabilidade líquida</dt><dd class="num">${pct(X.anual,2)} ao ano</dd></div>
+      <div><dt>Equivale a um CDB de</dt><dd class="num">${nf(X.eqCdb*100,1)}% do CDI</dd></div>
+      <div><dt>Garantia do FGC</dt><dd>${FGC.has(tipo) ? "sim, até R$ 250 mil" : tipo==="tesouro" ? "Tesouro Nacional" : "não"}</dd></div></dl></div>`;
+    const html = `<div class="verdict">${Math.abs(A.liq-B.liq)<0.5 && mesmo ? "Os dois investimentos empatam." : `<b>${esc(nW)}</b> rende mais: ${dif} que ${esc(nL)}.`}
+        ${empate!=null ? ` Para empatar com ${esc(nA)}, ${esc(TIPOS_RF.find(x=>x[0]===v.tipoB)[1])} precisaria pagar <b>${fmtTaxa(v.modoB, empate)}</b>.` : ""}</div>` +
+      `<div class="kpis">${kpi(nA, money(A.liq), `líquido · ${pct(A.anual,2)} a.a.`, C.c1, ganhaA)}${kpi(nB, money(B.liq), `líquido · ${pct(B.anual,2)} a.a.`, C.c2, !ganhaA)}${kpi("CDI médio esperado", pct(A.cdiMed,2), `nos ${A.n} meses, pelo Focus`)}</div>` +
+      (mesmo ? `<div class="card">${legend([[nA,C.c1],[nB,C.c2]])}<div class="chart" id="ch"></div></div>` : "") +
+      `<div class="duo">${lado(A, nA, v.tipoA, v.modoA, C.c1)}${lado(B, nB, v.tipoB, v.modoB, C.c2)}</div>` +
+      notas(["IR regressivo sobre o rendimento: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima disso. LCI, LCA, CRI, CRA, debêntures incentivadas e poupança são isentas para pessoa física.",
+        "Pós-fixados e IPCA+ seguem mês a mês a Selic e a inflação esperadas pelo Boletim Focus; o resultado muda se os juros mudarem. Títulos IPCA+ e prefixados vendidos antes do vencimento sofrem marcação a mercado.",
+        "Poupança: 0,5% ao mês com a Selic acima de 8,5%, ou 70% da Selic; a TR não foi incluída. Tesouro Direto: custódia de 0,20% ao ano da B3. Confira as regras vigentes.",
+        "“Equivale a um CDB de” mostra quanto um CDB tributado precisaria pagar, em % do CDI, para dar o mesmo líquido no mesmo prazo. LCI e LCA têm carência mínima."]);
+    return {html, after(){ const el = $("#ch"); if (!el) return; const xs = A.serie.map((_,i)=>i);
+      lineChart(el, {xs, series:[{name:nA,color:C.c1,ys:A.serie},{name:nB,color:C.c2,ys:B.serie}], noEndLabels:true,
+        xfmt:k=>`${k}m`, yfmt:y=>curto(y), tipfmt:y=>money(y), tipTitle:k=>`Resgate no mês ${k}`, label:"Valor líquido se resgatado em cada mês"}); }};
+  }
+});
+
+/* ---------- Comparador de ações ---------- */
+const CATS = [["acoes","Ações"],["stocks","Stocks"],["fiis","FIIs"],["etfs","ETFs internacionais"]];
+const CORES5 = ["#3987e5","#d95926","#199e70","#c98500","#d55181"];
+let ACOES = null, acoesProm = null;
+function carregarAcoes(){
+  if (acoesProm) return acoesProm;
+  acoesProm = fetch("data/acoes.json?h=" + Math.floor(Date.now()/36e5), {cache:"no-cache"}).then(r=>r.ok ? r.json() : null).catch(()=>null).then(d=>{
+    ACOES = d && d.categorias ? d : {categorias:{}};
+    // sem o arquivo, monta Ações com as séries mensais do mercado.json (só desempenho)
+    if (!Object.keys(ACOES.categorias.acoes||{}).length && M?.series){
+      const S = M.series, nomes = {BOVA11:"ETF Ibovespa",IVVB11:"ETF S&P 500 em reais",ITUB4:"Itaú Unibanco",PETR4:"Petrobras",VALE3:"Vale",WEGE3:"WEG",BBAS3:"Banco do Brasil"};
+      const cat = {};
+      for (const k of Object.keys(nomes)){ const r = S.retornos[k]; if (!r) continue; const ult = r.slice(-60); let p = 100; const c = [p]; ult.forEach(x=>{ p *= 1+(x||0); c.push(+p.toFixed(4)); });
+        cat[k] = {nome:nomes[k], preco:null, moeda:"BRL", ini:S.meses[S.meses.length-61] || S.meses[0], c}; }
+      ACOES.categorias.acoes = cat; ACOES.parcial = true;
+    }
+    return ACOES;
+  });
+  return acoesProm;
+}
+function estat(a){
+  const c = (a.c||[]).filter(x=>x!=null), n = c.length; if (n < 13) return {};
+  const r = []; for (let i=1;i<n;i++) r.push(c[i]/c[i-1]-1);
+  const m = r.reduce((s,x)=>s+x,0)/r.length, sd = Math.sqrt(r.reduce((s,x)=>s+(x-m)**2,0)/(r.length-1));
+  let pico = c[0], dd = 0; c.forEach(x=>{ pico = Math.max(pico,x); dd = Math.min(dd, x/pico-1); });
+  return {r12: c[n-1]/c[n-13]-1, r5: Math.pow(c[n-1]/c[0], 12/(n-1))-1, vol: sd*Math.sqrt(12), dd, dezmil: 10000*c[n-1]/c[0], anos:(n-1)/12};
+}
+const mo = (a, v, d=2) => v==null ? "—" : (a.moeda==="USD" ? "US$ " : "R$ ") + nf(v, d);
+const grande = (a, v) => v==null ? "—" : (a.moeda==="USD" ? "US$ " : "R$ ") + (v>=1e12 ? nf(v/1e12,2)+" tri" : v>=1e9 ? nf(v/1e9,1)+" bi" : nf(v/1e6,0)+" mi");
+const pctN = v => v==null ? "—" : pct(v,1);
+const xN = v => v==null ? "—" : nf(v,2);
+const INDIC = {
+  base: [
+    {l:"Cotação", f:(a)=>mo(a,a.preco)},
+    {l:"Variação em 12 meses", f:(a,s)=>pctN(s.r12), v:(a,s)=>s.r12, melhor:"max"},
+    {l:"Retorno anual em 5 anos", f:(a,s)=>pctN(s.r5), v:(a,s)=>s.r5, melhor:"max", sub:"com proventos reinvestidos"},
+    {l:"Volatilidade anual", f:(a,s)=>pctN(s.vol), v:(a,s)=>s.vol, melhor:"min"},
+    {l:"Maior queda no período", f:(a,s)=>pctN(s.dd), v:(a,s)=>s.dd, melhor:"max"},
+    {l:"10 mil investidos há 5 anos", f:(a,s)=>s.dezmil==null?"—":mo(a,s.dezmil,0), v:(a,s)=>s.dezmil, melhor:"max"},
+  ],
+  acoes: [
+    {l:"P/L", f:a=>xN(a.pl), v:a=>a.pl>0?a.pl:null, melhor:"min", sub:"preço ÷ lucro por ação"},
+    {l:"P/VP", f:a=>xN(a.pvp), v:a=>a.pvp>0?a.pvp:null, melhor:"min", sub:"preço ÷ valor patrimonial"},
+    {l:"Dividend yield", f:a=>pctN(a.dy), v:a=>a.dy, melhor:"max", sub:"proventos dos últimos 12 meses"},
+    {l:"ROE", f:a=>pctN(a.roe), v:a=>a.roe, melhor:"max"},
+    {l:"Margem líquida", f:a=>pctN(a.margem), v:a=>a.margem, melhor:"max"},
+    {l:"Dívida/patrimônio", f:a=>xN(a.divpl), v:a=>a.divpl, melhor:"min"},
+    {l:"Valor de mercado", f:a=>grande(a,a.vm)},
+    {l:"Beta", f:a=>xN(a.beta), sub:"sensibilidade ao mercado"},
+    {l:"Setor", f:a=>esc(a.setor||"—")},
+  ],
+  fiis: [
+    {l:"Dividend yield", f:a=>pctN(a.dy), v:a=>a.dy, melhor:"max", sub:"rendimentos dos últimos 12 meses"},
+    {l:"P/VP", f:a=>xN(a.pvp), v:a=>a.pvp>0?a.pvp:null, melhor:"min"},
+    {l:"Valor de mercado", f:a=>grande(a,a.vm)},
+  ],
+  etfs: [
+    {l:"Dividend yield", f:a=>pctN(a.dy), v:a=>a.dy, melhor:"max"},
+    {l:"Patrimônio", f:a=>grande(a,a.vm)},
+    {l:"Beta", f:a=>xN(a.beta)},
+    {l:"Categoria", f:a=>esc(a.setor||"—")},
+  ],
+};
+INDIC.stocks = INDIC.acoes;
+const PADRAO_ACOES = {acoes:["ITUB4","BBAS3","PETR4"], stocks:["AAPL","MSFT","NVDA"], fiis:["HGLG11","KNRI11","MXRF11"], etfs:["VOO","QQQ","VT"]};
+def({
+  id:"comp-acoes", grupo:"comp", nav:"Ações", titulo:"Comparador de ações", custom:true,
+  desc:"Compare até cinco ativos lado a lado: ações da B3, ações americanas, fundos imobiliários e ETFs internacionais, com desempenho, risco e indicadores fundamentalistas.",
+  mount(el){
+    const st = Object.assign({cat:"acoes", sel:{...PADRAO_ACOES}}, store.get("calc:comp-acoes") || {});
+    st.sel = {...PADRAO_ACOES, ...st.sel};
+    const salvar = () => store.set("calc:comp-acoes", st);
+    el.innerHTML = `<div class="card cmp"><div class="seg cats" role="tablist">${CATS.map(([k,n])=>`<button type="button" role="tab" data-cat="${k}" aria-pressed="${st.cat===k}">${n}</button>`).join("")}</div>
+      <div class="busca"><div class="f"><label for="q">Insira até 5 ativos</label><div class="in"><input id="q" type="search" autocomplete="off" placeholder="Busque pelo código ou nome, como itau ou BBAS3"></div></div><ul class="sug" id="sug" hidden></ul></div>
+      <div class="chips" id="chips"></div></div><div id="cmpres" class="res"><p class="mini">Carregando dados…</p></div>`;
+    const q = $("#q", el), sug = $("#sug", el);
+    const lista = () => Object.entries(ACOES?.categorias?.[st.cat] || {});
+    const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+    const add = cod => { const s = st.sel[st.cat]; if (s.includes(cod) || s.length>=5) return; s.push(cod); q.value=""; sug.hidden = true; salvar(); render(); };
+    const sugerir = () => { const t = norm(q.value.trim()); const s = st.sel[st.cat];
+      const r = lista().filter(([k,a])=>!s.includes(k) && (!t || norm(k).includes(t) || norm(a.nome).includes(t))).slice(0,8);
+      sug.innerHTML = s.length>=5 ? `<li class="vazio">Máximo de 5 ativos. Remova um para incluir outro.</li>` : r.length ? r.map(([k,a])=>`<li><button type="button" data-add="${esc(k)}"><b>${esc(k)}</b><span>${esc(a.nome)}</span></button></li>`).join("") : `<li class="vazio">Nenhum ativo encontrado nesta categoria.</li>`;
+      sug.hidden = false; };
+    q.addEventListener("input", sugerir); q.addEventListener("focus", sugerir);
+    q.addEventListener("keydown", e=>{ if (e.key==="Enter"){ const b = $("[data-add]", sug); if (b) add(b.dataset.add); } if (e.key==="Escape") sug.hidden = true; });
+    document.addEventListener("click", e=>{ if (!e.target.closest(".busca")) sug.hidden = true; });
+    sug.addEventListener("click", e=>{ const b = e.target.closest("[data-add]"); if (b) add(b.dataset.add); });
+    el.addEventListener("click", e=>{
+      const c = e.target.closest("[data-cat]"); if (c){ st.cat = c.dataset.cat; el.querySelectorAll("[data-cat]").forEach(b=>b.setAttribute("aria-pressed", b===c)); salvar(); render(); return; }
+      const r = e.target.closest("[data-rm]"); if (r){ st.sel[st.cat] = st.sel[st.cat].filter(k=>k!==r.dataset.rm); salvar(); render(); }
+    });
+    const render = () => {
+      const cat = ACOES?.categorias?.[st.cat] || {};
+      st.sel[st.cat] = st.sel[st.cat].filter(k=>cat[k] || !ACOES);
+      const sel = st.sel[st.cat].map(k=>[k, cat[k]]).filter(x=>x[1]);
+      $("#chips", el).innerHTML = sel.map(([k,a],i)=>`<span class="chip"><i style="background:${CORES5[i]}"></i><b>${esc(k)}</b><small>${esc(a.nome)}</small><button type="button" data-rm="${esc(k)}" aria-label="Remover ${esc(k)}">×</button></span>`).join("") || `<span class="mini">Nenhum ativo selecionado.</span>`;
+      const out = $("#cmpres", el);
+      if (!ACOES) return;
+      if (!Object.keys(cat).length){ out.innerHTML = `<div class="warn">Os dados de ${esc(CATS.find(c=>c[0]===st.cat)[1])} entram na próxima atualização diária do site (dias úteis, às 19h).</div>`; return; }
+      if (!sel.length){ out.innerHTML = ""; return; }
+      const S = sel.map(([k,a])=>estat(a));
+      const linhasInd = [...INDIC.base, ...(INDIC[st.cat]||[])].filter(ind => sel.some(([k,a],i)=>{ const t = ind.f(a, S[i]); return t && t!=="—"; }));
+      const melhor = ind => { if (!ind.melhor || sel.length<2) return -1; const vals = sel.map(([k,a],i)=>ind.v(a,S[i])); const ok = vals.filter(x=>x!=null); if (ok.length<2) return -1;
+        const alvo = ind.melhor==="max" ? Math.max(...ok) : Math.min(...ok); return vals.indexOf(alvo); };
+      const usd = st.cat==="stocks" || st.cat==="etfs";
+      out.innerHTML = (ACOES.parcial && st.cat==="acoes" ? `<div class="warn">Por enquanto há só o desempenho de alguns ativos. Cotações, indicadores e a lista completa entram na próxima atualização diária do site.</div>` : "") +
+        `<div class="card">${legend(sel.map(([k],i)=>[k, CORES5[i]]).concat(st.cat==="acoes"||st.cat==="fiis" ? [["CDI","var(--ink-2)",true]] : []))}<div class="chart" id="ch"></div><p class="mini" style="margin:10px 0 0">Valor de 100 investidos no início do período, com proventos reinvestidos${usd?", em dólar":""}.</p></div>` +
+        `<div class="card"><div class="tblwrap"><table class="cmp-t"><thead><tr><th>Indicador</th>${sel.map(([k,a],i)=>`<th class="n"><span class="hd"><i style="background:${CORES5[i]}"></i>${esc(k)}</span></th>`).join("")}</tr></thead><tbody>${
+          linhasInd.map(ind=>{ const b = melhor(ind); return `<tr><td>${ind.l}${ind.sub?`<small>${ind.sub}</small>`:""}</td>${sel.map(([k,a],i)=>`<td class="n${i===b?" best":""}">${ind.f(a,S[i])}</td>`).join("")}</tr>`; }).join("")}</tbody></table></div></div>` +
+        notas(["Em destaque, o melhor valor de cada linha entre os ativos escolhidos. P/L e P/VP baixos podem indicar ativo barato ou problemas; compare empresas do mesmo setor.",
+          "Desempenho com cotações mensais ajustadas por proventos (fonte: Yahoo Finance). Stocks e ETFs internacionais em dólar, sem a variação cambial.",
+          `Dados atualizados ${ACOES.atualizado ? "em " + Mercado.dataBR(ACOES.atualizado) : "diariamente"}. Indicadores fundamentalistas podem ter atraso em relação ao último balanço. Não é recomendação de investimento.`]);
+      desenhar(sel);
+    };
+    const desenhar = sel => {
+      const el2 = $("#ch", el); if (!el2) return;
+      const L = Math.min(...sel.map(([k,a])=>a.c.length)); if (L < 2) return;
+      const ys = sel.map(([k,a])=>{ const c = a.c.slice(-L); return c.map(x=>x==null?null:100*x/c[0]); });
+      const xs = Array.from({length:L},(_,i)=>i), ini = sel[0][1];
+      const mes0 = (() => { const [y,m] = (ini.ini||"2021-01").split("-").map(Number); const off = ini.c.length - L; return new Date(y, m-1+off, 1); })();
+      const rot = i => { const d = new Date(mes0.getFullYear(), mes0.getMonth()+i, 1); return `${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getFullYear()).slice(2)}`; };
+      const series = sel.map(([k],i)=>({name:k, color:CORES5[i], ys:ys[i].map((y,j)=>y ?? (ys[i][j-1]||100))}));
+      if ((st.cat==="acoes"||st.cat==="fiis") && M?.series?.retornos?.CDI){ const r = M.series.retornos.CDI.slice(-(L-1)); let p = 100; const c=[p]; r.forEach(x=>{p*=1+(x||0); c.push(p);}); if (c.length===L) series.push({name:"CDI", color:"var(--ink-2)", ys:c, dash:true}); }
+      lineChart(el2, {xs, series, noEndLabels:false, padR:64, xfmt:i=>rot(Math.round(i)), xticks:ticksX(0, L-1, el2.clientWidth<520?3:6).map(Math.round),
+        yfmt:y=>nf(y,0), tipfmt:y=>nf(y,1), tipTitle:i=>rot(i), label:"Desempenho dos ativos escolhidos, base 100"});
+    };
+    this.redraw = () => render();
+    Promise.resolve(window.Mercado ? Mercado.carregar().then(m=>{ M = M || m; }).catch(()=>{}) : 0).then(carregarAcoes).then(render);
+  }
+});
+
 /* ================= navegação e formulário ================= */
 const GRUPOS = [
   {id:"trabalho", nome:"Trabalho e salário"},
   {id:"invest", nome:"Investimentos"},
+  {id:"comp", nome:"Comparadores"},
 ].map(g=>({...g, calcs: CALCS.filter(c=>c.grupo===g.id)}));
 let atual = null;
 
@@ -962,7 +1218,8 @@ function mercadoDef(f){
 }
 function campo(f, val){
   if (f.g) return `<div class="grp-t">${esc(f.g)}</div>`;
-  return campoHtml(f, val).replace('<div class="f">', `<div class="f" data-w="${f.k}">`);
+  const lado = /[AB]$/.test(f.k) ? ` data-side="${f.k.slice(-1)}"` : "";
+  return campoHtml(f, val).replace('<div class="f">', `<div class="f" data-w="${f.k}"${lado}${f.full?" data-full":""}>`);
 }
 function campoHtml(f, val){
   const id = "f-"+f.k, hint = f.hint ? `<small>${esc(f.hint)}</small>` : "";
@@ -970,7 +1227,7 @@ function campoHtml(f, val){
   if (f.t==="sel") return `<div class="f"><label for="${id}">${esc(f.label)}</label><div class="in"><select id="${id}" data-k="${f.k}">${f.opts.map(([k,n])=>`<option value="${k}"${val===k?" selected":""}>${esc(n)}</option>`).join("")}</select></div>${hint}</div>`;
   if (f.t==="date") return `<div class="f"><label for="${id}">${esc(f.label)}</label><div class="in"><input id="${id}" type="date" data-k="${f.k}" value="${esc(val)}"></div>${hint}</div>`;
   const pre = f.t==="brl" ? "<span>R$</span>" : "", suf = f.t==="pct" ? `<span>%${f.suf?" "+f.suf:""}</span>` : f.suf ? `<span>${esc(f.suf)}</span>` : "";
-  return `<div class="f"><label for="${id}">${esc(f.label)}</label><div class="in">${pre}<input id="${id}" type="number" inputmode="decimal" step="any" ${f.min!=null?`min="${f.min}"`:""} ${f.max!=null?`max="${f.max}"`:""} data-k="${f.k}" value="${val}">${suf}</div>${hint}</div>`;
+  return `<div class="f"><label for="${id}">${esc(f.label)}</label><div class="in">${pre}<input id="${id}" type="number" inputmode="decimal" step="any" ${f.min!=null?`min="${f.min}"`:""} ${f.max!=null?`max="${f.max}"`:""} data-k="${f.k}" value="${val}">${suf}${f.dyn?'<span class="dsuf"></span>':""}</div>${hint}</div>`;
 }
 function ler(c){
   const v = {};
@@ -982,9 +1239,12 @@ function ler(c){
   return v;
 }
 function calcular(salvar){
-  const c = atual, v = ler(c);
+  const c = atual; if (!c || c.custom || !$("#form")) return;
+  const v = ler(c);
   if (salvar === true) store.set("calc:"+c.id, v);
-  c.campos.filter(f=>f.vis).forEach(f=>{ const w = $(`[data-w="${f.k}"]`); if (w) w.hidden = !f.vis(v); });
+  c.campos.filter(f=>f.vis).forEach(f=>{ const w = $(`[data-w="${f.k}"]`); if (!w) return;
+    if (c.layout==="wide") w.style.visibility = f.vis(v) ? "" : "hidden"; else w.hidden = !f.vis(v); });
+  c.campos.filter(f=>f.dyn).forEach(f=>{ const sp = $(`[data-w="${f.k}"] .dsuf`); if (sp) sp.textContent = {pre:"% ao ano", cdi:"% do CDI", ipca:"% + IPCA"}[f.dyn(v)] || ""; });
   const r = c.calc(v);
   $("#res").innerHTML = r.html;
   $("#full").innerHTML = r.full || "";
@@ -995,9 +1255,15 @@ function abrir(id, push){
   const g = GRUPOS.find(x=>x.id===c.grupo);
   $("#grupos").innerHTML = GRUPOS.map(x=>`<button role="tab" data-g="${x.id}" aria-selected="${x===g}">${esc(x.nome)}<small>${x.calcs.length}</small></button>`).join("");
   $("#tabs").innerHTML = g.calcs.map(x=>`<button role="tab" data-c="${x.id}" aria-selected="${x===c}">${esc(x.nav)}</button>`).join("");
+  if (push !== false && location.hash !== "#"+c.id) history.replaceState(null, "", "#"+c.id);
+  document.title = `${c.nav} · Calculadoras Livro-Caixa`;
+  if (c.custom){
+    $("#main").innerHTML = `<div class="calc-head"><div><h2>${esc(c.titulo)}</h2><p>${esc(c.desc)}</p></div></div><div class="res" id="res"></div>`;
+    c.mount($("#res")); return;
+  }
   const v = valores(c);
   $("#main").innerHTML = `<div class="calc-head"><div><h2>${esc(c.titulo)}</h2><p>${esc(c.desc)}</p></div></div>
-    <div class="grid"><form class="card campos" id="form" onsubmit="return false">${c.campos.map(f=>campo(f, v[f.k])).join("")}<button type="button" class="reset" id="reset">Restaurar valores padrão</button></form><div class="res" id="res"></div></div><div class="res" id="full" style="margin-top:16px"></div>`;
+    <div class="grid${c.layout==="wide"?" wide":""}"><form class="card campos${c.layout==="wide"?" wide":""}" id="form" onsubmit="return false">${c.campos.map(f=>campo(f, v[f.k])).join("")}<button type="button" class="reset" id="reset">Restaurar valores padrão</button></form><div class="res" id="res"></div></div><div class="res" id="full" style="margin-top:16px"></div>`;
   const form = $("#form");
   form.addEventListener("input", ()=>calcular(true));
   form.addEventListener("change", ()=>calcular(true));
@@ -1011,13 +1277,14 @@ function abrir(id, push){
 $("#grupos").addEventListener("click", e=>{ const b = e.target.closest("button"); if (!b) return; const g = GRUPOS.find(x=>x.id===b.dataset.g); abrir(g.calcs[0].id); });
 $("#tabs").addEventListener("click", e=>{ const b = e.target.closest("button"); if (b) abrir(b.dataset.c); });
 window.addEventListener("hashchange", ()=>abrir(location.hash.slice(1), false));
-let rt; window.addEventListener("resize", ()=>{ clearTimeout(rt); rt = setTimeout(()=>{ if (atual) calcular(); }, 120); });
+let rt; window.addEventListener("resize", ()=>{ clearTimeout(rt); rt = setTimeout(()=>{ if (!atual) return; if (atual.custom) atual.redraw?.(); else calcular(); }, 120); });
 
 abrir(location.hash.slice(1) || "clt-pj", false);
 
 /* taxas do dia: só mudam campos que o usuário não editou */
 if (window.Mercado) Mercado.carregar().then(m=>{ M = m;
   const c = atual;
+  if (c.custom) return;
   if (c.campos.some(f=>f.mk) && !store.get("calc:"+c.id)) abrir(c.id, false); else calcular();
 }).catch(()=>{});
 })();
