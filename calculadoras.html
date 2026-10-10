@@ -1130,6 +1130,7 @@ const INDIC = {
   ],
 };
 INDIC.stocks = INDIC.acoes;
+INDIC.acoes = INDIC.acoes.filter(i=>i.l!=="Beta");          // o beta do Yahoo para a B3 é medido contra o S&P 500
 const PADRAO_ACOES = {acoes:["ITUB4","BBAS3","PETR4"], stocks:["AAPL","MSFT","NVDA"], fiis:["HGLG11","KNRI11","MXRF11"], etfs:["VOO","QQQ","VT"]};
 def({
   id:"comp-acoes", grupo:"comp", nav:"Ações", titulo:"Comparador de ações", custom:true,

@@ -24,7 +24,7 @@ ATIVOS = {
         "BBDC4": ("BBDC4.SA", "Bradesco"), "BBAS3": ("BBAS3.SA", "Banco do Brasil"), "ITSA4": ("ITSA4.SA", "Itaúsa"),
         "BPAC11": ("BPAC11.SA", "BTG Pactual"), "SANB11": ("SANB11.SA", "Santander Brasil"), "B3SA3": ("B3SA3.SA", "B3"),
         "BBSE3": ("BBSE3.SA", "BB Seguridade"), "CXSE3": ("CXSE3.SA", "Caixa Seguridade"), "PSSA3": ("PSSA3.SA", "Porto Seguro"),
-        "WEGE3": ("WEGE3.SA", "WEG"), "ABEV3": ("ABEV3.SA", "Ambev"), "ELET3": ("ELET3.SA", "Eletrobras"),
+        "WEGE3": ("WEGE3.SA", "WEG"), "ABEV3": ("ABEV3.SA", "Ambev"), "AXIA3": ("AXIA3.SA", "Axia Energia (ex-Eletrobras)"),
         "EGIE3": ("EGIE3.SA", "Engie Brasil"), "TAEE11": ("TAEE11.SA", "Taesa"), "CMIG4": ("CMIG4.SA", "Cemig"),
         "EQTL3": ("EQTL3.SA", "Equatorial"), "ISAE4": ("ISAE4.SA", "ISA Energia"), "AURE3": ("AURE3.SA", "Auren"),
         "SBSP3": ("SBSP3.SA", "Sabesp"), "VIVT3": ("VIVT3.SA", "Vivo"), "TIMS3": ("TIMS3.SA", "TIM"),
