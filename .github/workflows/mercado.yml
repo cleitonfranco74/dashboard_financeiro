@@ -28,11 +28,15 @@ jobs:
 
       - run: python scripts/atualizar_mercado.py
 
+      - name: Ações, FIIs e ETFs do comparador
+        run: python scripts/atualizar_acoes.py
+        continue-on-error: true
+
       - name: Commit se houve mudança
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/mercado.json
+          git add data/mercado.json data/acoes.json 2>/dev/null || git add data/mercado.json
           if git diff --cached --quiet; then
             echo "Sem mudanças."
           else
