@@ -1458,7 +1458,8 @@ def({
       notas(["MEI: só para atividades permitidas e faturamento até R$ 81 mil por ano; DAS fixo de cerca de " + money(DAS_MEI) + ".",
         "Simples Anexo III: pró-labore de 28% do faturamento para atender ao fator R. Anexo V: pró-labore de um salário mínimo.",
         "Lucro Presumido (serviços): IRPJ e CSLL sobre 32% do faturamento, PIS 0,65%, Cofins 3%, ISS municipal, mais 20% de INSS patronal sobre o pró-labore.",
-        "Lucro distribuído isento até R$ 50 mil por mês por empresa; acima disso, retenção de 10% (Lei 15.270/2025). O contador é descontado em todos os regimes."]);
+        "Lucro distribuído isento até R$ 50 mil por mês por empresa; acima disso, retenção de 10% (Lei 15.270/2025). O contador é descontado em todos os regimes.",
+        "Regras de 2026. A reforma tributária ainda não está no cálculo: em 2026 a CBS (0,9%) e o IBS (0,1%) são só um teste, compensado com o PIS/Cofins e dispensado no Simples; a partir de 2027 a CBS substitui o PIS/Cofins, e de 2029 a 2033 o IBS substitui aos poucos o ISS e o ICMS."]);
     return {html};
   }
 });
@@ -1995,11 +1996,87 @@ def({
   }
 });
 
+/* ---------- Produtor rural: pessoa física ou jurídica ---------- */
+const IRA = {faixas:[[29145.60,0,0],[33919.80,.075,2185.92],[45012.60,.15,4729.92],[55976.16,.225,8105.88],[Infinity,.275,10904.76]],
+  simpPct:.20, simpMax:16754.34, dep:2275.08, red:{ate:60000, max:2694.15, fim:88200, a:8429.73, b:0.095575}};   // IRPF anual de 2026
+const irAnual = (renda, dep) => { const ded = Math.max(Math.min(IRA.simpPct*renda, IRA.simpMax), dep*IRA.dep), base = Math.max(0, renda-ded);
+  const f = IRA.faixas.find(([l])=>base<=l), tab = Math.max(0, base*f[1]-f[2]);
+  const r = renda<=IRA.red.ate ? IRA.red.max : renda<=IRA.red.fim ? Math.max(0, IRA.red.a-IRA.red.b*renda) : 0;
+  return Math.max(0, tab - Math.min(tab, r)); };
+function rural(v, R, Dp){
+  const desp = Dp ?? v.desp, folha = Math.min(v.folha, desp);
+  // Funrural: sobre a receita (padrão) ou sobre a folha (opção anual); o Senar continua sobre a receita
+  const funPF = v.funr==="receita" ? R*.015 : folha*(.20+v.rat/100) + R*.002;
+  const funPJ = v.funr==="receita" ? R*.0205 : folha*(.20+v.rat/100) + R*.0025;
+  // Pessoa física: livro-caixa (receita − despesas) ou 20% da receita, o que for menor
+  const resultado = Math.max(0, R - desp), presumido = .2*R, baseRural = Math.min(resultado, presumido);
+  const irPF = irAnual(baseRural + v.outras, v.dep) - irAnual(v.outras, v.dep);
+  const PF = {nome:"Pessoa física", fun:funPF, pis:0, irpj:0, csll:0, prol:0, irDiv:0, contab:0, ir:irPF,
+    liq: R - desp - funPF - irPF, obs: baseRural < resultado ? "IR sobre 20% da receita (opção presumida)" : "IR sobre o resultado do livro-caixa"};
+  // Pessoa jurídica: pró-labore do sócio com INSS de 11% e 20% patronal; Funrural substitui o INSS sobre os empregados
+  const pro = v.pro*12, inssPro = Math.min(v.pro, TETO)*.11*12, cpp = pro*.20, irPro = irMes(v.pro, Math.min(v.pro,TETO)*.11, v.dep).ir*12;
+  const pis = R*v.piscof/100;
+  const pj = (nome, irpj, csll) => { const lucro = R - desp - funPJ - pis - irpj - csll - v.contab - pro - cpp;
+    const dist = Math.max(0, lucro), irDiv = Math.max(0, dist/12 - 50000)*.10*12;
+    return {nome, fun:funPJ, pis, irpj, csll, prol: inssPro + irPro + cpp, irDiv, contab:v.contab, ir:0, liq: pro - inssPro - irPro + dist - irDiv, lucro}; };
+  const bLP = .08*R, LP = pj("PJ no Lucro Presumido", .15*bLP + .10*Math.max(0, bLP-240000), .09*.12*R);
+  const lr = Math.max(0, R - desp - funPJ - pis - v.contab - pro - cpp), LR = pj("PJ no Lucro Real", .15*lr + .10*Math.max(0, lr-240000), .09*lr);
+  return [PF, LP, LR];
+}
+def({
+  id:"rural", nav:"Produtor rural: PF ou PJ", titulo:"Produtor rural: pessoa física ou pessoa jurídica?",
+  desc:"Compara a carga tributária e o que sobra para o produtor rural como pessoa física (livro-caixa) e como pessoa jurídica no Lucro Presumido e no Lucro Real, com Funrural, IR, CSLL, PIS/Cofins, pró-labore e dividendos.",
+  campos:[
+    {g:"Atividade no ano"},
+    {k:"receita",label:"Receita bruta da produção",t:"brl",def:3000000,suf:"/ano"},
+    {k:"desp",label:"Despesas de custeio e investimentos",t:"brl",def:2100000,suf:"/ano",hint:"Insumos, arrendamento, mão de obra, máquinas e benfeitorias pagas no ano."},
+    {k:"folha",label:"Folha de pagamento (já nas despesas)",t:"brl",def:300000,suf:"/ano"},
+    {k:"funr",label:"Funrural sobre",t:"seg",def:"receita",opts:[["receita","a receita"],["folha","a folha"]],hint:"A opção pela folha é anual e vale a pena quando a folha é pequena em relação à receita."},
+    {k:"rat",label:"RAT na opção pela folha",t:"pct",def:2,vis:v=>v.funr==="folha"},
+    {g:"Se for pessoa jurídica"},
+    {k:"piscof",label:"PIS/Cofins efetivo sobre a receita",t:"pct",def:0,hint:"Muitos produtos agropecuários têm alíquota zero ou suspensão; no Presumido a alíquota cheia é 3,65%."},
+    {k:"pro",label:"Pró-labore mensal do sócio",t:"brl",def:SM},
+    {k:"contab",label:"Custo extra de contabilidade e manutenção da PJ",t:"brl",def:36000,suf:"/ano"},
+    {g:"Produtor"},
+    {k:"outras",label:"Outras rendas tributáveis da pessoa física",t:"brl",def:0,suf:"/ano",hint:"Salário, aluguel, aposentadoria. Entram na mesma tabela do IR."},
+    {k:"dep",label:"Dependentes",t:"num",def:0,min:0,max:10},
+  ],
+  calc(v){
+    const R = v.receita, S = rural(v, R), best = S.reduce((a,b)=>b.liq>a.liq?b:a), PF = S[0];
+    const carga = x => R - v.desp - x.liq;
+    const margem = (R - v.desp)/Math.max(1,R);
+    const xs = []; for (let r=250000; r<=12000000; r+=250000) xs.push(r);
+    const html = `<div class="verdict">Com receita de ${money0(R)} e margem de ${pct(margem,0)}, a opção mais vantajosa é <b>${best===PF ? "continuar como pessoa física" : best.nome}</b>: sobram <b>${money0(best.liq)}</b> por ano${best!==PF ? `, ${money0(best.liq-PF.liq)} a mais que como pessoa física` : ""}.</div>` +
+      `<div class="kpis">${S.map((x,i)=>kpi(x.nome, money0(x.liq), `tributos e custos: ${money0(carga(x))} (${pct(carga(x)/Math.max(1,R-v.desp),1)} do resultado)`, [C.c1,C.c2,"#199e70"][i], x===best)).join("")}</div>` +
+      `<div class="card"><div class="tblwrap"><table><thead><tr><th>Por ano</th>${S.map(x=>`<th class="n">${x.nome}</th>`).join("")}</tr></thead><tbody>
+        <tr><td>Receita bruta</td>${S.map(()=>`<td class="n">${money0(R)}</td>`).join("")}</tr>
+        <tr class="neg"><td>Despesas</td>${S.map(()=>`<td class="n">−${money0(v.desp)}</td>`).join("")}</tr>
+        <tr class="neg"><td>Funrural e Senar</td>${S.map(x=>`<td class="n">−${money0(x.fun)}</td>`).join("")}</tr>
+        ${v.piscof?`<tr class="neg"><td>PIS/Cofins</td>${S.map(x=>`<td class="n">${x.pis?"−"+money0(x.pis):"—"}</td>`).join("")}</tr>`:""}
+        <tr class="neg"><td>IRPJ e CSLL</td>${S.map(x=>`<td class="n">${x.irpj+x.csll?"−"+money0(x.irpj+x.csll):"—"}</td>`).join("")}</tr>
+        <tr class="neg"><td>IR da pessoa física<small>atividade rural na declaração anual</small></td>${S.map(x=>`<td class="n">${x.ir?"−"+money0(x.ir):"—"}</td>`).join("")}</tr>
+        <tr class="neg"><td>INSS e IR do pró-labore<small>com 20% patronal</small></td>${S.map(x=>`<td class="n">${x.prol?"−"+money0(x.prol):"—"}</td>`).join("")}</tr>
+        <tr class="neg"><td>IR de 10% sobre dividendos<small>acima de R$ 50 mil por mês</small></td>${S.map(x=>`<td class="n">${x.irDiv?"−"+money0(x.irDiv):"—"}</td>`).join("")}</tr>
+        <tr class="neg"><td>Contabilidade da PJ</td>${S.map(x=>`<td class="n">${x.contab?"−"+money0(x.contab):"—"}</td>`).join("")}</tr>
+        <tr class="tot"><td>Sobra para o produtor</td>${S.map(x=>`<td class="n">${money0(x.liq)}</td>`).join("")}</tr></tbody></table></div><p class="mini" style="margin:10px 0 0">Pessoa física: ${esc(PF.obs)}.</p></div>` +
+      `<div class="card">${legend(S.map((x,i)=>[x.nome,[C.c1,C.c2,"#199e70"][i]]))}<h3 style="margin-top:6px">O que sobra conforme o tamanho da receita<span class="sub">margem de ${pct(margem,0)} mantida</span></h3><div class="chart" id="ch"></div></div>` +
+      notas(["Pessoa física: o resultado da atividade rural (receita menos despesas, pelo regime de caixa, com investimentos deduzidos no ano) entra na declaração anual pela tabela progressiva. O produtor pode tributar 20% da receita bruta em vez do resultado; a calculadora usa o menor. Prejuízos podem ser compensados nos anos seguintes.",
+        "Funrural sobre a receita: 1,2% de INSS + 0,1% de RAT + 0,2% de Senar para pessoa física; 1,7% + 0,1% + 0,25% para pessoa jurídica. Na opção pela folha, 20% + RAT sobre a folha, e o Senar continua sobre a receita.",
+        "Lucro Presumido rural: IRPJ sobre 8% e CSLL sobre 12% da receita. Lucro Real: sobre o lucro efetivo, com adicional de 10% do IRPJ acima de R$ 240 mil por ano. O Lucro Real permite compensar prejuízos e a depreciação acelerada de bens rurais, não incluídas aqui.",
+        "Lucros distribuídos isentos até R$ 50 mil por mês por empresa; acima disso, retenção de 10% (Lei 15.270/2025). O imposto mínimo anual sobre altas rendas (acima de R$ 600 mil), ICMS e ITR não estão no cálculo.",
+        "Reforma tributária: a partir de 2027, a CBS substitui o PIS/Cofins, e o IBS entra aos poucos de 2029 a 2033. O produtor pessoa física com receita anual abaixo de R$ 3,6 milhões pode optar por não ser contribuinte de IBS e CBS. Os efeitos ainda não estão modelados.",
+        "Estimativa educacional: a escolha entre PF e PJ envolve sucessão, patrimônio, crédito rural e regras estaduais. Decida com um contador especializado em agronegócio."]);
+    return {html, after(){ const k = v.desp/Math.max(1,R), ser = xs.map(r=>rural(v, r, r*k));
+      lineChart($("#ch"), {xs, series:S.map((x,i)=>({name:x.nome, color:[C.c1,C.c2,"#199e70"][i], ys:ser.map(s=>s[i].liq)})), noEndLabels:true,
+        marks:[{x:Math.min(xs[xs.length-1],Math.max(xs[0],R)), label:"sua receita"}], xfmt:x=>curto(x), yfmt:y=>curto(y), tipfmt:y=>money0(y), tipTitle:x=>`Receita de ${money0(x)}`, label:"Sobra anual como PF, Lucro Presumido e Lucro Real conforme a receita"}); }};
+  }
+});
+
 /* ================= navegação e formulário ================= */
 /* três grupos, como no Investidor Sardinha; a ordem define as abas e os cartões */
 const ORDEM = {
   fin: ["milhao","juros","juros-simples","poup-selic","rentab","renda","reserva","cdb-calc","comp-rf","marcacao","comp-acoes","teto","magico","avista","pix","amortizacao"],
-  trab: ["clt-pj","pj","salario","custo-clt","ferias","ferias-prop","decimo","inss","fgts","horas","seguro","isencao","rescisao"],
+  trab: ["clt-pj","pj","rural","salario","custo-clt","ferias","ferias-prop","decimo","inss","fgts","horas","seguro","isencao","rescisao"],
   util: ["dias","dias-uteis","veiculo-ev","custos","cartoes"],
 };
 const ATALHOS = {fin: [["simuladores.html#aposentadoria","Aposentadoria","Planeje a aposentadoria e descubra quanto poupar por mês.","casa"],["simuladores.html#alugar","Aluguel × financiamento","Compare alugar e investir com financiar o imóvel.","casa"]]};
@@ -2010,7 +2087,7 @@ const RESUMO = {
   "marcacao":"Ganho ou perda ao vender um título antes do vencimento.", "comp-acoes":"Compare até cinco ações, FIIs ou ETFs.", "teto":"Preço-teto de Bazin e preço justo de Graham.",
   "magico":"Quantas cotas para os rendimentos comprarem uma nova.", "avista":"Vale mais pagar à vista com desconto ou parcelar?", "pix":"A taxa de juros embutida no Pix parcelado.",
   "amortizacao":"Parcelas, saldo devedor e economia com amortização extra.",
-  "clt-pj":"Quanto você ganha líquido como CLT ou PJ.", "pj":"Renda líquida como PJ no MEI, Simples ou Lucro Presumido.", "salario":"Quanto sobra depois do INSS e do IR.",
+  "clt-pj":"Quanto você ganha líquido como CLT ou PJ.", "pj":"Renda líquida como PJ no MEI, Simples ou Lucro Presumido.", "rural":"Produtor rural: pessoa física, Lucro Presumido ou Lucro Real.", "salario":"Quanto sobra depois do INSS e do IR.",
   "custo-clt":"O custo total de um funcionário para a empresa.", "ferias":"Quanto você recebe nas férias.", "ferias-prop":"Férias proporcionais ao tempo trabalhado.",
   "decimo":"O valor das duas parcelas do 13º salário.", "inss":"O desconto do INSS faixa por faixa.", "fgts":"Saldo projetado do FGTS e saque-aniversário.",
   "horas":"Horas extras, adicional noturno e DSR.", "seguro":"Valor e parcelas do seguro-desemprego.", "isencao":"Quanto você economiza com a nova tabela do IR.",
@@ -2033,7 +2110,7 @@ const ICONES = {
   doc:'<path d="M7 3.5h7l4 4V20H7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 12h5M10 15.5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
 };
 const ICONE_DE = {"milhao":"grafico","juros":"grafico","juros-simples":"pct","poup-selic":"balanca","rentab":"grafico","renda":"dinheiro","reserva":"dinheiro","cdb-calc":"pct","comp-rf":"balanca","marcacao":"grafico","comp-acoes":"balanca","teto":"dinheiro","magico":"casa","avista":"cartao","pix":"pct","amortizacao":"casa",
-  "clt-pj":"balanca","pj":"maleta","salario":"dinheiro","custo-clt":"maleta","ferias":"calend","ferias-prop":"calend","decimo":"dinheiro","inss":"doc","fgts":"dinheiro","horas":"relogio","seguro":"doc","isencao":"doc","rescisao":"doc",
+  "clt-pj":"balanca","pj":"maleta","rural":"casa","salario":"dinheiro","custo-clt":"maleta","ferias":"calend","ferias-prop":"calend","decimo":"dinheiro","inss":"doc","fgts":"dinheiro","horas":"relogio","seguro":"doc","isencao":"doc","rescisao":"doc",
   "dias":"calend","dias-uteis":"calend","veiculo-ev":"carro","custos":"pizza","cartoes":"cartao"};
 const ic = k => `<span class="cic"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">${ICONES[k]||ICONES.doc}</svg></span>`;
 const GRUPOS = [

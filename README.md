@@ -18,9 +18,9 @@ Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória es
 - Dados salvos no `localStorage` do navegador.
 
 ### Calculadoras (`calculadoras.html`)
-34 calculadoras em 3 grupos, abertas a partir de uma vitrine em cartões, como no Investidor Sardinha. Links como `calculadoras.html#clt-pj` abrem direto a calculadora.
+35 calculadoras em 3 grupos, abertas a partir de uma vitrine em cartões, como no Investidor Sardinha. Links como `calculadoras.html#clt-pj` abrem direto a calculadora.
 - **Financeiras:** primeiro milhão com carteiras sugeridas, juros compostos, juros simples, poupança × Selic, rentabilidade (bruta, líquida e real), viver de renda, reserva de emergência, CDB, comparador de renda fixa, marcação a mercado, comparador de ações (dados em `data/acoes.json`, gerado por `scripts/atualizar_acoes.py`), preço-teto, número mágico, à vista ou parcelado, juros do Pix parcelado e simulador de amortização (SAC ou Price, TR ou IPCA, aportes extras para reduzir prazo ou parcela). Aposentadoria e aluguel × financiamento abrem os simuladores.
-- **Trabalhistas:** CLT vs PJ, calculadora PJ (MEI, Simples III e V, Lucro Presumido), salário líquido, custo de funcionário, férias, férias proporcionais, 13º, INSS, FGTS com saque-aniversário, horas extras, seguro-desemprego, isenção do IR 2026 e rescisão.
+- **Trabalhistas:** CLT vs PJ, calculadora PJ (MEI, Simples III e V, Lucro Presumido), produtor rural PF ou PJ (livro-caixa, Lucro Presumido e Lucro Real, com Funrural), salário líquido, custo de funcionário, férias, férias proporcionais, 13º, INSS, FGTS com saque-aniversário, horas extras, seguro-desemprego, isenção do IR 2026 e rescisão.
 - **Utilitárias:** contador de dias, dias úteis com feriados nacionais, carro a combustão × elétrico, custos fixos (regra 50-30-20) e comparador de cartões de crédito.
 - INSS e IR pelas tabelas de 2026, com o redutor da Lei 15.270/2025; CDI e IPCA projetados pelo Boletim Focus.
 
