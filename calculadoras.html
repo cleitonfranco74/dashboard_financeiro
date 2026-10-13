@@ -114,9 +114,9 @@ footer.autor b{color:var(--ink-2);font-weight:700}
 <link rel="stylesheet" href="assets/sim.css">
 <!-- Contagem de visitas: GoatCounter (sem cookies; painel em dashboardfinan.goatcounter.com) -->
 <script>
-/* cada calculadora/simulador (#id) conta como uma página */
-window.goatcounter = {path: p => p + location.hash};
-addEventListener("hashchange", () => { if (window.goatcounter.count) window.goatcounter.count(); });
+/* Quem chega pelo Instagram (?utm_source=instagram) conta no caminho "/instagram", que o rodapé da capa exibe; cada calculadora/simulador (#id) conta como uma página. */
+window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(location.search) ? "/instagram" : p + location.hash};
+addEventListener("hashchange", () => { if (window.goatcounter.count) window.goatcounter.count({path: location.pathname + location.hash}); });
 </script>
 <script data-goatcounter="https://dashboardfinan.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head>
