@@ -1,0 +1,49 @@
+name: Juros futuros (DI1)
+
+on:
+  schedule:
+    - cron: "*/15 12-21 * * 1-5"   # a cada 15 min, das 9h às 18h45 de Brasília, dias úteis
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: di
+  cancel-in-progress: false
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install requests
+
+      # Os dados ficam no branch "dados", para não gerar commits na main a cada 15 minutos.
+      - name: Branch de dados
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch origin dados:dados; then
+            git worktree add ../dados dados
+          else
+            git worktree add --orphan -b dados ../dados
+          fi
+
+      - run: python scripts/atualizar_di.py ../dados/di.json
+
+      - name: Commit no branch de dados
+        working-directory: ../dados
+        run: |
+          git add di.json
+          if git diff --cached --quiet; then
+            echo "Sem mudanças."
+          else
+            git commit -m "DI futuro $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push origin dados
+          fi
