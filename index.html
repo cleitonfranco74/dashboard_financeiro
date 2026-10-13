@@ -229,6 +229,13 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
 .di .mini div{background:var(--bg);border:1px solid var(--ring);border-radius:12px;padding:8px 10px;min-width:0}
 .di .mini span{display:block;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .di .mini b{display:block;font-family:var(--mono);font-size:14px;font-weight:500;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.serie.inc{margin-top:16px}
+.di .leitura{margin:12px 0 0;padding:12px 14px;border-radius:12px;border:1px solid color-mix(in srgb,var(--s1) 35%,transparent);background:color-mix(in srgb,var(--s1) 8%,transparent);color:var(--ink);font-size:14px;text-wrap:pretty}
+.di .leitura b{color:var(--s1)}
+.di .ctl .dt{align-self:center}
+.di .termo{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);overflow-x:auto}
+.di .termo .katex{font-size:1.05em;color:var(--ink)}
+.di .it{font-family:var(--mono);font-size:13px;color:var(--ink)}
 .chart text.ref{fill:var(--ink-2);font-family:var(--mono);font-size:10.5px}
 </style>
 </head>
@@ -306,7 +313,7 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
       </div>
 
       <div class="bc dis">
-        <section class="serie di" data-c="DI1F27" aria-labelledby="hF27">
+        <section class="serie di" data-c="DI1F27" data-i="0" aria-labelledby="hF27">
           <div class="top"><h2 id="hF27" class="dh">Juros futuros · DI1F27</h2><span class="dt dd">carregando…</span></div>
           <p class="dt dnota" style="margin:4px 0 0">Taxa média de depósitos interfinanceiros de um dia, contrato com vencimento em janeiro de 2027.</p>
           <div class="val"><b class="dv">—</b><span class="var dx"></span></div>
@@ -320,7 +327,7 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
           <div class="mini dm"></div>
           <p class="fonte">Taxa em % ao ano. Fonte: B3, com atraso de cerca de 15 minutos; o painel se atualiza sozinho a cada 15 minutos durante o pregão.</p>
         </section>
-        <section class="serie di" data-c="DI1F28" aria-labelledby="hF28">
+        <section class="serie di" data-c="DI1F28" data-i="1" aria-labelledby="hF28">
           <div class="top"><h2 id="hF28" class="dh">Juros futuros · DI1F28</h2><span class="dt dd">carregando…</span></div>
           <p class="dt dnota" style="margin:4px 0 0">Taxa média de depósitos interfinanceiros de um dia, contrato com vencimento em janeiro de 2028.</p>
           <div class="val"><b class="dv">—</b><span class="var dx"></span></div>
@@ -335,6 +342,24 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
           <p class="fonte">Taxa em % ao ano. Fonte: B3, com atraso de cerca de 15 minutos; o painel se atualiza sozinho a cada 15 minutos durante o pregão.</p>
         </section>
       </div>
+      <section class="serie di inc" aria-labelledby="hInc">
+        <div class="top"><h2 id="hInc">Inclinação da curva · F28 − F27</h2><span class="dt id">carregando…</span></div>
+        <p class="dt" style="margin:4px 0 0">O que a diferença entre os dois vértices diz sobre a Selic esperada e o prêmio de risco.</p>
+        <div class="mini im"></div>
+        <p class="leitura il"></p>
+        <div class="ctl">
+          <span class="dt">Inclinação em pontos-base (vértice longo − curto)</span>
+          <div class="seg ij" role="group" aria-label="Período">
+            <button type="button" data-j="dia">Hoje</button><button type="button" data-j="semana" aria-pressed="true">Semana</button>
+          </div>
+        </div>
+        <div class="chart ic" role="img" aria-label="Inclinação entre DI1F28 e DI1F27 ao longo do tempo"></div>
+        <div class="termo">
+          <p class="dt" style="margin:0 0 6px">Taxa a termo implícita (CDI médio esperado entre os dois vencimentos), com <i>du</i> = dias úteis até cada vencimento:</p>
+          <div class="it"></div>
+        </div>
+        <p class="fonte">Negativa: o mercado espera juros menores à frente (curva invertida). Positiva: espera juros maiores ou cobra mais prêmio pelo prazo. Dias úteis contados pelo calendário de feriados nacionais; cálculo aproximado, sem valor de recomendação.</p>
+      </section>
     </section>
 
     <div class="stats" role="list">
@@ -596,12 +621,14 @@ function grafico(el, pts, o){
   if (!pts || pts.length < 2){ el.innerHTML = `<p class="fonte">${o.vazio || "Sem dados para este período ainda."}</p>`; return; }
   const W = Math.max(260, el.clientWidth||600), H = 220, pad = {t:14,r:50,b:24,l:8};
   const vs = pts.map(p=>p.v).concat(o.ref!=null ? [o.ref] : []);
+  if (o.zero) vs.push(0);
   let lo = Math.min(...vs), hi = Math.max(...vs); const f = (hi-lo)*0.12 || 0.05; lo -= f; hi += f;
   const L = pts.length-1, X = k => pad.l + k*(W-pad.l-pad.r)/L, Y = v => pad.t + (hi-v)/(hi-lo)*(H-pad.t-pad.b);
   let g = "";
-  const passo = [0.01,0.02,0.05,0.1,0.2,0.25,0.5,1,2].find(p => (hi-lo)/p <= 5) || 2;
+  const passo = [0.01,0.02,0.05,0.1,0.2,0.25,0.5,1,2,5,10,25,50].find(p => (hi-lo)/p <= 5) || 100;
+  const cor = o.cor || "var(--accent)", tick = o.tick || (v => nf(v, passo<1?2:1)), dica = o.dica || (v => nf(v,3)+"%");
   for (let v = Math.ceil(lo/passo)*passo; v <= hi; v += passo)
-    g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text class="tn" x="${W-pad.r+6}" y="${Y(v)+3.5}">${nf(v, passo<1?2:1)}</text>`;
+    g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text class="tn" x="${W-pad.r+6}" y="${Y(v)+3.5}">${tick(v)}</text>`;
   let ultX = -1e9;
   (o.marcas||[]).forEach(([k,txt,sep]) => {
     if (sep && k>0) g += `<line x1="${X(k)}" x2="${X(k)}" y1="${pad.t}" y2="${H-pad.b}" stroke="var(--line)" stroke-dasharray="2 3"/>`;
@@ -609,21 +636,23 @@ function grafico(el, pts, o){
     ultX = X(k);
     g += `<text x="${X(k)}" y="${H-6}" text-anchor="${k===0?"start":"middle"}">${txt}</text>`;
   });
-  if (o.ref!=null) g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(o.ref)}" y2="${Y(o.ref)}" stroke="var(--ink-2)" stroke-dasharray="4 4" opacity=".7"/><text class="ref" x="${pad.l+4}" y="${Y(o.ref)-5}">ajuste anterior ${nf(o.ref,3)}</text>`;
+  if (o.ref!=null) g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(o.ref)}" y2="${Y(o.ref)}" stroke="var(--ink-2)" stroke-dasharray="4 4" opacity=".7"/><text class="ref" x="${pad.l+4}" y="${Y(o.ref)-5}">${o.refRot || "ajuste anterior "+nf(o.ref,3)}</text>`;
   const linha = pts.map((p,k)=>(k?"L":"M")+X(k).toFixed(1)+","+Y(p.v).toFixed(1)).join("");
-  g += `<path d="${linha}L${X(L)},${H-pad.b}L${X(0)},${H-pad.b}Z" fill="var(--accent)" opacity=".08"/>`;
-  g += `<path d="${linha}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>`;
+  if (o.zero) g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--axis)"/>`;
+  const base = o.zero ? Y(0) : H-pad.b;
+  g += `<path d="${linha}L${X(L)},${base}L${X(0)},${base}Z" fill="${cor}" opacity=".08"/>`;
+  g += `<path d="${linha}" fill="none" stroke="${cor}" stroke-width="2" stroke-linejoin="round"/>`;
   (o.pontos||[]).forEach(k => { g += `<circle cx="${X(k)}" cy="${Y(pts[k].v)}" r="${k===o.destaque?6:3.5}" fill="${k===o.destaque?"var(--accent)":"var(--surface)"}" stroke="var(--accent)" stroke-width="2"/>`; });
   if (o.destaque!=null) g += `<text class="vl" x="${X(o.destaque)}" y="${Y(pts[o.destaque].v)-12}" text-anchor="middle">${pts[o.destaque].rot}</text>`;
-  else g += `<circle cx="${X(L)}" cy="${Y(pts[L].v)}" r="4.5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`;
-  g += `<g class="hov" style="display:none"><line y1="${pad.t}" y2="${H-pad.b}" stroke="var(--axis)"/><circle r="4" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/></g>`;
+  else g += `<circle cx="${X(L)}" cy="${Y(pts[L].v)}" r="4.5" fill="${cor}" stroke="var(--surface)" stroke-width="2"/>`;
+  g += `<g class="hov" style="display:none"><line y1="${pad.t}" y2="${H-pad.b}" stroke="var(--axis)"/><circle r="4" fill="${cor}" stroke="var(--surface)" stroke-width="2"/></g>`;
   el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" aria-hidden="true">${g}</svg><div class="tipb" hidden></div>`;
   const svg = el.querySelector("svg"), hov = el.querySelector(".hov"), tip = el.querySelector(".tipb");
   const move = e => { const b = svg.getBoundingClientRect(), px = (e.clientX-b.left)*(W/b.width);
     const k = Math.max(0, Math.min(L, Math.round((px-pad.l)/(W-pad.l-pad.r)*L)));
     hov.style.display = ""; hov.querySelector("line").setAttribute("x1",X(k)); hov.querySelector("line").setAttribute("x2",X(k));
     hov.querySelector("circle").setAttribute("cx",X(k)); hov.querySelector("circle").setAttribute("cy",Y(pts[k].v));
-    tip.hidden = false; tip.innerHTML = `${pts[k].dica} · <b>${nf(pts[k].v,3)}%</b>`;
+    tip.hidden = false; tip.innerHTML = `${pts[k].dica} · <b>${dica(pts[k].v)}</b>`;
     const x = X(k)/W*b.width; tip.style.left = Math.max(0, Math.min(b.width-tip.offsetWidth, x-tip.offsetWidth/2))+"px"; };
   svg.addEventListener("mousemove", move);
   svg.addEventListener("touchstart", e=>move(e.touches[0]), {passive:true});
@@ -632,7 +661,7 @@ function grafico(el, pts, o){
 }
 
 function painel(root){
-  const q = s => root.querySelector(s), st = {c:root.dataset.c, j:"semana"};
+  const q = s => root.querySelector(s), st = {c:root.dataset.c, j:"semana"}, pos = +root.dataset.i;
 
   function desenhar(){
     const d = dados, el = q(".dc");
@@ -667,7 +696,7 @@ function painel(root){
     grafico(el, pts, {marcas, ref:aj, vazio:"A série intradiária começa a ser montada no próximo pregão."});
   }
   function botoes(){
-    if (dados && !dados.contratos[st.c]) st.c = Object.keys(dados.contratos)[0];
+    if (dados && !dados.contratos[st.c]) st.c = Object.keys(dados.contratos).sort((x,y)=>ano(x)-ano(y))[pos] || Object.keys(dados.contratos)[0];
     const cs = dados ? Object.keys(dados.contratos).sort() : [st.c];
     q(".sc").innerHTML = cs.map(c=>`<button type="button" data-c="${c}" aria-pressed="${c===st.c}" title="Vencimento em janeiro de ${ano(c)}">${c.slice(3)}</button>`).join("");
     root.querySelectorAll(".sj button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.j===st.j));
@@ -678,7 +707,90 @@ function painel(root){
   return () => { botoes(); desenhar(); };
 }
 
-const paineis = [...document.querySelectorAll(".serie.di")].map(painel);
+/* Dias úteis (calendário nacional: fixos, Carnaval, Sexta-feira Santa e Corpus Christi). */
+const pascoa = y => { const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mes=Math.floor((h+l-7*m+114)/31),dia=((h+l-7*m+114)%31)+1; return Date.UTC(y,mes-1,dia); };
+const FER = {};
+function feriados(y){
+  if (FER[y]) return FER[y];
+  const iso = t => new Date(t).toISOString().slice(0,10), P = pascoa(y), D = 864e5;
+  return FER[y] = new Set(["01-01","04-21","05-01","09-07","10-12","11-02","11-15","11-20","12-25"].map(x=>`${y}-${x}`)
+    .concat([P-48*D, P-47*D, P-2*D, P+60*D].map(iso)));
+}
+const util = t => { const dt = new Date(t), w = dt.getUTCDay(), s = dt.toISOString().slice(0,10); return w!==0 && w!==6 && !feriados(dt.getUTCFullYear()).has(s); };
+function vencimento(c){ let t = Date.UTC(ano(c), 0, 1); while (!util(t)) t += 864e5; return t; }   // 1º dia útil de janeiro
+function du(de, ate){ let n = 0; for (let t = de; t < ate; t += 864e5) if (util(t)) n++; return n; }
+const termo = (i1, i2, d1, d2) => (Math.pow(Math.pow(1+i2/100, d2/252) / Math.pow(1+i1/100, d1/252), 252/(d2-d1)) - 1) * 100;
+
+function painelInc(root){
+  const q = s => root.querySelector(s), st = {j:"semana"};
+  let A, B;
+  const bps = (v,d=1) => `${v>0?"+":v<0?"−":""}${nf(Math.abs(v),d)}`;
+  function leitura(d1, d2){
+    const m = Math.max(Math.abs(d1), Math.abs(d2)), dir = x => x>0 ? "alta" : "queda";
+    if (m < 3) return "Curva praticamente parada hoje: nenhum dos dois vértices andou mais de 3 bps.";
+    const lado = (d2-d1) > 0 ? "a curva <b>inclinou</b> (o longo subiu mais ou caiu menos que o curto)" : "a curva <b>desinclinou</b> (o curto subiu mais ou caiu menos que o longo)";
+    if (Math.sign(d1) !== Math.sign(d2) && Math.min(Math.abs(d1),Math.abs(d2)) >= 3)
+      return `Os vértices andaram em direções opostas (${A.slice(3)} ${bps(d1)} bps, ${B.slice(3)} ${bps(d2)} bps): ${lado}. Costuma indicar troca entre juro curto e prêmio de prazo, por exemplo um Banco Central mais duro hoje com menos inflação adiante.`;
+    if (Math.abs(d2) >= Math.abs(d1) + 3)
+      return `Movimento concentrado no <b>vértice longo</b>: ${dir(d2)} de ${bps(d2)} bps no ${B.slice(3)} contra ${bps(d1)} bps no ${A.slice(3)}. O mercado mexeu no <b>prêmio de risco</b> (fiscal, inflação mais longa ou cenário externo), não na expectativa para as próximas reuniões do Copom.`;
+    if (Math.abs(d1) >= Math.abs(d2) + 3)
+      return `Movimento concentrado no <b>vértice curto</b>: ${dir(d1)} de ${bps(d1)} bps no ${A.slice(3)} contra ${bps(d2)} bps no ${B.slice(3)}. O mercado está <b>reprecificando as próximas decisões do Copom</b> (dados de atividade, inflação corrente ou comunicação do Banco Central).`;
+    return `Movimento <b>paralelo</b>: ${dir(d2)} parecida nos dois vértices (${A.slice(3)} ${bps(d1)} bps, ${B.slice(3)} ${bps(d2)} bps). A curva subiu ou desceu como um todo, sem mudar muito a inclinação.`;
+  }
+  function desenhar(){
+    const el = q(".ic");
+    if (dados) [A, B] = Object.keys(dados.contratos).sort((x,y)=>ano(x)-ano(y));
+    if (!dados || !A || !B){ if (tentou) el.innerHTML = `<p class="fonte">Aguardando os dados do DI1F27 e do DI1F28.</p>`; return; }
+    const ra = dados.contratos[A], rb = dados.contratos[B], ua = ra.ultimo||{}, ub = rb.ultimo||{};
+    const ultimo = r => { const ds = Object.keys(r.intradia||{}).sort(); return ds.length ? r.intradia[ds.at(-1)].at(-1)[1] : null; };
+    const ia = ua.taxa ?? ultimo(ra), ib = ub.taxa ?? ultimo(rb), aa = ua.ajusteAnterior, ab = ub.ajusteAnterior;
+    const hoje = (ub.hora || ua.hora || dados.atualizado || "").slice(0,10) || new Date().toISOString().slice(0,10);
+    const t0 = Date.UTC(+hoje.slice(0,4), +hoje.slice(5,7)-1, +hoje.slice(8,10));
+    const d1 = du(t0, vencimento(A)), d2 = du(t0, vencimento(B));
+    let tAnt = t0 - 864e5; while (!util(tAnt)) tAnt -= 864e5;
+    const d1a = du(tAnt, vencimento(A)), d2a = du(tAnt, vencimento(B));
+    const inc = (ib-ia)*100, incA = aa && ab ? (ab-aa)*100 : null;
+    const f = d1 > 0 && d2 > d1 ? termo(ia, ib, d1, d2) : null, fA = aa && ab && d2a > d1a ? termo(aa, ab, d1a, d2a) : null;
+    root.querySelector("h2").textContent = `Inclinação da curva · ${B.slice(3)} − ${A.slice(3)}`;
+    q(".ic").setAttribute("aria-label", `Inclinação entre ${B} e ${A} ao longo do tempo`);
+    q(".id").textContent = ub.hora ? `${diaBR(hoje)}, ${ub.hora.slice(11,16)} (Brasília)` : diaBR(hoje);
+    q(".im").innerHTML = [
+      ["Inclinação agora", `${bps(inc)} bps`],
+      ["Inclinação no ajuste anterior", incA!=null ? `${bps(incA)} bps` : "—"],
+      ["Mudança no dia", incA!=null ? `${bps(inc-incA)} bps` : "—"],
+      [`Termo ${ano(A)}→${ano(B)}`, f!=null ? `${nf(f,2)}%` : "—"],
+      ["Termo no ajuste anterior", fA!=null ? `${nf(fA,2)}%` : "—"],
+    ].map(([a,b])=>`<div><span>${a}</span><b>${b}</b></div>`).join("");
+    q(".il").innerHTML = (aa && ab ? leitura((ia-aa)*100, (ib-ab)*100) + " " : "") +
+      (f!=null ? `Pela taxa a termo, o mercado espera um CDI médio de <b>${nf(f,2)}% a.a.</b> entre ${MES[0]}/${ano(A)} e ${MES[0]}/${ano(B)}, ${f < ia ? `abaixo dos ${nf(ia,2)}% do ${A.slice(3)}: aposta em <b>cortes</b> da Selic` : `acima dos ${nf(ia,2)}% do ${A.slice(3)}: aposta em <b>altas</b> da Selic ou prêmio de prazo elevado`}.` : "");
+    const it = q(".it");
+    if (f!=null){
+      const dec = (v,dd) => v.toFixed(dd).replace(".","{,}");
+      const tx = `f = \\left[\\frac{(1+i_{${B.slice(3)}})^{du_{${B.slice(3)}}/252}}{(1+i_{${A.slice(3)}})^{du_{${A.slice(3)}}/252}}\\right]^{\\frac{252}{du_{${B.slice(3)}}-du_{${A.slice(3)}}}} - 1 = \\left[\\frac{${dec(1+ib/100,5)}^{${d2}/252}}{${dec(1+ia/100,5)}^{${d1}/252}}\\right]^{\\frac{252}{${d2-d1}}} - 1 = \\mathbf{${dec(f,2)}\\%}`;
+      it.textContent = `f = [(1+${nf(ib,3)}%)^(${d2}/252) / (1+${nf(ia,3)}%)^(${d1}/252)]^(252/${d2-d1}) − 1 = ${nf(f,2)}%`;
+      try { if (window.katex) katex.render(tx, it, {displayMode:true, throwOnError:false}); } catch {}
+    }
+    // série da inclinação: cada horário do F28 contra o último valor do F27 até aquele horário
+    const dias = Object.keys(rb.intradia||{}).filter(x => (ra.intradia||{})[x]).sort();
+    const usar = st.j === "dia" ? dias.slice(-1) : dias, pts = [], marcas = [];
+    usar.forEach(dia => {
+      const a = ra.intradia[dia], b = rb.intradia[dia]; let k = 0, va = null, ini = pts.length;
+      b.forEach(([h,v]) => { while (k < a.length && a[k][0] <= h){ va = a[k][1]; k++; } if (va!=null) pts.push({v:(v-va)*100, dica:`${diaBR(dia)} ${h}`}); });
+      if (pts.length > ini){
+        marcas.push([ini, st.j==="dia" ? b[0][0] : diaBR(dia), true]);
+        if (st.j==="dia") for (const hh of ["11:00","13:00","15:00","17:00"]){ const j = b.findIndex(p=>p[0]>=hh); if (j>0 && ini+j < pts.length) marcas.push([ini+j, hh]); }
+      }
+    });
+    grafico(el, pts, {marcas, cor:"var(--s1)", ref:incA, refRot: incA!=null ? `ajuste anterior ${bps(incA)} bps` : "",
+      tick: v => nf(v,0), dica: v => `${bps(v)} bps`, vazio:"A série da inclinação começa a ser montada no próximo pregão."});
+  }
+  q(".ij").addEventListener("click", e=>{ const b = e.target.closest("button"); if (!b) return; st.j = b.dataset.j;
+    root.querySelectorAll(".ij button").forEach(x=>x.setAttribute("aria-pressed", x.dataset.j===st.j)); desenhar(); });
+  let t; new ResizeObserver(()=>{ clearTimeout(t); t = setTimeout(desenhar, 80); }).observe(q(".ic"));
+  return desenhar;
+}
+
+const paineis = [...document.querySelectorAll(".serie.di:not(.inc)")].map(painel).concat([...document.querySelectorAll(".serie.inc")].map(painelInc));
 async function atualizar(){
   const d = await carregar(); tentou = true;
   if (d) dados = d;
