@@ -9,7 +9,7 @@ Painel de finanças pessoais, simuladores e otimizador de carteira em português
 ## Páginas
 
 ### Capa (`index.html`)
-Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória esperada pelo Focus), acesso às ferramentas e autoria.
+Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória esperada pelo Focus), Ibovespa e dólar, gráfico dos juros futuros (DI1F28 e outros vencimentos de janeiro: hoje, semana e curva completa, com atualização automática), acesso às ferramentas e autoria.
 
 ### Livro-Caixa (`livro-caixa.html`)
 - Resumo do mês: receitas, despesas, resultado e taxa de poupança.
@@ -83,6 +83,9 @@ Otimização de Markowitz com Tesouro Selic/CDI, Prefixado, IPCA+, BOVA11, IVVB1
 - **BCB SGS 1:** dólar PTAX de venda, diário (último valor também lido ao vivo na página inicial).
 
 Para atualizar à mão: aba **Actions** → *Atualizar dados de mercado* → *Run workflow*.
+
+### Juros futuros (DI1)
+`di.json` fica no branch `dados` (fora da `main`, para não republicar o site a cada coleta). A GitHub Action `.github/workflows/di.yml` roda `scripts/atualizar_di.py` a cada 15 minutos nos dias úteis, das 9h às 18h45 (Brasília), e grava as cotações da B3 (cotacao.b3.com.br, atraso de ~15 min): taxa a cada 5 minutos dos últimos 7 pregões para DI1F27, F28, F29, F31 e F33, fechamentos diários e a curva com todos os vencimentos. A capa lê o arquivo em `raw.githubusercontent.com/.../dados/di.json` e se recarrega a cada 5 minutos. Para coletar à mão: **Actions** → *Juros futuros (DI1)* → *Run workflow*.
 
 Para editar a lista de ações, altere `ACOES` em `scripts/atualizar_mercado.py` e `ATIVOS` em `carteira.html`.
 

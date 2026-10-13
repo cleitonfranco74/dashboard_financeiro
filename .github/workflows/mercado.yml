@@ -26,12 +26,6 @@ jobs:
 
       - run: pip install -r scripts/requirements.txt
 
-      - name: Teste DI (temporário)
-        run: |
-          python scripts/atualizar_di.py /tmp/di.json
-          python -c "import json;d=json.load(open('/tmp/di.json'));c=d['contratos']['DI1F28'];print(json.dumps(c['ultimo']));print(list(c['intradia'].keys()), len(next(iter(c['intradia'].values()))));print(json.dumps(next(iter(c['intradia'].values()))[:5]));print(json.dumps(d['curva'][:4]))"
-        continue-on-error: true
-
       - run: python scripts/atualizar_mercado.py
 
       - name: Ações, FIIs e ETFs do comparador
