@@ -217,18 +217,18 @@ footer .about b{color:var(--ink-2);font-weight:700}
 footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;font-size:12.5px}
 
 /* juros futuros (DI1) */
-.serie.di{margin-top:16px;text-align:left}
+.serie.di{text-align:left}
+.bc.dis{margin-top:16px}
 .di .ctl{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:10px 0 12px}
 .seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--bg);gap:2px}
 .seg button{border:0;background:none;color:var(--ink-2);font:600 12.5px/1 var(--sans);padding:7px 11px;border-radius:999px;cursor:pointer}
 .seg button:hover{color:var(--ink)}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
-.di .chart{height:230px}
-.di .mini{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:12px}
+.di .chart{height:220px}
+.di .mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin-top:12px}
 .di .mini div{background:var(--bg);border:1px solid var(--ring);border-radius:12px;padding:8px 10px;min-width:0}
 .di .mini span{display:block;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .di .mini b{display:block;font-family:var(--mono);font-size:14px;font-weight:500;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media (max-width:640px){.di .mini{grid-template-columns:repeat(2,minmax(0,1fr))}.di .mini div:last-child{grid-column:1/-1}}
 .chart text.ref{fill:var(--ink-2);font-family:var(--mono);font-size:10.5px}
 </style>
 </head>
@@ -305,20 +305,36 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
         </section>
       </div>
 
-      <section class="serie di" aria-labelledby="hDI">
-        <div class="top"><h2 id="hDI">Juros futuros · DI1F28</h2><span class="dt" id="dDI">carregando…</span></div>
-        <p class="dt" id="nDI" style="margin:4px 0 0">Taxa média de depósitos interfinanceiros de um dia, contrato com vencimento em janeiro de 2028.</p>
-        <div class="val"><b id="vDI">—</b><span class="var" id="xDI"></span></div>
-        <div class="ctl">
-          <div class="seg" id="segC" role="group" aria-label="Vencimento"></div>
-          <div class="seg" id="segJ" role="group" aria-label="Período">
-            <button type="button" data-j="dia">Hoje</button><button type="button" data-j="semana" aria-pressed="true">Semana</button><button type="button" data-j="curva">Curva</button>
+      <div class="bc dis">
+        <section class="serie di" data-c="DI1F27" aria-labelledby="hF27">
+          <div class="top"><h2 id="hF27" class="dh">Juros futuros · DI1F27</h2><span class="dt dd">carregando…</span></div>
+          <p class="dt dnota" style="margin:4px 0 0">Taxa média de depósitos interfinanceiros de um dia, contrato com vencimento em janeiro de 2027.</p>
+          <div class="val"><b class="dv">—</b><span class="var dx"></span></div>
+          <div class="ctl">
+            <div class="seg sc" role="group" aria-label="Vencimento"></div>
+            <div class="seg sj" role="group" aria-label="Período">
+              <button type="button" data-j="dia">Hoje</button><button type="button" data-j="semana" aria-pressed="true">Semana</button><button type="button" data-j="curva">Curva</button>
+            </div>
           </div>
-        </div>
-        <div class="chart" id="cDI" role="img" aria-label="Taxa do DI futuro ao longo do tempo"></div>
-        <div class="mini" id="mDI"></div>
-        <p class="fonte" id="fDI">Taxa em % ao ano. Fonte: B3, com atraso de cerca de 15 minutos; o painel se atualiza sozinho a cada 15 minutos durante o pregão.</p>
-      </section>
+          <div class="chart dc" role="img" aria-label="Taxa do DI futuro ao longo do tempo"></div>
+          <div class="mini dm"></div>
+          <p class="fonte">Taxa em % ao ano. Fonte: B3, com atraso de cerca de 15 minutos; o painel se atualiza sozinho a cada 15 minutos durante o pregão.</p>
+        </section>
+        <section class="serie di" data-c="DI1F28" aria-labelledby="hF28">
+          <div class="top"><h2 id="hF28" class="dh">Juros futuros · DI1F28</h2><span class="dt dd">carregando…</span></div>
+          <p class="dt dnota" style="margin:4px 0 0">Taxa média de depósitos interfinanceiros de um dia, contrato com vencimento em janeiro de 2028.</p>
+          <div class="val"><b class="dv">—</b><span class="var dx"></span></div>
+          <div class="ctl">
+            <div class="seg sc" role="group" aria-label="Vencimento"></div>
+            <div class="seg sj" role="group" aria-label="Período">
+              <button type="button" data-j="dia">Hoje</button><button type="button" data-j="semana" aria-pressed="true">Semana</button><button type="button" data-j="curva">Curva</button>
+            </div>
+          </div>
+          <div class="chart dc" role="img" aria-label="Taxa do DI futuro ao longo do tempo"></div>
+          <div class="mini dm"></div>
+          <p class="fonte">Taxa em % ao ano. Fonte: B3, com atraso de cerca de 15 minutos; o painel se atualiza sozinho a cada 15 minutos durante o pregão.</p>
+        </section>
+      </div>
     </section>
 
     <div class="stats" role="list">
@@ -555,17 +571,17 @@ Mercado.carregar().then(m=>{
 })();
 </script>
 <script>
-/* Juros futuros (DI1): lê o arquivo gravado pela Action di.yml no branch "dados" e se atualiza sozinho. */
+/* Juros futuros (DI1): lê o arquivo gravado pela Action di.yml no branch "dados" e se atualiza sozinho.
+   Cada painel .serie.di começa no contrato de data-c e tem seus próprios seletores. */
 (() => {
-const $ = s => document.querySelector(s);
 const nf = (v,d=2) => v.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
 const RAW = "https://raw.githubusercontent.com/cleitonfranco74/dashboard_financeiro/dados/di.json";
 const NOMES = {F:"janeiro",G:"fevereiro",H:"março",J:"abril",K:"maio",M:"junho",N:"julho",Q:"agosto",U:"setembro",V:"outubro",X:"novembro",Z:"dezembro"};
 const MES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
 const SEM = ["dom","seg","ter","qua","qui","sex","sáb"];
-const st = {c:"DI1F28", j:"semana", d:null};
 const ano = c => 2000 + +c.slice(-2);
 const diaBR = d => `${SEM[new Date(d+"T12:00:00").getDay()]} ${d.slice(8,10)}/${d.slice(5,7)}`;
+let dados = null, tentou = false;
 
 async function carregar(){
   const t = Math.floor(Date.now()/60000);
@@ -578,16 +594,19 @@ async function carregar(){
 /* Gráfico de linha com área, referência tracejada (ajuste anterior) e dica ao passar o mouse. */
 function grafico(el, pts, o){
   if (!pts || pts.length < 2){ el.innerHTML = `<p class="fonte">${o.vazio || "Sem dados para este período ainda."}</p>`; return; }
-  const W = Math.max(260, el.clientWidth||600), H = 230, pad = {t:14,r:56,b:24,l:8};
+  const W = Math.max(260, el.clientWidth||600), H = 220, pad = {t:14,r:50,b:24,l:8};
   const vs = pts.map(p=>p.v).concat(o.ref!=null ? [o.ref] : []);
   let lo = Math.min(...vs), hi = Math.max(...vs); const f = (hi-lo)*0.12 || 0.05; lo -= f; hi += f;
   const L = pts.length-1, X = k => pad.l + k*(W-pad.l-pad.r)/L, Y = v => pad.t + (hi-v)/(hi-lo)*(H-pad.t-pad.b);
   let g = "";
   const passo = [0.01,0.02,0.05,0.1,0.2,0.25,0.5,1,2].find(p => (hi-lo)/p <= 5) || 2;
   for (let v = Math.ceil(lo/passo)*passo; v <= hi; v += passo)
-    g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text class="tn" x="${W-pad.r+6}" y="${Y(v)+3.5}">${nf(v, passo<0.1?2:passo<1?2:1)}</text>`;
+    g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text class="tn" x="${W-pad.r+6}" y="${Y(v)+3.5}">${nf(v, passo<1?2:1)}</text>`;
+  let ultX = -1e9;
   (o.marcas||[]).forEach(([k,txt,sep]) => {
     if (sep && k>0) g += `<line x1="${X(k)}" x2="${X(k)}" y1="${pad.t}" y2="${H-pad.b}" stroke="var(--line)" stroke-dasharray="2 3"/>`;
+    if (X(k) - ultX < 8*txt.length + 6) return;
+    ultX = X(k);
     g += `<text x="${X(k)}" y="${H-6}" text-anchor="${k===0?"start":"middle"}">${txt}</text>`;
   });
   if (o.ref!=null) g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(o.ref)}" y2="${Y(o.ref)}" stroke="var(--ink-2)" stroke-dasharray="4 4" opacity=".7"/><text class="ref" x="${pad.l+4}" y="${Y(o.ref)-5}">ajuste anterior ${nf(o.ref,3)}</text>`;
@@ -612,59 +631,62 @@ function grafico(el, pts, o){
   svg.addEventListener("mouseleave", ()=>{ hov.style.display="none"; tip.hidden = true; });
 }
 
-function desenhar(){
-  const d = st.d, el = $("#cDI");
-  if (!d){ if (!st.tentou) return; el.innerHTML = `<p class="fonte">Os dados do DI futuro ainda não foram coletados. A primeira coleta acontece no próximo pregão (dias úteis, das 9h às 18h).</p>`; $("#dDI").textContent = "aguardando dados"; return; }
-  const r = d.contratos[st.c] || {}, u = r.ultimo || {}, intra = r.intradia || {}, dias = Object.keys(intra).sort();
-  const nome = `${NOMES[st.c[3]]||""} de ${ano(st.c)}`;
-  $("#hDI").textContent = `Juros futuros · ${st.c}`;
-  $("#nDI").textContent = `Taxa média de depósitos interfinanceiros de um dia, contrato com vencimento em ${nome}.`;
-  const taxa = u.taxa ?? (dias.length ? intra[dias.at(-1)].at(-1)[1] : null);
-  $("#vDI").textContent = taxa!=null ? nf(taxa,3)+"%" : "—";
-  const aj = u.ajusteAnterior;
-  $("#xDI").innerHTML = taxa!=null && aj ? (x => `<span class="${x<=0?"up":"dn"}">${x>=0?"+":"−"}${nf(Math.abs(x),1)} bps no dia</span><span>${x>=0?"+":"−"}${nf(Math.abs(u.var ?? (taxa/aj-1)*100))}%</span>`)((taxa-aj)*100) : "";
-  $("#dDI").textContent = u.hora ? `${diaBR(u.hora.slice(0,10))}, ${u.hora.slice(11,16)} (Brasília)` : dias.length ? diaBR(dias.at(-1)) : "";
-  const fmt = (v,dd=3) => v!=null ? nf(v,dd)+"%" : "—";
-  $("#mDI").innerHTML = [["Abertura",fmt(u.abertura)],["Mínima",fmt(u.min)],["Máxima",fmt(u.max)],["Ajuste anterior",fmt(aj)],["Negócios",u.negocios!=null?u.negocios.toLocaleString("pt-BR"):"—"]]
-    .map(([a,b])=>`<div><span>${a}</span><b>${b}</b></div>`).join("");
-  $("#cDI").setAttribute("aria-label", st.j==="curva" ? "Curva de juros futuros por vencimento" : `Taxa do ${st.c} ${st.j==="dia"?"hoje":"nos últimos pregões"}`);
+function painel(root){
+  const q = s => root.querySelector(s), st = {c:root.dataset.c, j:"semana"};
 
-  if (st.j === "curva"){
-    const cv = (d.curva||[]).filter(x => x.venc && x.venc.slice(0,4) <= String(new Date().getFullYear()+10));
-    const pts = cv.map(x => ({v:x.taxa, dica:`${x.c} · ${MES[+x.venc.slice(5,7)-1]}/${x.venc.slice(0,4)}`, rot:nf(x.taxa,2)+"%"}));
-    const marcas = [], vistos = new Set();
-    cv.forEach((x,k)=>{ const a = x.venc.slice(0,4); if (!vistos.has(a)){ vistos.add(a); if (+a%2===0 || cv.length<14) marcas.push([k, a, true]); } });
-    const k = cv.findIndex(x => x.c === st.c);
-    grafico(el, pts, {marcas, destaque:k>=0?k:null, pontos:cv.map((x,i)=>i).filter(i=>/F\d\d$/.test(cv[i].c)), vazio:"Curva ainda não disponível."});
-    return;
+  function desenhar(){
+    const d = dados, el = q(".dc");
+    if (!d){ if (!tentou) return; el.innerHTML = `<p class="fonte">Os dados do DI futuro ainda não foram coletados. A primeira coleta acontece no próximo pregão (dias úteis, das 9h às 18h).</p>`; q(".dd").textContent = "aguardando dados"; return; }
+    const r = d.contratos[st.c] || {}, u = r.ultimo || {}, intra = r.intradia || {}, dias = Object.keys(intra).sort();
+    q(".dh").textContent = `Juros futuros · ${st.c}`;
+    q(".dnota").textContent = `Taxa média de depósitos interfinanceiros de um dia, contrato com vencimento em ${NOMES[st.c[3]]||""} de ${ano(st.c)}.`;
+    const taxa = u.taxa ?? (dias.length ? intra[dias.at(-1)].at(-1)[1] : null), aj = u.ajusteAnterior;
+    q(".dv").textContent = taxa!=null ? nf(taxa,3)+"%" : "—";
+    q(".dx").innerHTML = taxa!=null && aj ? (x => `<span class="${x<=0?"up":"dn"}">${x>=0?"+":"−"}${nf(Math.abs(x),1)} bps no dia</span><span>${x>=0?"+":"−"}${nf(Math.abs(u.var ?? (taxa/aj-1)*100))}%</span>`)((taxa-aj)*100) : "";
+    q(".dd").textContent = u.hora ? `${diaBR(u.hora.slice(0,10))}, ${u.hora.slice(11,16)} (Brasília)` : dias.length ? diaBR(dias.at(-1)) : "";
+    const fmt = v => v!=null ? nf(v,3)+"%" : "—";
+    q(".dm").innerHTML = [["Abertura",fmt(u.abertura)],["Mínima",fmt(u.min)],["Máxima",fmt(u.max)],["Ajuste anterior",fmt(aj)],["Negócios",u.negocios!=null?u.negocios.toLocaleString("pt-BR"):"—"]]
+      .map(([a,b])=>`<div><span>${a}</span><b>${b}</b></div>`).join("");
+    el.setAttribute("aria-label", st.j==="curva" ? "Curva de juros futuros por vencimento" : `Taxa do ${st.c} ${st.j==="dia"?"hoje":"nos últimos pregões"}`);
+
+    if (st.j === "curva"){
+      const cv = (d.curva||[]).filter(x => x.venc && x.venc.slice(0,4) <= String(new Date().getFullYear()+10));
+      const pts = cv.map(x => ({v:x.taxa, dica:`${x.c} · ${MES[+x.venc.slice(5,7)-1]}/${x.venc.slice(0,4)}`, rot:nf(x.taxa,2)+"%"}));
+      const marcas = [], vistos = new Set();
+      cv.forEach((x,k)=>{ const a = x.venc.slice(0,4); if (!vistos.has(a)){ vistos.add(a); if (+a%2===0 || cv.length<14) marcas.push([k, a, true]); } });
+      const k = cv.findIndex(x => x.c === st.c);
+      grafico(el, pts, {marcas, destaque:k>=0?k:null, pontos:cv.map((x,i)=>i).filter(i=>/F\d\d$/.test(cv[i].c)), vazio:"Curva ainda não disponível."});
+      return;
+    }
+    const usar = st.j === "dia" ? dias.slice(-1) : dias, pts = [], marcas = [];
+    usar.forEach(dia => { const a = intra[dia]||[]; if (!a.length) return;
+      marcas.push([pts.length, st.j==="dia" ? a[0][0] : diaBR(dia), true]);
+      a.forEach(([h,v]) => pts.push({v, dica:`${diaBR(dia)} ${h}`}));
+      if (st.j==="dia"){ for (const hh of ["11:00","13:00","15:00","17:00"]){ const k = a.findIndex(p=>p[0]>=hh); if (k>0) marcas.push([k, hh]); } }
+    });
+    grafico(el, pts, {marcas, ref:aj, vazio:"A série intradiária começa a ser montada no próximo pregão."});
   }
-  const usar = st.j === "dia" ? dias.slice(-1) : dias;
-  const pts = [], marcas = [];
-  usar.forEach(dia => { const a = intra[dia]||[]; if (!a.length) return;
-    marcas.push([pts.length, st.j==="dia" ? a[0][0] : diaBR(dia), true]);
-    a.forEach(([h,v]) => pts.push({v, dica:`${diaBR(dia)} ${h}`}));
-    if (st.j==="dia"){ for (const hh of ["11:00","13:00","15:00","17:00"]){ const k = a.findIndex(p=>p[0]>=hh); if (k>0) marcas.push([k, hh]); } }
-  });
-  grafico(el, pts, {marcas, ref:aj, vazio:"A série intradiária começa a ser montada no próximo pregão."});
+  function botoes(){
+    if (dados && !dados.contratos[st.c]) st.c = Object.keys(dados.contratos)[0];
+    const cs = dados ? Object.keys(dados.contratos).sort() : [st.c];
+    q(".sc").innerHTML = cs.map(c=>`<button type="button" data-c="${c}" aria-pressed="${c===st.c}" title="Vencimento em janeiro de ${ano(c)}">${c.slice(3)}</button>`).join("");
+    root.querySelectorAll(".sj button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.j===st.j));
+  }
+  q(".sc").addEventListener("click", e=>{ const b = e.target.closest("button"); if (!b) return; st.c = b.dataset.c; botoes(); desenhar(); });
+  q(".sj").addEventListener("click", e=>{ const b = e.target.closest("button"); if (!b) return; st.j = b.dataset.j; botoes(); desenhar(); });
+  let t; new ResizeObserver(()=>{ clearTimeout(t); t = setTimeout(desenhar, 80); }).observe(q(".dc"));
+  return () => { botoes(); desenhar(); };
 }
 
-function botoes(){
-  const cs = st.d ? Object.keys(st.d.contratos).sort() : ["DI1F28"];
-  $("#segC").innerHTML = cs.map(c=>`<button type="button" data-c="${c}" aria-pressed="${c===st.c}" title="Vencimento em janeiro de ${ano(c)}">${c.slice(3)}</button>`).join("");
-  document.querySelectorAll("#segJ button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.j===st.j));
-}
-$("#segC").addEventListener("click", e=>{ const b = e.target.closest("button"); if (!b) return; st.c = b.dataset.c; botoes(); desenhar(); });
-$("#segJ").addEventListener("click", e=>{ const b = e.target.closest("button"); if (!b) return; st.j = b.dataset.j; botoes(); desenhar(); });
-
+const paineis = [...document.querySelectorAll(".serie.di")].map(painel);
 async function atualizar(){
-  const d = await carregar(); st.tentou = true;
-  if (d) { st.d = d; if (!d.contratos[st.c]) st.c = Object.keys(d.contratos)[0]; }
-  botoes(); desenhar();
+  const d = await carregar(); tentou = true;
+  if (d) dados = d;
+  paineis.forEach(f => f());
 }
 atualizar();
 setInterval(()=>{ if (!document.hidden) atualizar(); }, 5*60*1000);
-document.addEventListener("visibilitychange", ()=>{ if (!document.hidden && st.d && Date.now()-Date.parse(st.d.atualizado) > 20*60*1000) atualizar(); });
-let t; new ResizeObserver(()=>{ clearTimeout(t); t = setTimeout(desenhar, 80); }).observe($("#cDI"));
+document.addEventListener("visibilitychange", ()=>{ if (!document.hidden && dados && Date.now()-Date.parse(dados.atualizado) > 20*60*1000) atualizar(); });
 })();
 </script>
 </body>

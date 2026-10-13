@@ -9,7 +9,7 @@ Painel de finanças pessoais, simuladores e otimizador de carteira em português
 ## Páginas
 
 ### Capa (`index.html`)
-Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória esperada pelo Focus), Ibovespa e dólar, gráfico dos juros futuros (DI1F28 e outros vencimentos de janeiro: hoje, semana e curva completa, com atualização automática), acesso às ferramentas e autoria.
+Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória esperada pelo Focus), Ibovespa e dólar, gráficos dos juros futuros lado a lado (DI1F27 e DI1F28, cada um podendo trocar para outros vencimentos de janeiro; hoje, semana e curva completa, com atualização automática), acesso às ferramentas e autoria.
 
 ### Livro-Caixa (`livro-caixa.html`)
 - Resumo do mês: receitas, despesas, resultado e taxa de poupança.
