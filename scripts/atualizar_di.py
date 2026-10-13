@@ -19,10 +19,16 @@ from pathlib import Path
 import requests
 
 API = "https://cotacao.b3.com.br/mds/api/v1"
-CONTRATOS = ["DI1F27", "DI1F28", "DI1F29", "DI1F31", "DI1F33"]   # janeiros: 1, 2, 3, 5 e 7 anos à frente
+ANOS_A_FRENTE = [1, 2, 3, 5, 7]                                  # vencimentos de janeiro acompanhados
 PREGOES = 7                                                    # dias de histórico intradiário guardados
 PASSO_MIN = 5                                                  # minutos entre pontos guardados
 BRT = timezone(timedelta(hours=-3))
+
+
+def contratos() -> list[str]:
+    """Janeiros de 1, 2, 3, 5 e 7 anos à frente (em 2026: F27, F28, F29, F31 e F33); rolam na virada do ano."""
+    y = datetime.now(BRT).year
+    return [f"DI1F{(y + n) % 100:02d}" for n in ANOS_A_FRENTE]
 
 sessao = requests.Session()
 sessao.headers["User-Agent"] = "dashboard-financeiro/1.0 (+github.com/cleitonfranco74/dashboard_financeiro)"
@@ -101,7 +107,10 @@ def main() -> None:
     except Exception as e:  # noqa: BLE001
         log(f"curva: falhou ({e})")
     ajustes = {c["c"]: c["ant"] for c in dados.get("curva") or []}
-    for c in CONTRATOS:
+    lista = contratos()
+    for velho in [c for c in dados["contratos"] if c not in lista]:   # contrato vencido sai do arquivo
+        del dados["contratos"][velho]
+    for c in lista:
         reg = dados["contratos"].setdefault(c, {"intradia": {}, "fechamentos": {}})
         try:
             dia, serie = intradia(c)

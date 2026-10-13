@@ -9,7 +9,7 @@ Painel de finanças pessoais, simuladores e otimizador de carteira em português
 ## Páginas
 
 ### Capa (`index.html`)
-Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória esperada pelo Focus), Ibovespa e dólar, gráficos dos juros futuros lado a lado (DI1F27 e DI1F28, cada um podendo trocar para outros vencimentos de janeiro; hoje, semana e curva completa, com atualização automática), acesso às ferramentas e autoria.
+Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória esperada pelo Focus), Ibovespa e dólar, gráficos dos juros futuros lado a lado (DI1F27 e DI1F28, cada um podendo trocar para outros vencimentos de janeiro; hoje, semana e curva completa, com atualização automática) e painel de inclinação F28 − F27 com taxa a termo implícita e leitura automática do movimento do dia, acesso às ferramentas e autoria.
 
 ### Livro-Caixa (`livro-caixa.html`)
 - Resumo do mês: receitas, despesas, resultado e taxa de poupança.
@@ -85,7 +85,7 @@ Otimização de Markowitz com Tesouro Selic/CDI, Prefixado, IPCA+, BOVA11, IVVB1
 Para atualizar à mão: aba **Actions** → *Atualizar dados de mercado* → *Run workflow*.
 
 ### Juros futuros (DI1)
-`di.json` fica no branch `dados` (fora da `main`, para não republicar o site a cada coleta). A GitHub Action `.github/workflows/di.yml` roda `scripts/atualizar_di.py` a cada 15 minutos nos dias úteis, das 9h às 18h45 (Brasília), e grava as cotações da B3 (cotacao.b3.com.br, atraso de ~15 min): taxa a cada 5 minutos dos últimos 7 pregões para DI1F27, F28, F29, F31 e F33, fechamentos diários e a curva com todos os vencimentos. A capa lê o arquivo em `raw.githubusercontent.com/.../dados/di.json` e se recarrega a cada 5 minutos. Para coletar à mão: **Actions** → *Juros futuros (DI1)* → *Run workflow*.
+`di.json` fica no branch `dados` (fora da `main`, para não republicar o site a cada coleta). A GitHub Action `.github/workflows/di.yml` roda `scripts/atualizar_di.py` a cada 15 minutos nos dias úteis, das 9h às 18h45 (Brasília), e grava as cotações da B3 (cotacao.b3.com.br, atraso de ~15 min): taxa a cada 5 minutos dos últimos 7 pregões para os janeiros de 1, 2, 3, 5 e 7 anos à frente (em 2026: DI1F27, F28, F29, F31 e F33; a lista rola sozinha na virada do ano), fechamentos diários e a curva com todos os vencimentos. A capa lê o arquivo em `raw.githubusercontent.com/.../dados/di.json` e se recarrega a cada 5 minutos. Para coletar à mão: **Actions** → *Juros futuros (DI1)* → *Run workflow*.
 
 Para editar a lista de ações, altere `ACOES` em `scripts/atualizar_mercado.py` e `ATIVOS` em `carteira.html`.
 
