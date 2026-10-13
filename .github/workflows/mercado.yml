@@ -26,6 +26,10 @@ jobs:
 
       - run: pip install -r scripts/requirements.txt
 
+      - name: Sonda B3 (temporária)
+        run: python scripts/sondar_b3.py
+        continue-on-error: true
+
       - run: python scripts/atualizar_mercado.py
 
       - name: Ações, FIIs e ETFs do comparador
