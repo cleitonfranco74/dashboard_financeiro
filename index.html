@@ -214,6 +214,10 @@ footer ul a{color:var(--ink-2);text-decoration:none}
 footer ul a:hover{color:var(--accent)}
 footer .about p{margin:12px 0 0;max-width:44ch}
 footer .about b{color:var(--ink-2);font-weight:700}
+footer .visitas{display:inline-flex;align-items:center;gap:7px}
+footer .visitas[hidden]{display:none}
+footer .visitas i{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+footer .visitas b{color:var(--ink);font-weight:600}
 footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;font-size:12.5px}
 
 /* juros futuros (DI1) */
@@ -487,11 +491,20 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
     </div>
     <div class="legal">
       <span>© 2026 Livro-Caixa</span>
+      <span class="visitas" id="visitas" hidden><i aria-hidden="true"></i><b class="num">—</b> visitas</span>
       <span>Ferramenta educacional, não é recomendação de investimento</span>
     </div>
   </footer>
 </div>
 
+<script>
+/* Contador de visitas do rodapé: total do site no GoatCounter (some se o contador público estiver desligado). */
+fetch("https://dashboardfinan.goatcounter.com/counter/TOTAL.json")
+  .then(r => r.ok ? r.json() : Promise.reject())
+  .then(j => { const n = +String(j.count).replace(/\D/g, ""); if (!n) return;
+    const el = document.getElementById("visitas"); el.querySelector("b").textContent = n.toLocaleString("pt-BR"); el.hidden = false; })
+  .catch(() => {});
+</script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="assets/mercado.js"></script>
 <script>
