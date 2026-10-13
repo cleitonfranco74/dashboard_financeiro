@@ -137,6 +137,10 @@ details[open] summary{margin-bottom:8px}
 </style>
 <link rel="stylesheet" href="assets/tema.css">
 <!-- Contagem de visitas: GoatCounter (sem cookies; painel em dashboardfinan.goatcounter.com) -->
+<script>
+/* Quem chega pelo Instagram (?utm_source=instagram) conta no caminho "/instagram", que o rodapé da capa exibe. */
+window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(location.search) ? "/instagram" : p};
+</script>
 <script data-goatcounter="https://dashboardfinan.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head>
 <body>
