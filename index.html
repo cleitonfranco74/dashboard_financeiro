@@ -495,27 +495,35 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
     </div>
     <div class="legal">
       <span>© 2026 Livro-Caixa</span>
-      <span class="visitas" id="visitas" hidden><i aria-hidden="true"></i><span><b class="num" id="vTot">—</b> <span id="vRot">visitas</span> · <b class="num" id="vIg">0</b> pelo Instagram</span></span>
+      <span class="visitas" id="visitas" title="Visitas contadas pelo GoatCounter, com algumas horas de atraso"><i aria-hidden="true"></i><span><b class="num" id="vTot">—</b> <span id="vRot">visitas</span> · <b class="num" id="vIg">0</b> pelo Instagram</span></span>
       <span>Ferramenta educacional, não é recomendação de investimento</span>
     </div>
   </footer>
 </div>
 
 <script>
-/* Contador de visitas do rodapé: total do site e chegadas pelo Instagram (caminho "/instagram") no GoatCounter.
-   Mostra zero também; um caminho sem visitas responde 404, lido como zero. O contador some só se a leitura do total falhar. */
+/* Contador de visitas do rodapé: total do site e chegadas pelo Instagram (caminho "/instagram").
+   Duas fontes, vale o maior número: o GoatCounter direto (pode ser bloqueado pela prevenção de rastreamento
+   do navegador; caminho sem visitas responde 404 = zero) e a cópia gravada pela Action di.yml no branch "dados". */
 (() => {
   const GC = "https://dashboardfinan.goatcounter.com/counter/";
-  const ler = (cam, vazio404) => fetch(GC + encodeURIComponent(cam) + ".json")
-    .then(r => r.ok ? r.json() : (vazio404 && r.status === 404 ? {count:"0"} : Promise.reject()))
-    .then(j => { const t = String(j.count ?? "").replace(/\D/g, ""); return t === "" ? Promise.reject() : +t; });
+  const COPIA = "https://raw.githubusercontent.com/cleitonfranco74/dashboard_financeiro/dados/visitas.json";
+  const num = v => { const t = String(v ?? "").replace(/\D/g, ""); return t === "" ? Promise.reject() : +t; };
+  const ler = cam => fetch(GC + encodeURIComponent(cam) + ".json")
+    .then(r => r.ok ? r.json() : (r.status === 404 && cam !== "TOTAL" ? {count:"0"} : Promise.reject()))
+    .then(j => num(j.count));
+  const copia = fetch(COPIA + "?t=" + Math.floor(Date.now()/600000)).then(r => r.ok ? r.json() : Promise.reject());
   const fmt = n => n.toLocaleString("pt-BR");
-  Promise.all([ler("TOTAL", false), ler("/instagram", true).catch(() => 0)]).then(([tot, ig]) => {
-    document.getElementById("vTot").textContent = fmt(tot);
-    document.getElementById("vRot").textContent = tot === 1 ? "visita" : "visitas";
-    document.getElementById("vIg").textContent = fmt(ig);
-    document.getElementById("visitas").hidden = false;
-  }).catch(() => {});
+  const maior = (...v) => { const x = v.filter(n => typeof n === "number" && isFinite(n)); return x.length ? Math.max(...x) : null; };
+  Promise.allSettled([ler("TOTAL"), ler("/instagram"), copia]).then(([t, i, c]) => {
+    const cp = c.status === "fulfilled" ? c.value : {};
+    const tot = maior(t.value, cp.total), ig = maior(i.value, cp.instagram);
+    if (tot != null) {
+      document.getElementById("vTot").textContent = fmt(tot);
+      document.getElementById("vRot").textContent = tot === 1 ? "visita" : "visitas";
+    }
+    document.getElementById("vIg").textContent = ig != null ? fmt(ig) : "—";
+  });
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>

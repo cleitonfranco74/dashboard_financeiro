@@ -37,10 +37,23 @@ jobs:
 
       - run: python scripts/atualizar_di.py ../dados/di.json
 
+      # Cópia dos contadores públicos do GoatCounter, lida pelo rodapé da capa quando o navegador bloqueia o GoatCounter.
+      - name: Visitas (GoatCounter)
+        continue-on-error: true
+        working-directory: ../dados
+        run: |
+          gc() { curl -sS -m 20 "https://dashboardfinan.goatcounter.com/counter/$1.json" | jq -r '.count // "0"' | tr -dc '0-9'; }
+          t=$(gc TOTAL); i=$(gc %2Finstagram)
+          if [ -n "$t" ]; then
+            printf '{"total":%s,"instagram":%s,"atualizado":"%s"}\n' "$t" "${i:-0}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > visitas.json
+            cat visitas.json
+          fi
+
       - name: Commit no branch de dados
         working-directory: ../dados
         run: |
           git add di.json
+          if [ -f visitas.json ]; then git add visitas.json; fi
           if git diff --cached --quiet; then
             echo "Sem mudanças."
           else
