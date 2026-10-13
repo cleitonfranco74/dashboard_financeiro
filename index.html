@@ -498,11 +498,12 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
 </div>
 
 <script>
-/* Contador de visitas do rodapé: total do site no GoatCounter (some se o contador público estiver desligado). */
+/* Contador de visitas do rodapé: total do site no GoatCounter, inclusive zero (some só se a leitura falhar). */
 fetch("https://dashboardfinan.goatcounter.com/counter/TOTAL.json")
   .then(r => r.ok ? r.json() : Promise.reject())
-  .then(j => { const n = +String(j.count).replace(/\D/g, ""); if (!n) return;
-    const el = document.getElementById("visitas"); el.querySelector("b").textContent = n.toLocaleString("pt-BR"); el.hidden = false; })
+  .then(j => { const t = String(j.count ?? "").replace(/\D/g, ""); if (t === "") return;
+    const n = +t, el = document.getElementById("visitas");
+    el.querySelector("b").textContent = n.toLocaleString("pt-BR"); el.lastChild.textContent = n === 1 ? " visita" : " visitas"; el.hidden = false; })
   .catch(() => {});
 </script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
