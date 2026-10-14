@@ -245,6 +245,13 @@ window.GUIAS = {
 },
 
 /* ===================== Simuladores ===================== */
+"inflexao": {
+  usar: ["Informe quanto já tem investido, o aporte mensal e, se quiser, quanto pretende aumentá-lo acima da inflação a cada ano.", "Defina a rentabilidade real (acima da inflação, já sem IR e taxas) e o padrão de vida que deseja manter, em valores de hoje.", "Veja em quantos anos chegam os três marcos e acompanhe nos gráficos o patrimônio, os aportes e o rendimento mensal."],
+  entenda: [["Ponto de inflexão", "No começo, quase todo o crescimento vem do seu bolso. Com o tempo, o rendimento mensal do patrimônio (P × r) cresce até superar o próprio aporte: daí em diante os juros trabalham mais do que você. Com patrimônio inicial zero e aporte fixo, isso acontece quando o dinheiro aportado teria dobrado, em n = ln 2 / ln(1 + r) meses: cerca de 14 anos a 5% real ao ano, seja o aporte de R$ 500 ou de R$ 5.000."],
+    ["Juros maiores que os aportes", "Um pouco depois, o total de juros acumulados passa a superar tudo o que você depositou: o patrimônio vale mais que o dobro do que saiu do seu bolso."],
+    ["Independência financeira", "É o patrimônio cujo rendimento real paga o seu padrão de vida para sempre, sem consumir o principal: renda mensal ÷ taxa real mensal. A 5% real ao ano, cada R$ 1.000 de renda mensal exige cerca de R$ 245 mil."]],
+  faq: [["Por que usar rentabilidade real?", "Porque os valores ficam no poder de compra de hoje: R$ 6 mil de padrão de vida significam o que R$ 6 mil compram agora, sem precisar estimar a inflação de décadas."], ["Aumentar o aporte adianta a inflexão?", "Aumentar o aporte adianta a independência financeira, mas tende a atrasar o ponto de inflexão, porque o alvo (o próprio aporte) também sobe. O que antecipa a inflexão é patrimônio inicial maior ou rentabilidade maior."]]
+},
 "aposentadoria": {
   usar: ["Informe sua idade, com que idade quer se aposentar e até que idade planejar a renda.", "Diga quanto já tem investido e quanto aporta por mês.", "Informe a renda desejada e o INSS estimado, em valores de hoje.", "Ajuste a rentabilidade real antes e depois da aposentadoria e veja se o plano cobre a renda ou quanto precisa aportar."],
   entenda: [["Por que valores de hoje", "Usar retornos reais (acima da inflação) mantém todos os números no poder de compra atual: R$ 8 mil de renda significam o que R$ 8 mil compram hoje, sem precisar estimar a inflação de décadas."], ["Duas fases", "Na acumulação, aportes e juros fazem o patrimônio crescer. Na aposentadoria, você retira a renda desejada menos o INSS e o patrimônio é consumido até a idade planejada."]],

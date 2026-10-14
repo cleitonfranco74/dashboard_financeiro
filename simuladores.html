@@ -131,7 +131,7 @@ const C = window.CalcLib, S = window.SimLib, F = window.Ferramentas;
 const GRUPOS = [
   {id:"g-tesouro", nome:"Tesouro Direto", sub:"Títulos públicos com as taxas de hoje", ids:["tesouro","selic","ipca","prefixado","educa"]},
   {id:"g-invest", nome:"Investimentos", sub:"Renda fixa, ações, dividendos, FIIs e cripto", ids:["cdb","acoes","dividendos","fii","cripto"]},
-  {id:"g-apos", nome:"Planejamento e aposentadoria", sub:"Primeiro milhão, viver de renda, aposentadoria e previdência", ids:["milhao","renda","aposentadoria","prevprivada","previdencia"]},
+  {id:"g-apos", nome:"Planejamento e aposentadoria", sub:"Primeiro milhão, ponto de inflexão, viver de renda, aposentadoria e previdência", ids:["milhao","inflexao","renda","aposentadoria","prevprivada","previdencia"]},
   {id:"g-credito", nome:"Crédito, moradia e veículos", sub:"Dívidas, financiamentos, amortização, aluguel, consórcio e carro", ids:["dividas","amortizacao","imovel","veiculo","alugar","consorcio","veiculo-ev"]},
 ].map(g=>({...g, ids: g.ids.filter(id=>S.tem(id)||C.tem(id))}));
 /* contas com regra fixa que ficam na aba Calculadoras, mostradas como atalhos */

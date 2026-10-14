@@ -14,7 +14,7 @@ window.Ferramentas = (() => {
   const VEJA = {
     "cdb":["cdb-calc","comp-rf"], "cdb-calc":["cdb","comp-rf"], "comp-rf":["tesouro","cdb"], "tesouro":["comp-rf","poup-selic"],
     "selic":["poup-selic","reserva"], "poup-selic":["selic"], "ipca":["marcacao"], "prefixado":["marcacao"], "marcacao":["ipca","prefixado"],
-    "renda":["aposentadoria","milhao"], "aposentadoria":["renda","milhao"], "milhao":["juros","aposentadoria"], "juros":["milhao","rentab"],
+    "renda":["aposentadoria","inflexao"], "aposentadoria":["renda","inflexao"], "milhao":["inflexao","juros"], "inflexao":["milhao","renda","aposentadoria"], "juros":["milhao","rentab"],
     "amortizacao":["imovel","veiculo"], "imovel":["amortizacao","alugar"], "veiculo":["amortizacao","veiculo-ev"], "veiculo-ev":["veiculo"],
     "ir":["salario","isencao"], "salario":["ir","isencao"], "isencao":["ir"], "previdencia":["ir"],
     "cambio":["viagem","roma"], "voos":["roma","cambio"], "viagem":["roma","cambio"], "roma":["voos","viagem","cambio"],

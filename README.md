@@ -35,10 +35,10 @@ Cada calculadora, cada simulador, o Livro-Caixa e a Carteira trazem abaixo dos r
 - `assets/ferramentas.js` define em que página cada ferramenta mora, os links “Veja também” e o redirecionamento de endereços antigos (por exemplo, `calculadoras.html#milhao` abre `simuladores.html#milhao`).
 
 ### Simuladores (`simuladores.html`)
-22 simuladores em 4 grupos, abertos a partir de uma vitrine em cartões, com navegação em dois níveis (grupo e simulador). Além dos listados abaixo, ficam aqui primeiro milhão, viver de renda, amortização e carro a combustão × elétrico. Imposto de renda, câmbio, passagens e orçamento de viagem ficam nas Calculadoras:
+23 simuladores em 4 grupos, abertos a partir de uma vitrine em cartões, com navegação em dois níveis (grupo e simulador). Além dos listados abaixo, ficam aqui primeiro milhão, viver de renda, amortização e carro a combustão × elétrico. Imposto de renda, câmbio, passagens e orçamento de viagem ficam nas Calculadoras:
 - **Tesouro Direto:** comparar títulos, Tesouro Selic, IPCA+, Prefixado e Educa+ (faculdade dos filhos).
 - **Investimentos:** CDB e LCI/LCA, ações, dividendos, fundos imobiliários e criptomoedas.
-- **Aposentadoria e impostos:** aposentadoria, previdência privada, PGBL ou VGBL e imposto de renda.
+- **Aposentadoria e impostos:** ponto de inflexão (quando o rendimento mensal supera o aporte, quando os juros superam o total aportado e quando a renda do patrimônio cobre o padrão de vida), aposentadoria, previdência privada, PGBL ou VGBL e imposto de renda.
 - **Crédito e moradia:** quitar dívidas, financiar veículo, financiar imóvel, alugar ou financiar e consórcio.
 - **Viagem:** orçamento de viagem, passagens aéreas e câmbio.
 

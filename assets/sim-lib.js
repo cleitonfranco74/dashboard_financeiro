@@ -107,6 +107,13 @@ function drawLine(el, spec){
   }
   const xt = niceTicks(x0, x1, Math.max(3, Math.min(8, Math.floor((W-m.l)/80)))).filter(v=>v>=x0&&v<=x1);
   for (const t of xt) g += `<text x="${X(t)}" y="${H-9}" text-anchor="middle">${xFmt(t)}</text>`;
+  (spec.areas||[]).forEach(si=>{ const s=series[si]; const pts=s.values.map((v,i)=>v==null||!isFinite(v)?null:`${X(xs[i]).toFixed(1)},${Y(v).toFixed(1)}`).filter(Boolean);
+    if (pts.length>1) g += `<polygon points="${X(xs[0]).toFixed(1)},${Y(Math.max(y0,0)).toFixed(1)} ${pts.join(" ")} ${X(xs[s.values.length-1]).toFixed(1)},${Y(Math.max(y0,0)).toFixed(1)}" fill="${s.color}" opacity=".12"/>`; });
+  (spec.marks||[]).forEach((mk,k)=>{ if (!(mk.x>=x0 && mk.x<=x1)) return; const x=X(mk.x);
+    g += `<line x1="${x}" x2="${x}" y1="${m.t}" y2="${H-m.b}" stroke="${mk.color||"var(--ink-2)"}" stroke-dasharray="3 4" opacity=".8"/>`;
+    if (mk.y!=null) g += `<circle cx="${x}" cy="${Y(mk.y)}" r="5.5" fill="var(--surface)" stroke="${mk.color||"var(--ink-2)"}" stroke-width="2.5"/>`;
+    const lbl = esc(mk.label||""), w = lbl.length*6.4+12, lx = Math.min(Math.max(x-w/2, m.l), W-m.r-w), ly = m.t + 2 + k*20;
+    g += `<rect x="${lx}" y="${ly}" width="${w}" height="17" rx="8.5" fill="var(--surface)" stroke="${mk.color||"var(--line)"}"/><text x="${lx+w/2}" y="${ly+12}" text-anchor="middle" class="mk-l" style="fill:var(--ink);font-size:10.5px;font-weight:600">${lbl}</text>`; });
   series.forEach((s,si)=>{
     let d="", pen=false;
     s.values.forEach((v,i)=>{ if (v==null||!isFinite(v)){pen=false;return;} d += (pen?"L":"M")+X(xs[i]).toFixed(1)+","+Y(v).toFixed(1); pen=true; });
@@ -253,6 +260,73 @@ SIMS.push({
           "Impostos não calculados à parte: informe a rentabilidade já líquida de IR e taxas.",
           `“Necessário” consome o patrimônio até os ${v.ate} anos. Viver só de renda exigiria ${money(capPerp)}.`]),
       after(){ lineChart($("#ch"),{label:"Patrimônio por idade", xs, series:[{name:"Seu plano",color:C.s1,values:A.out},{name:"Plano necessário",color:C.s2,values:B.out}], xFmt:v=>`${nf(v)}`, tipTitle:x=>`${nf(x)} anos`}); }
+    };
+  }
+});
+
+/* ---------- 1b. Ponto de inflexão e independência financeira ---------- */
+SIMS.push({
+  id:"inflexao", nav:"Ponto de inflexão",
+  title:"Quando os juros passam a trabalhar mais do que você?",
+  lede:"Mostra os três marcos da acumulação: o mês em que o rendimento supera o aporte (ponto de inflexão), quando os juros acumulados superam tudo o que você investiu e quando a renda do patrimônio cobre seu padrão de vida.",
+  fields:[
+    {k:"patrimonio",label:"Já investido",def:0,pre:"R$"},
+    {k:"aporte",label:"Aporte mensal",def:1500,pre:"R$",sobra:true},
+    {k:"cresc",label:"Aumento real do aporte",def:0,suf:"% a.a.",hint:"0 = mesmo valor de hoje todo mês"},
+    {k:"ret",label:"Rentabilidade real",def:5,suf:"% a.a.",hint:"acima da inflação, já sem IR e taxas"},
+    {k:"anos",label:"Horizonte do gráfico",def:35,suf:"anos"},
+    {sect:"Independência financeira"},
+    {k:"renda",label:"Padrão de vida desejado",def:6000,pre:"R$",suf:"/mês",hint:"em valores de hoje",wide:true},
+  ],
+  run(v){
+    if (!(v.ret>0)) return {error:"Informe uma rentabilidade real maior que zero: sem juros não há ponto de inflexão."};
+    if (!(v.anos>=1 && v.anos<=60)) return {error:"Use um horizonte entre 1 e 60 anos."};
+    if (!(v.aporte>0) && !(v.patrimonio>0)) return {error:"Informe um aporte mensal ou um valor já investido."};
+    if (!(v.renda>0)) return {error:"Informe o padrão de vida desejado, em reais por mês."};
+    const r = aToM(v.ret/100), N = Math.round(v.anos*12), LIM = 100*12;
+    let P = v.patrimonio, inv = v.patrimonio, a = v.aporte, m1=null, m2=null, m3=null;
+    const xs=[0], pat=[P], apo=[inv], rend=[P*r], aps=[a], meta=[v.renda];
+    if (P*r >= a && a>0) m1 = 0;
+    if (P*r >= v.renda) m3 = 0;
+    for (let t=1; t<=Math.max(N, LIM); t++){
+      if (t>1 && (t-1)%12===0) a *= 1+v.cresc/100;
+      P = P*(1+r) + a; inv += a;
+      const juros = P - inv, rm = P*r;
+      if (m1==null && a>0 && rm >= a) m1 = t;
+      if (m2==null && juros >= inv && inv>0) m2 = t;
+      if (m3==null && rm >= v.renda) m3 = t;
+      if (t<=N){ xs.push(t/12); pat.push(P); apo.push(inv); rend.push(rm); aps.push(a); meta.push(v.renda); }
+      if (t>=N && m1!=null && m2!=null && m3!=null) break;
+    }
+    const quando = t => t==null ? "mais de 100 anos" : t===0 ? "já" : `em ${yrs(t)}`;
+    const capInd = v.renda/r;
+    const atN = {P: pat[pat.length-1], inv: apo[apo.length-1]};
+    const marks = [];
+    if (m1!=null && m1<=N) marks.push({x:m1/12, y:pat[m1], label:`Inflexão · ${nf(m1/12,1)} anos`, color:"var(--s4)"});
+    if (m2!=null && m2<=N) marks.push({x:m2/12, y:pat[m2], label:`Juros > aportes · ${nf(m2/12,1)} anos`, color:"var(--s2)"});
+    if (m3!=null && m3<=N) marks.push({x:m3/12, y:pat[m3], label:`Independência · ${nf(m3/12,1)} anos`, color:"var(--s3)"});
+    const regra = v.patrimonio===0 && v.cresc===0 ? ` Sem patrimônio inicial e com aporte constante, ele não depende do valor aportado: acontece quando (1 + r)ⁿ = 2, em cerca de <b>${nf(Math.log(2)/Math.log(1+r)/12,1)} anos</b> a ${nf(v.ret,1)}% real ao ano.` : "";
+    const main = m3===0
+      ? `Você já atingiu a independência financeira: ${money(v.patrimonio)} rendendo ${nf(v.ret,1)}% real ao ano pagam ${money(v.patrimonio*r)}/mês, acima dos ${money(v.renda)} desejados.`
+      : `O <b>ponto de inflexão</b> chega ${quando(m1)}: a partir daí os juros de cada mês rendem mais do que o seu aporte.${regra}`;
+    const extra = m3===0 ? "" :
+      `Os juros acumulados superam tudo o que você investiu ${quando(m2)}. A <b>independência financeira</b> (rendimento real de ${money(v.renda)}/mês sem consumir o patrimônio) exige <b>${money(capInd)}</b> e chega ${quando(m3)}.`;
+    const xF = x => `${nf(x,0)}`, tipT = x => `${yrs(Math.round(x*12))}`;
+    return {
+      html: verdict(m3===0?"Independência atingida":"Seus três marcos", main, extra) +
+        `<div class="kpis">${kpi("Ponto de inflexão", m1==null?"—":m1===0?"já":yrs(m1), "rendimento do mês ≥ aporte", "var(--s4)")}${kpi("Juros > aportes", m2==null?"—":yrs(m2), "juros acumulados ≥ total investido", "var(--s2)")}${kpi("Independência financeira", m3==null?"> 100 anos":m3===0?"já":yrs(m3), `${money(capInd)} rendendo ${money(v.renda)}/mês`, "var(--s3)")}${kpi(`Patrimônio em ${nf(v.anos)} anos`, money(atN.P), `${money(atN.inv)} aportados + ${money(atN.P-atN.inv)} de juros`, C.s1)}</div>` +
+        chartPanel("Patrimônio acumulado × aportes", "Em valores de hoje. A área entre as curvas são os juros compostos", legend([["Patrimônio (aportes + rendimentos)","var(--accent)"],["Total aportado",C.s1]]), "chI1") +
+        chartPanel("Rendimento mensal × aporte × padrão de vida", "Quanto o patrimônio rende por mês, comparado ao aporte e à renda desejada", legend([["Rendimento do mês","var(--accent)"],["Aporte do mês",C.s1],["Padrão de vida",C.s3,true]]), "chI2") +
+        notes(["Rentabilidade real (acima da inflação) e já líquida de IR e taxas: todos os valores estão no poder de compra de hoje.",
+          "Aportes no fim de cada mês; o aumento real do aporte é aplicado uma vez por ano.",
+          "<b>Ponto de inflexão</b>: primeiro mês em que o rendimento do patrimônio (P × r) é maior que o aporte. Com patrimônio inicial zero e aporte fixo, ocorre em n = ln 2 / ln(1 + r) meses, independentemente do valor aportado.",
+          "<b>Juros > aportes</b>: quando o patrimônio passa a ser mais que o dobro do total aportado.",
+          `<b>Independência financeira</b>: patrimônio cujo rendimento real cobre o padrão de vida para sempre, sem consumir o principal (renda ÷ taxa real mensal = ${money(capInd)}).`]),
+      after(){
+        lineChart($("#chI1"),{label:"Patrimônio acumulado e total aportado por ano", xs, series:[{name:"Patrimônio",color:"var(--accent)",values:pat},{name:"Total aportado",color:C.s1,values:apo}], areas:[0,1], marks, xFmt:xF, tipTitle:tipT});
+        lineChart($("#chI2"),{label:"Rendimento mensal, aporte e padrão de vida", xs, series:[{name:"Rendimento do mês",color:"var(--accent)",values:rend},{name:"Aporte do mês",color:C.s1,values:aps},{name:"Padrão de vida",color:C.s3,values:meta}], dashed:[2],
+          marks: marks.filter(mk=>!/Juros/.test(mk.label)).map(mk=>({...mk, y: /Inflexão/.test(mk.label) ? aps[Math.round(mk.x*12)] : v.renda})), xFmt:xF, tipTitle:tipT});
+      }
     };
   }
 });
