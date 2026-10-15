@@ -241,6 +241,7 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
 .di .termo .katex{font-size:1.05em;color:var(--ink)}
 .di .it{font-family:var(--mono);font-size:13px;color:var(--ink)}
 .serie.comb{margin-top:16px}
+.comb .mini b{white-space:normal}
 .comb .seg button i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 .comb .seg button[aria-pressed="false"] i{opacity:.35}
 .comb #sComb button[aria-pressed="true"]{background:var(--surface-2);color:var(--ink)}
@@ -948,7 +949,7 @@ function painel(){
     (vBl - vMt > 0.03 ? "O petróleo subiu mais que a bomba: parte da alta ainda pode chegar ao consumidor, a depender da política de preços da Petrobras." :
      vMt - vBl > 0.03 ? "A bomba subiu mais que o petróleo: impostos, margens de distribuição e revenda ou o biodiesel misturado pesaram mais que o custo do óleo." :
      "Bomba e petróleo andaram juntos no período."));
-  if (bl!=null && mt!=null) frases.push(`O petróleo bruto responde por cerca de <b>${nf(bl/mt*100,0)}%</b> do preço na bomba; o resto são refino, frete, impostos, biodiesel e margens.`);
+  if (bl!=null && mt!=null) frases.push(`Um litro de petróleo bruto custa o equivalente a <b>${nf(bl/mt*100,0)}%</b> do litro na bomba; o resto vem de refino, frete, impostos, biodiesel e margens.`);
   if (eua!=null && br!=null) frases.push(`Nos EUA, o diesel sai por R$ ${nf(eua)}/l convertido pelo dólar, ${eua>br?"acima":"abaixo"} da média brasileira.`);
   $("#lComb").innerHTML = frases.join(" ");
 }
