@@ -26,10 +26,6 @@ jobs:
 
       - run: pip install -r scripts/requirements.txt
 
-      - name: Sonda combustíveis (temporário)
-        run: python scripts/sondar_comb.py
-        continue-on-error: true
-
       - run: python scripts/atualizar_mercado.py
 
       - name: Ações, FIIs e ETFs do comparador

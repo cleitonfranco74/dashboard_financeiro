@@ -1,0 +1,14 @@
+name: Teste diesel EUA (temporário)
+on:
+  push:
+    branches: [claude/sweet-albattani-q7n9og]
+jobs:
+  t:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          for u in "https://fred.stlouisfed.org/graph/fredgraph.csv?id=GASDESW&cosd=2021-01-01" \
+                   "https://www.eia.gov/dnav/pet/hist_xls/EMD_EPD2D_PTE_NUS_DPGw.xls" \
+                   "https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?n=PET&s=EMD_EPD2D_PTE_NUS_DPG&f=W"; do
+            echo "=== $u"; curl -sS -m 120 -A "Mozilla/5.0" -o out.bin -w "%{http_code} %{size_download} %{content_type}\n" "$u" || true
+            head -c 300 out.bin | strings | head -5; echo; tail -c 300 out.bin | strings | tail -5; echo; done
