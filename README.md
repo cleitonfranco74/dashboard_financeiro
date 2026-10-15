@@ -9,7 +9,7 @@ Painel de finanças pessoais, simuladores e otimizador de carteira em português
 ## Páginas
 
 ### Capa (`index.html`)
-Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória esperada pelo Focus), Ibovespa e dólar, gráficos dos juros futuros lado a lado (DI1F27 e DI1F28, cada um podendo trocar para outros vencimentos de janeiro; hoje, semana e curva completa, com atualização automática) e painel de inclinação F28 − F27 com taxa a termo implícita e leitura automática do movimento do dia, acesso às ferramentas e autoria.
+Apresentação do projeto, indicadores do dia (Selic, CDI, IPCA e trajetória esperada pelo Focus), Ibovespa e dólar, gráficos dos juros futuros lado a lado (DI1F27 e DI1F28, cada um podendo trocar para outros vencimentos de janeiro; hoje, semana e curva completa, com atualização automática) e painel de inclinação F28 − F27 com taxa a termo implícita e leitura automática do movimento do dia, acesso às ferramentas e autoria. Painel **Diesel e petróleo**: diesel S10 em Mato Grosso e no Brasil (ANP), Brent em R$/litro e, opcionalmente, o diesel nos EUA (EIA), com marcos de eventos e leitura automática.
 
 ### Livro-Caixa (`livro-caixa.html`)
 - Resumo do mês: receitas, despesas, resultado e taxa de poupança.
@@ -83,6 +83,8 @@ Otimização de Markowitz com Tesouro Selic/CDI, Prefixado, IPCA+, BOVA11, IVVB1
 - **BCB SGS 1:** dólar PTAX de venda, diário (último valor também lido ao vivo na página inicial).
 
 Para atualizar à mão: aba **Actions** → *Atualizar dados de mercado* → *Run workflow*.
+
+`data/combustiveis.json` também é gravado por essa rotina, via `scripts/atualizar_combustiveis.py`: diesel S10 semanal da ANP (Brasil e Mato Grosso, desde 2019), Brent (BZ=F) e dólar (BRL=X) pelo Yahoo Finance, e diesel no varejo dos EUA pela planilha pública da EIA. Os marcos de eventos do gráfico ficam na lista `MARCOS` do script da capa.
 
 ### Juros futuros (DI1)
 `di.json` fica no branch `dados` (fora da `main`, para não republicar o site a cada coleta). A GitHub Action `.github/workflows/di.yml` roda `scripts/atualizar_di.py` a cada 15 minutos nos dias úteis, das 9h às 18h45 (Brasília), e grava as cotações da B3 (cotacao.b3.com.br, atraso de ~15 min): taxa a cada 5 minutos dos últimos 7 pregões para os janeiros de 1, 2, 3, 5 e 7 anos à frente (em 2026: DI1F27, F28, F29, F31 e F33; a lista rola sozinha na virada do ano), fechamentos diários e a curva com todos os vencimentos. A capa lê o arquivo em `raw.githubusercontent.com/.../dados/di.json` e se recarrega a cada 5 minutos. Para coletar à mão: **Actions** → *Juros futuros (DI1)* → *Run workflow*.
