@@ -245,6 +245,10 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
 .comb .seg button i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 .comb .seg button[aria-pressed="false"] i{opacity:.35}
 .comb #sComb button[aria-pressed="true"]{background:var(--surface-2);color:var(--ink)}
+.serie.cripto{margin-top:16px}
+.cripto .mini b{white-space:normal}
+.cripto .mini span{overflow-wrap:anywhere}
+.cripto .fng{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
 .chart text.ref{fill:var(--ink-2);font-family:var(--mono);font-size:10.5px}
 </style>
 <!-- Contagem de visitas: GoatCounter (sem cookies; painel em dashboardfinan.goatcounter.com) -->
@@ -389,6 +393,20 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
         <div class="mini" id="mComb"></div>
         <p class="leitura" id="lComb"></p>
         <p class="fonte">Em R$ por litro. Diesel: ANP, levantamento semanal de preços (média de revenda). Brent: contrato futuro em US$ por barril (159 litros) convertido pelo dólar da semana. EUA: EIA, preço médio de varejo em US$ por galão (3,785 litros) convertido pelo dólar; os impostos e o tipo de diesel diferem entre os países. Atualizado todo dia útil; a ANP publica uma vez por semana.</p>
+      </section>
+      <section class="serie di cripto" aria-labelledby="hCr">
+        <div class="top"><h2 id="hCr">Criptomoedas · Bitcoin</h2><span class="dt" id="dCr">carregando…</span></div>
+        <div class="val"><b id="vCr">—</b><span class="var" id="xCr"></span></div>
+        <div class="ctl">
+          <div class="seg" id="mCrSel" role="group" aria-label="Moeda"></div>
+          <div class="seg" id="pCr" role="group" aria-label="Período">
+            <button type="button" data-p="30">1 mês</button><button type="button" data-p="182">6 meses</button><button type="button" data-p="365" aria-pressed="true">1 ano</button><button type="button" data-p="ibov" aria-pressed="false">× Ibovespa</button>
+          </div>
+        </div>
+        <div class="chart" id="cCr" role="img" aria-label="Preço da criptomoeda em reais"></div>
+        <div class="mini" id="kCr"></div>
+        <p class="leitura" id="lCr"></p>
+        <p class="fonte">Preço do momento ao vivo pela CoinGecko; histórico diário de 12 meses em reais (cotação em dólar do Yahoo Finance × dólar do dia), atualizado todo dia útil. Índice de medo e ganância: alternative.me. Criptomoedas são investimentos de alto risco; isto não é recomendação. <a href="simuladores.html#cripto" style="color:var(--accent)">Simule um investimento em cripto →</a></p>
       </section>
     </section>
 
@@ -959,6 +977,133 @@ fetch("data/combustiveis.json?t=" + Math.floor(Date.now()/3600000)).then(r => r.
   D = d; botoes(); painel(); desenhar();
 }).catch(() => { $("#dComb").textContent = "indisponível"; $("#cComb").innerHTML = `<p class="fonte">Os dados de diesel e petróleo ainda não foram coletados. Eles chegam na próxima atualização diária.</p>`; botoes(); });
 let t; new ResizeObserver(()=>{ clearTimeout(t); t = setTimeout(desenhar, 80); }).observe($("#cComb"));
+})();
+</script>
+<script>
+/* Criptomoedas: histórico diário em data/cripto.json (Action mercado.yml) e preço ao vivo da CoinGecko. */
+(() => {
+const $ = s => document.querySelector(s);
+const nf = (v,d=2) => v.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
+const brl = v => "R$ " + (v >= 1000 ? Math.round(v).toLocaleString("pt-BR") : nf(v, v < 10 ? 4 : 2));
+const usd = v => "US$ " + (v >= 1000 ? Math.round(v).toLocaleString("pt-BR") : nf(v, v < 10 ? 4 : 2));
+const pc = x => x==null || !isFinite(x) ? "—" : `${x>=0?"+":"−"}${nf(Math.abs(x)*100,1)}%`;
+const dBR = d => `${d.slice(8,10)}/${d.slice(5,7)}/${d.slice(0,4)}`;
+const MES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const FNG = {"Extreme Fear":["Medo extremo","var(--s2)"], "Fear":["Medo","var(--s4)"], "Neutral":["Neutro","var(--ink-2)"], "Greed":["Ganância","var(--s3)"], "Extreme Greed":["Ganância extrema","var(--accent)"]};
+let D = null, IB = null, VIVO = {}, GLOBAL = null, FG = null, moeda = "BTC", per = 365, cmp = false;
+
+function grafico(el, xs, series, o){
+  const W = Math.max(260, el.clientWidth||640), H = 230, pad = {t:12,r:58,b:24,l:8};
+  const vs = series.flatMap(s=>s.v.filter(v=>v!=null));
+  if (xs.length < 2 || !vs.length){ el.innerHTML = `<p class="fonte">Sem dados para este período.</p>`; return; }
+  let lo = Math.min(...vs), hi = Math.max(...vs); const f = (hi-lo)*.08 || hi*.02 || 1; lo -= f; hi += f;
+  const L = xs.length-1, X = k => pad.l + k*(W-pad.l-pad.r)/L, Y = v => pad.t + (hi-v)/(hi-lo)*(H-pad.t-pad.b);
+  const bruto = (hi-lo)/5, mag = Math.pow(10, Math.floor(Math.log10(bruto))), passo = [1,2,2.5,5,10].map(m=>m*mag).find(p=>p>=bruto);
+  let g = "";
+  for (let v = Math.ceil(lo/passo)*passo; v <= hi; v += passo)
+    g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(${o.base && Math.abs(v-100)<1e-9 ? "--axis" : "--line"})"/><text class="tn" x="${W-pad.r+6}" y="${Y(v)+3.5}">${o.tick(v)}</text>`;
+  let ult = "", ultX = -1e9;
+  xs.forEach((d,k)=>{ const chave = xs.length > 70 ? d.slice(0,7) : d.slice(0,10); const novo = xs.length > 70 ? d.slice(8,10)==="01" : (k % Math.ceil(xs.length/6) === 0);
+    if (k>0 && novo && chave!==ult && X(k)-ultX > 44){ ult = chave; ultX = X(k);
+      g += `<text x="${X(k)}" y="${H-6}" text-anchor="middle">${xs.length > 70 ? MES[+d.slice(5,7)-1] + (d.slice(5,7)==="01" ? "/"+d.slice(2,4) : "") : d.slice(8,10)+"/"+d.slice(5,7)}</text>`; } });
+  series.forEach((s,i)=>{ let d = "", pen = false, k0 = -1, k1 = -1;
+    s.v.forEach((v,k)=>{ if (v==null){ pen=false; return; } if (k0<0) k0 = k; k1 = k; d += (pen?"L":"M")+X(k).toFixed(1)+","+Y(v).toFixed(1); pen = true; });
+    if (i===0 && !o.base && k0>=0) g += `<path d="${d}L${X(k1)},${H-pad.b}L${X(k0)},${H-pad.b}Z" fill="${s.cor}" opacity=".08"/>`;
+    g += `<path d="${d}" fill="none" stroke="${s.cor}" stroke-width="2" stroke-linejoin="round"/>`;
+    if (k1>=0) g += `<circle cx="${X(k1)}" cy="${Y(s.v[k1])}" r="4" fill="${s.cor}" stroke="var(--surface)" stroke-width="2"/>`; });
+  g += `<g class="hov" style="display:none"><line y1="${pad.t}" y2="${H-pad.b}" stroke="var(--axis)"/>${series.map(s=>`<circle r="4" fill="${s.cor}" stroke="var(--surface)" stroke-width="2"/>`).join("")}</g>`;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" aria-hidden="true">${g}</svg><div class="tipb" hidden></div>`;
+  const svg = el.querySelector("svg"), hov = el.querySelector(".hov"), tip = el.querySelector(".tipb"), dots = hov.querySelectorAll("circle");
+  const move = e => { const b = svg.getBoundingClientRect(), px = (e.clientX-b.left)*(W/b.width);
+    const k = Math.max(0, Math.min(L, Math.round((px-pad.l)/(W-pad.l-pad.r)*L)));
+    hov.style.display = ""; hov.querySelector("line").setAttribute("x1",X(k)); hov.querySelector("line").setAttribute("x2",X(k));
+    series.forEach((s,i)=>{ const v = s.v[k]; dots[i].style.display = v==null ? "none" : ""; if (v!=null){ dots[i].setAttribute("cx",X(k)); dots[i].setAttribute("cy",Y(v)); } });
+    tip.hidden = false;
+    tip.innerHTML = `<div>${dBR(xs[k])}</div>` + series.map(s=>`<div><i style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${s.cor};margin-right:6px"></i>${s.nome} <b>${s.v[k]==null ? "—" : o.dica(s.v[k])}</b></div>`).join("");
+    const x = X(k)/W*b.width; tip.style.left = Math.max(0, Math.min(b.width-tip.offsetWidth, x+12 > b.width-tip.offsetWidth ? x-tip.offsetWidth-12 : x+12))+"px"; };
+  svg.addEventListener("mousemove", move);
+  svg.addEventListener("touchstart", e=>move(e.touches[0]), {passive:true});
+  svg.addEventListener("touchmove", e=>move(e.touches[0]), {passive:true});
+  svg.addEventListener("mouseleave", ()=>{ hov.style.display="none"; tip.hidden = true; });
+}
+
+/* estatísticas da série diária (dias com preço) */
+function stats(v){
+  const x = v.filter(a=>a!=null && a>0); if (x.length < 30) return {};
+  const r = []; for (let i=1;i<x.length;i++) r.push(Math.log(x[i]/x[i-1]));
+  const m = r.reduce((a,b)=>a+b,0)/r.length, sd = Math.sqrt(r.reduce((a,b)=>a+(b-m)**2,0)/(r.length-1));
+  let pico = x[0], dd = 0; for (const a of x){ pico = Math.max(pico,a); dd = Math.min(dd, a/pico-1); }
+  return {ret: x[x.length-1]/x[0]-1, vol: sd, dd};
+}
+const ibovNas = datas => { if (!IB) return null; const m = new Map(IB.datas.map((d,i)=>[d, IB.valores[i]])); let u = null; return datas.map(d => { if (m.has(d)) u = m.get(d); return u; }); };
+
+function desenhar(){
+  if (!D) return;
+  const M = D.moedas[moeda], n = D.datas.length, ini = Math.max(0, n - (cmp ? 365 : per));
+  const xs = D.datas.slice(ini), v = M.brl.slice(ini);
+  $("#cCr").setAttribute("aria-label", cmp ? `${M.nome} e Ibovespa em base 100` : `Preço do ${M.nome} em reais`);
+  if (cmp){
+    const ib = ibovNas(xs) || [], b0 = v.find(a=>a!=null), i0 = ib.find(a=>a!=null);
+    grafico($("#cCr"), xs, [{nome:M.nome, cor:"var(--accent)", v:v.map(a=>a==null?null:a/b0*100)}, ...(i0 ? [{nome:"Ibovespa", cor:"var(--s1)", v:ib.map(a=>a==null?null:a/i0*100)}] : [])],
+      {base:true, tick:t=>nf(t,0), dica:a=>nf(a,1)});
+  } else grafico($("#cCr"), xs, [{nome:M.nome, cor:"var(--accent)", v}], {tick:t => t>=1e6 ? nf(t/1e6,2)+" mi" : t>=1e3 ? nf(t/1e3,0)+" mil" : nf(t, t<10?2:0), dica:brl});
+}
+
+function painel(){
+  if (!D) return;
+  const M = D.moedas[moeda], k = M.brl.length-1, vivo = VIVO[M.coingecko];
+  const preco = vivo?.brl ?? M.brl[k], var24 = vivo?.brl_24h_change != null ? vivo.brl_24h_change/100 : (M.brl[k-1] ? M.brl[k]/M.brl[k-1]-1 : null);
+  const st = stats(M.brl), sIb = IB ? stats(IB.valores.slice(-250)) : {};
+  const volA = st.vol!=null ? st.vol*Math.sqrt(365) : null, volIb = sIb.vol!=null ? sIb.vol*Math.sqrt(252) : null;
+  $("#hCr").textContent = `Criptomoedas · ${M.nome}`;
+  $("#dCr").textContent = vivo ? "ao vivo · CoinGecko" : `fechamento de ${dBR(D.datas[k])}`;
+  $("#vCr").textContent = brl(preco);
+  $("#xCr").innerHTML = [var24!=null ? `<span class="${var24>=0?"up":"dn"}">${pc(var24)} em 24 h</span>` : "", st.ret!=null ? `<span class="${st.ret>=0?"up":"dn"}">${pc(st.ret)} em 12 meses</span>` : ""].join("");
+  const fg = FG ? (FNG[FG.value_classification] || [FG.value_classification, "var(--ink-2)"]) : null;
+  $("#kCr").innerHTML = [
+    ["Preço em dólar", usd(vivo?.usd ?? M.usd[k])],
+    ["Volatilidade anual", volA!=null ? nf(volA*100,0)+"%" : "—"],
+    ["Maior queda em 12 meses", st.dd!=null ? pc(st.dd) : "—"],
+    ["Dominância do Bitcoin", GLOBAL ? nf(GLOBAL.market_cap_percentage.btc,1)+"%" : "—"],
+    ["Medo e ganância", fg ? `<i class="fng" style="background:${fg[1]}"></i>${FG.value} · ${fg[0]}` : "—"],
+  ].map(([a,b])=>`<div><span>${a}</span><b>${b}</b></div>`).join("");
+  const fr = [];
+  if (st.ret!=null) fr.push(`Em 12 meses, o ${M.nome} ${st.ret>=0?"subiu":"caiu"} <b>${pc(Math.abs(st.ret)).slice(1)}</b> em reais${sIb.ret!=null ? `, contra ${pc(sIb.ret)} do Ibovespa` : ""}.`);
+  if (volA!=null) fr.push(`A volatilidade foi de <b>${nf(volA*100,0)}% ao ano</b>${volIb ? `, cerca de ${nf(volA/volIb,1)} vezes a do Ibovespa (${nf(volIb*100,0)}%)` : ""}, e a maior queda a partir de um pico chegou a ${pc(st.dd)}.`);
+  if (fg) fr.push(`O índice de medo e ganância está em <b>${FG.value} (${fg[0].toLowerCase()})</b>: ${+FG.value <= 25 ? "pânico costuma coincidir com preços deprimidos, mas não marca o fundo" : +FG.value < 46 ? "os investidores estão receosos e preferem reduzir risco" : +FG.value <= 55 ? "o humor do mercado está equilibrado" : +FG.value < 75 ? "os investidores estão otimistas" : "euforia costuma anteceder correções"}.`);
+  fr.push("Se for investir, limite a uma fatia pequena da carteira, que você aceite ver cair pela metade.");
+  $("#lCr").innerHTML = fr.join(" ");
+}
+function botoes(){
+  if (D) $("#mCrSel").innerHTML = Object.entries(D.moedas).map(([s,m])=>`<button type="button" data-m="${s}" aria-pressed="${s===moeda}">${m.nome}</button>`).join("");
+  document.querySelectorAll("#pCr button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.p==="ibov" ? cmp : (!cmp && +b.dataset.p===per)));
+}
+$("#mCrSel").addEventListener("click", e=>{ const b = e.target.closest("button"); if (!b) return; moeda = b.dataset.m; botoes(); painel(); desenhar(); });
+$("#pCr").addEventListener("click", e=>{ const b = e.target.closest("button"); if (!b) return; if (b.dataset.p==="ibov") cmp = !cmp; else { cmp = false; per = +b.dataset.p; } botoes(); desenhar(); });
+
+async function aoVivo(){
+  if (!D) return;
+  const ids = Object.values(D.moedas).map(m=>m.coingecko).join(",");
+  const j = u => fetch(u).then(r => r.ok ? r.json() : Promise.reject());
+  const [p, g, f] = await Promise.allSettled([
+    j(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=brl,usd&include_24hr_change=true`),
+    j("https://api.coingecko.com/api/v3/global"),
+    j("https://api.alternative.me/fng/?limit=1")]);
+  if (p.status==="fulfilled") VIVO = p.value;
+  if (g.status==="fulfilled") GLOBAL = g.value.data;
+  if (f.status==="fulfilled") FG = f.value.data?.[0] || null;
+  painel();
+}
+Promise.all([
+  fetch("data/cripto.json?t=" + Math.floor(Date.now()/3600000)).then(r => r.ok ? r.json() : Promise.reject()),
+  (window.Mercado ? Mercado.carregar().then(m => m.bolsa?.ibov).catch(() => null) : Promise.resolve(null)),
+]).then(([d, ib]) => {
+  if (!d.datas?.length) throw 0;
+  D = d; IB = ib?.datas?.length ? ib : null; if (!D.moedas[moeda]) moeda = Object.keys(D.moedas)[0];
+  botoes(); painel(); desenhar(); aoVivo();
+  setInterval(()=>{ if (!document.hidden) aoVivo(); }, 120000);
+}).catch(() => { $("#dCr").textContent = "indisponível"; $("#cCr").innerHTML = `<p class="fonte">Os dados de criptomoedas ainda não foram coletados. Eles chegam na próxima atualização diária.</p>`; });
+let t; new ResizeObserver(()=>{ clearTimeout(t); t = setTimeout(desenhar, 80); }).observe($("#cCr"));
 })();
 </script>
 </body>
