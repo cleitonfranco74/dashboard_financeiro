@@ -1,0 +1,19 @@
+name: Teste cripto (temporário)
+on:
+  push:
+    branches: [claude/sweet-albattani-q7n9og]
+jobs:
+  t:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          for u in "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,ripple,tether&vs_currencies=brl,usd&include_24hr_change=true" "https://api.coingecko.com/api/v3/global" "https://api.alternative.me/fng/?limit=1"; do
+            echo "=== $u"; curl -sS -m 30 -i -H "Origin: https://cleitonfranco74.github.io" "$u" | grep -i '^HTTP\|access-control-allow-origin\|^{' | cut -c1-400; done
+      - run: |
+          pip install -q yfinance pandas
+          python - <<'PY'
+          import yfinance as yf
+          for t in ["BTC-USD","ETH-USD","SOL-USD","XRP-USD","BTC-BRL","USDT-BRL","BRL=X"]:
+              h=yf.Ticker(t).history(period="1y",interval="1d")
+              print(t, len(h), h["Close"].tail(2).round(4).to_dict() if len(h) else "-")
+          PY
