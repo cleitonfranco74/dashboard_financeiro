@@ -240,6 +240,10 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
 .di .termo{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);overflow-x:auto}
 .di .termo .katex{font-size:1.05em;color:var(--ink)}
 .di .it{font-family:var(--mono);font-size:13px;color:var(--ink)}
+.serie.comb{margin-top:16px}
+.comb .seg button i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.comb .seg button[aria-pressed="false"] i{opacity:.35}
+.comb #sComb button[aria-pressed="true"]{background:var(--surface-2);color:var(--ink)}
 .chart text.ref{fill:var(--ink-2);font-family:var(--mono);font-size:10.5px}
 </style>
 <!-- Contagem de visitas: GoatCounter (sem cookies; painel em dashboardfinan.goatcounter.com) -->
@@ -369,6 +373,21 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
           <div class="it"></div>
         </div>
         <p class="fonte">Negativa: o mercado espera juros menores à frente (curva invertida). Positiva: espera juros maiores ou cobra mais prêmio pelo prazo. Dias úteis contados pelo calendário de feriados nacionais; cálculo aproximado, sem valor de recomendação.</p>
+      </section>
+      <section class="serie di comb" aria-labelledby="hComb">
+        <div class="top"><h2 id="hComb">Diesel e petróleo</h2><span class="dt" id="dComb">carregando…</span></div>
+        <p class="dt" style="margin:4px 0 0">Preço médio do diesel S10 na bomba em Mato Grosso e no Brasil, petróleo Brent convertido em reais por litro e, para comparar, o diesel nos EUA.</p>
+        <div class="val"><b id="vComb">—</b><span class="var" id="xComb"></span></div>
+        <div class="ctl">
+          <div class="seg" id="sComb" role="group" aria-label="Séries do gráfico"></div>
+          <div class="seg" id="pComb" role="group" aria-label="Período">
+            <button type="button" data-p="1">1 ano</button><button type="button" data-p="3">3 anos</button><button type="button" data-p="0" aria-pressed="true">Desde 2019</button>
+          </div>
+        </div>
+        <div class="chart" id="cComb" role="img" aria-label="Preço semanal do diesel e do petróleo em reais por litro"></div>
+        <div class="mini" id="mComb"></div>
+        <p class="leitura" id="lComb"></p>
+        <p class="fonte">Em R$ por litro. Diesel: ANP, levantamento semanal de preços (média de revenda). Brent: contrato futuro em US$ por barril (159 litros) convertido pelo dólar da semana. EUA: EIA, preço médio de varejo em US$ por galão (3,785 litros) convertido pelo dólar; os impostos e o tipo de diesel diferem entre os países. Atualizado todo dia útil; a ANP publica uma vez por semana.</p>
       </section>
     </section>
 
@@ -826,7 +845,7 @@ function painelInc(root){
   return desenhar;
 }
 
-const paineis = [...document.querySelectorAll(".serie.di:not(.inc)")].map(painel).concat([...document.querySelectorAll(".serie.inc")].map(painelInc));
+const paineis = [...document.querySelectorAll(".serie.di[data-c]")].map(painel).concat([...document.querySelectorAll(".serie.inc")].map(painelInc));
 async function atualizar(){
   const d = await carregar(); tentou = true;
   if (d) dados = d;
@@ -835,6 +854,110 @@ async function atualizar(){
 atualizar();
 setInterval(()=>{ if (!document.hidden) atualizar(); }, 5*60*1000);
 document.addEventListener("visibilitychange", ()=>{ if (!document.hidden && dados && Date.now()-Date.parse(dados.atualizado) > 20*60*1000) atualizar(); });
+})();
+</script>
+<script>
+/* Diesel e petróleo: data/combustiveis.json (ANP, Brent e EIA), gravado pela Action mercado.yml. */
+(() => {
+const $ = s => document.querySelector(s);
+const nf = (v,d=2) => v.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
+const MES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const dBR = d => `${d.slice(8,10)}/${d.slice(5,7)}/${d.slice(0,4)}`;
+/* Marcos com data confirmada; para acrescentar um evento, inclua [data, rótulo]. */
+const MARCOS = [["2022-02-24","Invasão da Ucrânia"],["2023-05-16","Petrobras deixa o PPI"]];
+const SERIES = [
+  {k:"mt", nome:"Diesel S10 MT", cor:"var(--accent)", on:true},
+  {k:"br", nome:"Diesel S10 Brasil", cor:"var(--s1)", on:true},
+  {k:"brentLitro", nome:"Brent em R$/litro", cor:"var(--s2)", on:true},
+  {k:"euaLitro", nome:"Diesel EUA", cor:"var(--s4)", on:false},
+];
+let D = null, per = 0;
+
+function grafico(el, xs, series){
+  const W = Math.max(260, el.clientWidth||640), H = 240, pad = {t:14,r:46,b:24,l:8};
+  const vs = series.flatMap(s=>s.v.filter(v=>v!=null));
+  if (xs.length < 2 || !vs.length){ el.innerHTML = `<p class="fonte">Sem dados para este período.</p>`; return; }
+  let lo = Math.min(...vs), hi = Math.max(...vs); const f = (hi-lo)*.08 || .5; lo = Math.max(0, lo-f); hi += f;
+  const L = xs.length-1, X = k => pad.l + k*(W-pad.l-pad.r)/L, Y = v => pad.t + (hi-v)/(hi-lo)*(H-pad.t-pad.b);
+  const passo = [.25,.5,1,2,5].find(p => (hi-lo)/p <= 6) || 5;
+  let g = "";
+  for (let v = Math.ceil(lo/passo)*passo; v <= hi; v += passo)
+    g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text class="tn" x="${W-pad.r+6}" y="${Y(v)+3.5}">${nf(v, passo<1?2:0)}</text>`;
+  // eixo x: anos (ou trimestres quando o período é curto)
+  let ult = "", ultX = -1e9;
+  xs.forEach((d,k)=>{ const tri = per===1, m = +d.slice(5,7)-1, chave = tri ? d.slice(0,4)+Math.floor(m/3) : d.slice(0,4);
+    if (chave!==ult){ ult = chave; if (k>0 && X(k)-ultX > 42){ ultX = X(k);
+      g += `<line x1="${X(k)}" x2="${X(k)}" y1="${pad.t}" y2="${H-pad.b}" stroke="var(--line)" stroke-dasharray="2 3"/><text x="${X(k)}" y="${H-6}" text-anchor="middle">${tri ? MES[m]+"/"+d.slice(2,4) : d.slice(0,4)}</text>`; } } });
+  // marcos de eventos
+  MARCOS.forEach(([d,rot],i)=>{ const k = xs.findIndex(x=>x>=d); if (k<=0) return; const x = X(k), w = rot.length*6.2+12, lx = Math.min(Math.max(x-w/2,pad.l), W-pad.r-w);
+    g += `<line x1="${x}" x2="${x}" y1="${pad.t}" y2="${H-pad.b}" stroke="var(--ink-2)" stroke-dasharray="4 4" opacity=".7"/><rect x="${lx}" y="${pad.t+i*20}" width="${w}" height="17" rx="8.5" fill="var(--surface)" stroke="var(--line)"/><text x="${lx+w/2}" y="${pad.t+i*20+12}" text-anchor="middle" style="fill:var(--ink-2);font-size:10.5px;font-weight:600">${rot}</text>`; });
+  series.forEach(s=>{ let d = "", pen = false;
+    s.v.forEach((v,k)=>{ if (v==null){ pen=false; return; } d += (pen?"L":"M")+X(k).toFixed(1)+","+Y(v).toFixed(1); pen = true; });
+    g += `<path d="${d}" fill="none" stroke="${s.cor}" stroke-width="2" stroke-linejoin="round"/>`;
+    let k = s.v.length-1; while (k>=0 && s.v[k]==null) k--;
+    if (k>=0) g += `<circle cx="${X(k)}" cy="${Y(s.v[k])}" r="4" fill="${s.cor}" stroke="var(--surface)" stroke-width="2"/>`; });
+  g += `<g class="hov" style="display:none"><line y1="${pad.t}" y2="${H-pad.b}" stroke="var(--axis)"/>${series.map(s=>`<circle r="4" fill="${s.cor}" stroke="var(--surface)" stroke-width="2"/>`).join("")}</g>`;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" aria-hidden="true">${g}</svg><div class="tipb" hidden></div>`;
+  const svg = el.querySelector("svg"), hov = el.querySelector(".hov"), tip = el.querySelector(".tipb"), dots = hov.querySelectorAll("circle");
+  const move = e => { const b = svg.getBoundingClientRect(), px = (e.clientX-b.left)*(W/b.width);
+    const k = Math.max(0, Math.min(L, Math.round((px-pad.l)/(W-pad.l-pad.r)*L)));
+    hov.style.display = ""; hov.querySelector("line").setAttribute("x1",X(k)); hov.querySelector("line").setAttribute("x2",X(k));
+    series.forEach((s,i)=>{ const v = s.v[k]; dots[i].style.display = v==null ? "none" : ""; if (v!=null){ dots[i].setAttribute("cx",X(k)); dots[i].setAttribute("cy",Y(v)); } });
+    tip.hidden = false;
+    tip.innerHTML = `<div>semana até ${dBR(xs[k])}</div>` + series.map(s=>`<div><i style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${s.cor};margin-right:6px"></i>${s.nome} <b>${s.v[k]==null?"—":"R$ "+nf(s.v[k])}</b></div>`).join("");
+    const x = X(k)/W*b.width; tip.style.left = Math.max(0, Math.min(b.width-tip.offsetWidth, x+12 > b.width-tip.offsetWidth ? x-tip.offsetWidth-12 : x+12))+"px"; };
+  svg.addEventListener("mousemove", move);
+  svg.addEventListener("touchstart", e=>move(e.touches[0]), {passive:true});
+  svg.addEventListener("touchmove", e=>move(e.touches[0]), {passive:true});
+  svg.addEventListener("mouseleave", ()=>{ hov.style.display="none"; tip.hidden = true; });
+}
+
+const ultimo = a => { for (let k=a.length-1;k>=0;k--) if (a[k]!=null) return k; return -1; };
+function var12(a){ const k = ultimo(a); if (k<0) return null; const alvo = D.semanas[k].replace(/^\d{4}/, y=>String(+y-1)); const j = D.semanas.findIndex(d=>d>=alvo); return j>=0 && a[j] ? a[k]/a[j]-1 : null; }
+const pc = x => x==null ? "—" : `${x>=0?"+":"−"}${nf(Math.abs(x)*100,1)}%`;
+
+function desenhar(){
+  const el = $("#cComb");
+  if (!D){ return; }
+  const ini = per ? D.semanas.findIndex(d => d >= D.semanas.at(-1).replace(/^\d{4}/, y=>String(+y-per))) : 0;
+  const xs = D.semanas.slice(Math.max(0,ini));
+  grafico(el, xs, SERIES.filter(s=>s.on && D[s.k]?.some(v=>v!=null)).map(s=>({nome:s.nome, cor:s.cor, v:D[s.k].slice(Math.max(0,ini))})));
+}
+function botoes(){
+  $("#sComb").innerHTML = SERIES.map((s,i)=>`<button type="button" data-i="${i}" aria-pressed="${s.on}"><i style="background:${s.cor}"></i>${s.k==="euaLitro"?"Comparar com EUA":s.nome}</button>`).join("");
+  document.querySelectorAll("#pComb button").forEach(b=>b.setAttribute("aria-pressed", +b.dataset.p===per));
+}
+$("#sComb").addEventListener("click", e=>{ const b = e.target.closest("button"); if (!b) return; const s = SERIES[+b.dataset.i];
+  if (s.on && SERIES.filter(x=>x.on).length===1) return; s.on = !s.on; botoes(); desenhar(); });
+$("#pComb").addEventListener("click", e=>{ const b = e.target.closest("button"); if (!b) return; per = +b.dataset.p; botoes(); desenhar(); });
+
+function painel(){
+  const k = ultimo(D.mt.some(v=>v!=null) ? D.mt : D.br), sem = D.semanas[k];
+  const mt = D.mt[k], br = D.br[k], bl = D.brentLitro[ultimo(D.brentLitro)], bu = D.brentUsd[ultimo(D.brentUsd)], eua = D.euaLitro[ultimo(D.euaLitro)];
+  const vMt = var12(D.mt), vBr = var12(D.br), vBl = var12(D.brentLitro);
+  $("#dComb").textContent = `semana até ${dBR(sem)}`;
+  $("#vComb").textContent = mt!=null ? `R$ ${nf(mt)}/l` : br!=null ? `R$ ${nf(br)}/l` : "—";
+  const sem1 = k>0 && D.mt[k-1] ? mt/D.mt[k-1]-1 : null;
+  $("#xComb").innerHTML = [sem1!=null ? `<span class="${sem1<=0?"up":"dn"}">${pc(sem1)} na semana</span>` : "", vMt!=null ? `<span class="${vMt<=0?"up":"dn"}">${pc(vMt)} em 12 meses</span>` : "", "<span>diesel S10 · Mato Grosso</span>"].join("");
+  const fmt = v => v==null ? "—" : "R$ "+nf(v);
+  $("#mComb").innerHTML = [["Diesel S10 MT", fmt(mt)+"/l"], ["Diesel S10 Brasil", fmt(br)+"/l"], ["Brent", bu==null?"—":"US$ "+nf(bu)], ["Brent em reais", fmt(bl)+"/l"], ["Diesel EUA", fmt(eua)+"/l"]]
+    .map(([a,b])=>`<div><span>${a}</span><b>${b}</b></div>`).join("");
+  const frases = [];
+  if (mt!=null && br!=null) frases.push(`O diesel S10 em Mato Grosso custa <b>R$ ${nf(mt)}/l</b>, ${Math.abs(mt-br)<0.005 ? "igual à" : `R$ ${nf(Math.abs(mt-br))} ${mt>br?"acima":"abaixo"} da`} média nacional (R$ ${nf(br)}).`);
+  if (vMt!=null && vBl!=null) frases.push(`Em 12 meses, o diesel subiu ${pc(vMt)} em MT e ${pc(vBr)} no Brasil, enquanto o Brent em reais variou <b>${pc(vBl)}</b>. ` +
+    (vBl - vMt > 0.03 ? "O petróleo subiu mais que a bomba: parte da alta ainda pode chegar ao consumidor, a depender da política de preços da Petrobras." :
+     vMt - vBl > 0.03 ? "A bomba subiu mais que o petróleo: impostos, margens de distribuição e revenda ou o biodiesel misturado pesaram mais que o custo do óleo." :
+     "Bomba e petróleo andaram juntos no período."));
+  if (bl!=null && mt!=null) frases.push(`O petróleo bruto responde por cerca de <b>${nf(bl/mt*100,0)}%</b> do preço na bomba; o resto são refino, frete, impostos, biodiesel e margens.`);
+  if (eua!=null && br!=null) frases.push(`Nos EUA, o diesel sai por R$ ${nf(eua)}/l convertido pelo dólar, ${eua>br?"acima":"abaixo"} da média brasileira.`);
+  $("#lComb").innerHTML = frases.join(" ");
+}
+
+fetch("data/combustiveis.json?t=" + Math.floor(Date.now()/3600000)).then(r => r.ok ? r.json() : Promise.reject()).then(d => {
+  if (!d.semanas?.length) throw 0;
+  D = d; botoes(); painel(); desenhar();
+}).catch(() => { $("#dComb").textContent = "indisponível"; $("#cComb").innerHTML = `<p class="fonte">Os dados de diesel e petróleo ainda não foram coletados. Eles chegam na próxima atualização diária.</p>`; botoes(); });
+let t; new ResizeObserver(()=>{ clearTimeout(t); t = setTimeout(desenhar, 80); }).observe($("#cComb"));
 })();
 </script>
 </body>

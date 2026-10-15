@@ -74,7 +74,9 @@ def alinhar(semanas: pd.DatetimeIndex, s: pd.Series | None, dias: int = 10) -> l
     """Último valor da série até cada semana da ANP (no máximo `dias` antes)."""
     if s is None or s.empty:
         return [None] * len(semanas)
-    a = pd.merge_asof(pd.DataFrame({"d": semanas}), pd.DataFrame({"d": s.index, "v": s.values}),
+    esq = pd.DataFrame({"d": pd.DatetimeIndex(semanas).astype("datetime64[ns]")})
+    dir_ = pd.DataFrame({"d": pd.DatetimeIndex(s.index).astype("datetime64[ns]"), "v": s.values})
+    a = pd.merge_asof(esq, dir_,
                       on="d", direction="backward", tolerance=pd.Timedelta(days=dias))
     return [None if pd.isna(v) else round(float(v), 4) for v in a["v"]]
 
