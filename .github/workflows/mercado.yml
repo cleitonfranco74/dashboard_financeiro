@@ -40,18 +40,12 @@ jobs:
         run: python scripts/atualizar_cripto.py
         continue-on-error: true
 
-      - name: Passagens para Roma
-        run: python scripts/atualizar_voos.py
-        continue-on-error: true
-        env:
-          TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
-
       - name: Commit se houve mudança
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/mercado.json
-          for f in data/acoes.json data/voos.json data/combustiveis.json data/cripto.json; do if [ -f "$f" ]; then git add "$f"; fi; done
+          for f in data/acoes.json data/combustiveis.json data/cripto.json; do if [ -f "$f" ]; then git add "$f"; fi; done
           if git diff --cached --quiet; then
             echo "Sem mudanças."
           else

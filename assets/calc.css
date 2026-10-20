@@ -178,9 +178,6 @@
 
 
 /* passagens para Roma */
-.calc-ui .roma-f{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 18px;align-items:end}
-@media (max-width:820px){.calc-ui .roma-f{grid-template-columns:1fr 1fr}}
-@media (max-width:480px){.calc-ui .roma-f{grid-template-columns:minmax(0,1fr)}}
 .calc-ui .r-dir{height:44px}
 .calc-ui .brb{width:100%;background:none;border:0;padding:4px 6px;margin:0 -6px;border-radius:10px;text-align:left;color:inherit;font:inherit;cursor:pointer}
 .calc-ui .brb:hover{background:var(--surface-2)}
