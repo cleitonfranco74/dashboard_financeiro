@@ -1851,12 +1851,12 @@ function montar(id, el){
   atual = c; alvo = el;
   const guia = window.renderGuia ? renderGuia(c.id, "") : "";
   if (c.custom){
-    el.innerHTML = `<div class="calc-head"><div><h2>${esc(c.titulo)}</h2><p>${esc(c.desc)}</p></div></div><div class="res" id="res"></div>${guia}`;
+    el.innerHTML = `<div class="calc-head"><div><h2>${esc(c.titulo)}</h2><p>${esc(c.desc)}</p></div></div><div class="res" id="res"></div><div data-fb-util="${esc(c.nav)}"></div>${guia}`;
     c.mount($("#res")); return true;
   }
   const v = valores(c);
   el.innerHTML = `<div class="calc-head"><div><h2>${esc(c.titulo)}</h2><p>${esc(c.desc)}</p></div></div>
-    <div class="grid${c.layout==="wide"?" wide":""}"><form class="card campos${c.layout==="wide"?" wide":""}" id="form" onsubmit="return false">${c.campos.map(f=>campo(f, v[f.k])).join("")}<button type="button" class="reset" id="reset">Restaurar valores padrão</button></form><div class="res" id="res"></div></div><div class="res" id="full" style="margin-top:16px"></div>${guia}`;
+    <div class="grid${c.layout==="wide"?" wide":""}"><form class="card campos${c.layout==="wide"?" wide":""}" id="form" onsubmit="return false">${c.campos.map(f=>campo(f, v[f.k])).join("")}<button type="button" class="reset" id="reset">Restaurar valores padrão</button></form><div class="res" id="res"></div></div><div class="res" id="full" style="margin-top:16px"></div><div data-fb-util="${esc(c.nav)}"></div>${guia}`;
   const form = $("#form");
   form.addEventListener("input", ()=>calcular(true));
   form.addEventListener("change", ()=>calcular(true));

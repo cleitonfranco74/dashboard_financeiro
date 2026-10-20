@@ -2317,7 +2317,7 @@ function renderSim(sim){
       <div class="rowbtns"><span class="sub">Os resultados atualizam enquanto você digita.</span><button class="textbtn" type="button" id="reset">Restaurar exemplo</button></div>
     </section>
     <div class="results" id="results" aria-live="polite"></div>
-  </div>${window.renderGuia ? renderGuia(sim.id, "") : ""}`;
+  </div><div data-fb-util="${esc(sim.nav)}"></div>${window.renderGuia ? renderGuia(sim.id, "") : ""}`;
   const fields = $("#fields");
   let t;
   const onChange = () => { clearTimeout(t); t=setTimeout(()=>{ if (current===sim) compute(sim); },120); };
