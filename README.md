@@ -97,7 +97,20 @@ Para editar a lista de ações, altere `ACOES` em `scripts/atualizar_mercado.py`
 Todas as páginas contam visitas pelo [GoatCounter](https://www.goatcounter.com) (sem cookies e sem dados pessoais), no painel `https://dashboardfinan.goatcounter.com`. Em Calculadoras e Simuladores, cada ferramenta (`#id`) conta como uma página. O rodapé da página inicial mostra o total de visitas (`/counter/TOTAL.json`) e as chegadas pelo Instagram: quem abre um link com `utm_source=instagram` é contado no caminho `/instagram` (`/counter/%2Finstagram.json`). Se o navegador bloquear o GoatCounter, o rodapé usa a cópia `visitas.json` que a Action `di.yml` grava no branch `dados`. Os contadores públicos exigem ativar *Allow adding visitor counts on your website* nas configurações do GoatCounter. Para saber quantas visitas vêm do Instagram, divulgue o link com a origem marcada, por exemplo `https://cleitonfranco74.github.io/dashboard_financeiro/?utm_source=instagram&utm_medium=bio`.
 
 ## Feedback
-Todas as páginas têm o botão **💬 Dê sua opinião** (`assets/feedback.js`), que abre uma caixa com nota de 1 a 5 estrelas, perfil de quem usa e comentário livre. O envio é anônimo e chega por e-mail ao autor pelo [FormSubmit](https://formsubmit.co) (gratuito, sem cadastro). O primeiro envio dispara um e-mail de ativação, que precisa ser confirmado uma única vez.
+`assets/feedback.js` (o mesmo arquivo serve o Boi na Bolsa) coloca três coisas no site:
+
+- **Caixa de opinião:** o botão **💬 Dê sua opinião**, em todas as páginas, abre uma caixa com nota de 1 a 5 estrelas, perfil de quem usa, comentário livre e, se a pessoa quiser resposta, o e-mail dela. Depois de enviar, o botão encolhe para só o ícone.
+- **"Esta ferramenta foi útil? 👍 👎":** aparece no fim de cada simulador, calculadora e na carteira (elementos `<div data-fb-util="Nome">`). Quem marca 👎 pode dizer o que faltou. Cada ferramenta é avaliada uma vez por navegador.
+- **Nota média:** o rodapé da capa mostra "★ 4,6 de 5 · N avaliações" a partir de 5 avaliações (elemento com `data-fb-media`).
+
+As respostas vão para uma Planilha Google pelo script `scripts/feedback_planilha.gs`, que também avisa por e-mail a cada opinião da caixa ou 👎 com comentário. A planilha guarda data, site, página, ferramenta, nota, 👍/👎, perfil, comentário e e-mail. Para ligar a planilha:
+
+1. Crie uma planilha vazia em [sheets.new](https://sheets.new) e abra **Extensões > Apps Script**.
+2. Apague o conteúdo do editor, cole `scripts/feedback_planilha.gs` e salve.
+3. **Implantar > Nova implantação**, tipo **App da Web**, *Executar como*: **Eu**, *Quem pode acessar*: **Qualquer pessoa**. Autorize e copie o URL que termina em `/exec`.
+4. Coloque o URL na constante `PLANILHA` de `assets/feedback.js` aqui e de `feedback.js` no Boi na Bolsa.
+
+Enquanto `PLANILHA` estiver vazia, a caixa envia por e-mail pelo [FormSubmit](https://formsubmit.co), e o 👍/👎 e a nota média ficam escondidos. Com a planilha ligada, o seu e-mail deixa de aparecer no código do site.
 
 ## Aviso
 Ferramenta educacional. Estimativas não são recomendação de investimento. As regras tributárias refletem a legislação conhecida na data de criação.
