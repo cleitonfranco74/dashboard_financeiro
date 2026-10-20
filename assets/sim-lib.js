@@ -188,6 +188,8 @@ const MKT_FIELDS = {
   real: (M,v) => { const t = Mercado.titulo(M,"Tesouro IPCA+",v.anos); return t && {valor:t.taxaCompra, hint:`Tesouro IPCA+ ${t.vencimento.slice(0,4)}, taxa de ${Mercado.dataBR(M.tesouro.data)}`}; },
   selicTit: (M,v) => { const t = Mercado.titulo(M,"Tesouro Selic",v.anos); return t && {valor:t.taxaCompra, hint:`Tesouro Selic ${t.vencimento.slice(0,4)}, taxa de ${Mercado.dataBR(M.tesouro.data)}`}; },
   dolar: M => { const s = M.bolsa?.dolar; return s?.valores?.length ? {valor:s.valores[s.valores.length-1], hint:`PTAX de venda, BCB ${Mercado.dataBR(s.datas[s.datas.length-1])}`} : null; },
+  moeda: (M,v,f) => { const c = f.cur(v); if (c==="USD") return MKT_FIELDS.dolar(M);
+    const x = M.moedas?.[c]; return x && {valor:x.valor, hint:`${MOEDAS[c].nome} PTAX de venda, BCB ${Mercado.dataBR(x.data)}${x.aoVivo?" (ao vivo)":""}`}; },
   volDolar: () => { const x = volDolar(); return x && {valor:r2(x*100), hint:"oscilação do dólar PTAX nos últimos 12 meses"}; },
   educa: (M,v) => { const t = educaTitulo(M, educaAno(v)); return t && {valor:t.taxaCompra, hint:`Tesouro Educa+ ${t.vencimento.slice(0,4)}, taxa de ${Mercado.dataBR(M.tesouro.data)}`}; },
   cdiMedio: (M,v,f) => { const m=f.hz(v); return isFinite(m) && {valor:r2(cdiEsperado(m)*100), hint:`CDI médio esperado em ${yrs(Math.round(m))}, pelo Focus`}; },
@@ -204,6 +206,14 @@ const SOBRA = (()=>{ try {
 } catch { return null; } })();
 
 const SIMS = [];
+/* Moedas com cotação PTAX do Banco Central (USD vem da série diária do dólar). */
+const MOEDAS = {
+  USD:{nome:"Dólar americano", simb:"US$"}, EUR:{nome:"Euro", simb:"€"}, GBP:{nome:"Libra esterlina", simb:"£"},
+  CHF:{nome:"Franco suíço", simb:"CHF"}, NOK:{nome:"Coroa norueguesa", simb:"NOK"}, SEK:{nome:"Coroa sueca", simb:"SEK"},
+  DKK:{nome:"Coroa dinamarquesa", simb:"DKK"}, JPY:{nome:"Iene", simb:"¥"}, CAD:{nome:"Dólar canadense", simb:"C$"}, AUD:{nome:"Dólar australiano", simb:"A$"},
+};
+const moneyU = x => x>0 && x<1 ? "R$ " + x.toLocaleString("pt-BR",{minimumFractionDigits:4,maximumFractionDigits:4}) : money2(x);   // R$ por unidade de moeda
+const OPCOES_MOEDA = Object.entries(MOEDAS).map(([c,m])=>[c,`${m.nome} (${c})`]);
 
 /* ---------- 1. Aposentadoria ---------- */
 SIMS.push({
@@ -1956,11 +1966,9 @@ SIMS.push({
   title:"Qual a forma mais barata de levar dinheiro para a viagem?",
   lede:"Compara cartão de crédito, cartão pré-pago, conta global e dinheiro em espécie pelo custo total em reais, com spread e IOF. Mostra o risco do câmbio até a viagem e quanto guardar por mês.",
   fields:[
-    {k:"moeda",label:"Moeda",def:"USD",opts:[["USD","Dólar americano"],["EUR","Euro"],["OUT","Outra"]]},
+    {k:"moeda",label:"Moeda",def:"USD",opts:[...OPCOES_MOEDA,["OUT","Outra"]],wide:true},
     {k:"gasto",label:"Gastos na viagem",def:3000,suf:"na moeda",hint:"hospedagem, passeios, compras"},
-    {k:"cotUSD",label:"Dólar comercial",def:5.0,pre:"R$",mkt:"dolar",when:["moeda","USD"]},
-    {k:"cotOUT",label:"Cotação comercial",def:5.8,pre:"R$",when:["moeda","EUR"],hint:"euro comercial do dia"},
-    {k:"cotX",label:"Cotação comercial",def:1,pre:"R$",when:["moeda","OUT"]},
+    {k:"cot",label:"Cotação comercial",def:5.0,pre:"R$",mkt:"moeda",cur:v=>v.moeda,dec:4,hint:"R$ por unidade da moeda"},
     {k:"meses",label:"Meses até a viagem",def:6,suf:"meses"},
     {sect:"Spread sobre a cotação comercial"},
     {k:"spcc",label:"Cartão de crédito",def:5,suf:"%",hint:"veja o “dólar turismo do cartão” do seu banco"},
@@ -1972,10 +1980,10 @@ SIMS.push({
     {k:"iofEsp",label:"Compra de espécie",def:3.5,suf:"%"},
     {sect:"Planejamento"},
     {k:"rend",label:"Rendimento líquido até a viagem",def:10,suf:"% a.a.",mkt:"investLiq",hz:v=>Math.max(1,v.meses)},
-    {k:"vol",label:"Volatilidade da moeda",def:15,suf:"% a.a.",mkt:"volDolar",hint:"oscilação típica em um ano"},
+    {k:"vol",label:"Volatilidade da moeda",def:15,suf:"% a.a.",mkt:"volDolar",hint:"oscilação típica em um ano (preenchida com a do dólar)"},
   ],
   run(v){
-    const cot = v.moeda==="USD" ? v.cotUSD : v.moeda==="EUR" ? v.cotOUT : v.cotX, simb = v.moeda==="USD" ? "US$" : v.moeda==="EUR" ? "€" : "";
+    const cot = v.cot, simb = MOEDAS[v.moeda]?.simb || "";
     if (!(cot>0)) return {error:"Informe a cotação comercial da moeda."};
     if (!(v.gasto>0)) return {error:"Informe quanto pretende gastar na viagem."};
     const n = Math.round(v.meses);
@@ -1992,21 +2000,22 @@ SIMS.push({
     const fmtM = x => (simb?simb+" ":"") + x.toLocaleString("pt-BR",{maximumFractionDigits:0});
     return {
       html: verdict(`${best.nome} sai mais barato`,
-          `Para gastar ${fmtM(v.gasto)}, você paga <b>${money(best.total)}</b> usando ${best.nome.toLowerCase()} (${money2(best.vet)} por unidade), contra ${money(worst.total)} com ${worst.nome.toLowerCase()}: <b>${money(worst.total-best.total)}</b> de diferença. Na cotação comercial, seriam ${money(base)}.`,
+          `Para gastar ${fmtM(v.gasto)}, você paga <b>${money(best.total)}</b> usando ${best.nome.toLowerCase()} (${moneyU(best.vet)} por unidade), contra ${money(worst.total)} com ${worst.nome.toLowerCase()}: <b>${money(worst.total-best.total)}</b> de diferença. Na cotação comercial, seriam ${money(base)}.`,
           `${n>0?`Até a viagem, em ${yrs(n)}, a moeda pode oscilar: em 1 de cada 10 cenários, a mesma viagem custa mais de ${money(best.total*Math.exp(z*sd))}. Comprar aos poucos (preço médio) ou travar o câmbio com antecedência reduz esse risco. Para juntar ${money(alvo)} até lá, guarde <b>${money(mensal)}/mês</b>.`:"Para quem viaja agora, o que pesa é o spread e o IOF de cada forma de pagamento."}`) +
-        `<div class="kpis">${res.map(f=>kpi(f.nome, money(f.total), `${money2(f.vet)} por unidade · +${pct(f.extra,1)} sobre a comercial`, f.color, f===best)).join("")}</div>` +
-        `<section class="panel"><div class="phead"><div><h3>Custo total em reais</h3><div class="sub">Cotação comercial de ${money2(cot)} + spread + IOF</div></div></div><div class="bars">${res.map(f=>`<div class="bar"><span>${esc(f.nome)}${f===best?` <span class="badge">melhor</span>`:""}</span><span class="track"><i style="width:${Math.max(2,f.total/max*100)}%;background:${f.color}"></i></span><span class="v">${money(f.total)}</span></div>`).join("")}</div></section>` +
+        `<div class="kpis">${res.map(f=>kpi(f.nome, money(f.total), `${moneyU(f.vet)} por unidade · +${pct(f.extra,1)} sobre a comercial`, f.color, f===best)).join("")}</div>` +
+        `<section class="panel"><div class="phead"><div><h3>Custo total em reais</h3><div class="sub">Cotação comercial de ${moneyU(cot)} + spread + IOF</div></div></div><div class="bars">${res.map(f=>`<div class="bar"><span>${esc(f.nome)}${f===best?` <span class="badge">melhor</span>`:""}</span><span class="track"><i style="width:${Math.max(2,f.total/max*100)}%;background:${f.color}"></i></span><span class="v">${money(f.total)}</span></div>`).join("")}</div></section>` +
         `<section class="panel"><div class="phead"><div><h3>Como se forma o valor efetivo total (VET)</h3><div class="sub">Quanto você paga, em reais, por unidade da moeda</div></div></div><div class="tablewrap"><table><thead><tr><th>Forma</th><th class="n">Comercial</th><th class="n">Spread</th><th class="n">IOF</th><th class="n">VET</th><th>Observação</th></tr></thead><tbody>
-        ${res.map(f=>`<tr class="${f===best?"best":""}"><td><span class="sw" style="background:${f.color}"></span>${f.nome}</td><td class="n num">${money2(cot)}</td><td class="n num">${pct(sp[f.k]/100,1)}</td><td class="n num">${pct(iof[f.k]/100,1)}</td><td class="n num"><b>${money2(f.vet)}</b></td><td>${f.obs}</td></tr>`).join("")}
+        ${res.map(f=>`<tr class="${f===best?"best":""}"><td><span class="sw" style="background:${f.color}"></span>${f.nome}</td><td class="n num">${moneyU(cot)}</td><td class="n num">${pct(sp[f.k]/100,1)}</td><td class="n num">${pct(iof[f.k]/100,1)}</td><td class="n num"><b>${moneyU(f.vet)}</b></td><td>${f.obs}</td></tr>`).join("")}
         </tbody></table></div></section>` +
         (n>0 ? `<section class="panel"><div class="phead"><div><h3>E se a moeda mudar até a viagem?</h3><div class="sub">Custo da viagem pela forma mais barata, com volatilidade de ${nf(v.vol,0)}% a.a. em ${yrs(n)}</div></div></div><div class="tablewrap"><table><thead><tr><th>Cenário</th><th class="n">Cotação comercial</th><th class="n">Custo da viagem</th><th class="n">Diferença</th></tr></thead><tbody>
-        ${cenas.map(([nm,f])=>`<tr class="${f===1?"best":""}"><td>${nm}</td><td class="n num">${money2(cot*f)}</td><td class="n num"><b>${money(best.total*f)}</b></td><td class="n num">${f===1?"—":(f>1?"+":"−")+money(Math.abs(best.total*(f-1)))}</td></tr>`).join("")}
+        ${cenas.map(([nm,f])=>`<tr class="${f===1?"best":""}"><td>${nm}</td><td class="n num">${moneyU(cot*f)}</td><td class="n num"><b>${money(best.total*f)}</b></td><td class="n num">${f===1?"—":(f>1?"+":"−")+money(Math.abs(best.total*(f-1)))}</td></tr>`).join("")}
         </tbody></table></div></section>` : "") +
         notes(["VET (valor efetivo total): cotação comercial × (1 + spread) × (1 + IOF). É o número que o banco ou a casa de câmbio deve informar antes da operação; use-o para comparar.",
           "IOF: desde 2025, compras com cartão de crédito, débito e pré-pago no exterior, remessas para conta própria e compra de moeda em espécie pagam a mesma alíquota (3,5% na data deste simulador). As regras mudam por decreto: confira a vigente.",
           "Cartão de crédito: a conversão usa a cotação do dia do pagamento da fatura ou do dia da compra, conforme o banco. Se a moeda subir até lá, você paga mais.",
           "Conta global: costuma ter spread menor e permite comprar a moeda aos poucos antes da viagem, fazendo preço médio. Verifique tarifas de saque em caixas eletrônicos no exterior.",
           "Dinheiro em espécie: útil para pequenas despesas, mas tem spread maior e risco de perda ou roubo. Em viagens internacionais, valores acima de R$ 10 mil devem ser declarados à Receita Federal.",
+          "Cotações: PTAX de venda do Banco Central do dia (dólar, euro, libra, franco suíço, coroas, iene, dólares canadense e australiano), lida ao vivo quando possível.",
           "Cenários de câmbio: oscilação sem tendência, com a volatilidade informada (preenchida pela oscilação do dólar PTAX nos últimos 12 meses). A faixa cobre 80% dos casos.",
           "Planejamento: valor mensal a investir até a viagem para juntar o custo de hoje pela forma mais barata, ao rendimento líquido informado."]),
     };
@@ -2025,10 +2034,32 @@ const AEROPORTOS = [
   ["BOG","Bogotá","CO"],["PTY","Cidade do Panamá","PA"],["CUN","Cancún","MX"],["MEX","Cidade do México","MX"],["MIA","Miami","US"],["MCO","Orlando","US"],
   ["JFK","Nova York – JFK","US"],["LAX","Los Angeles","US"],["YYZ","Toronto","CA"],["LIS","Lisboa","PT"],["OPO","Porto","PT"],["MAD","Madri","ES"],["BCN","Barcelona","ES"],
   ["CDG","Paris – Charles de Gaulle","FR"],["FCO","Roma – Fiumicino","IT"],["MXP","Milão – Malpensa","IT"],["LHR","Londres – Heathrow","GB"],["FRA","Frankfurt","DE"],
-  ["AMS","Amsterdã","NL"],["ZRH","Zurique","CH"],["DXB","Dubai","AE"],["DOH","Doha","QA"],["NRT","Tóquio – Narita","JP"],["JNB","Joanesburgo","ZA"],
+  ["AMS","Amsterdã","NL"],["ZRH","Zurique","CH"],["ATH","Atenas","GR"],["BER","Berlim","DE"],["MUC","Munique","DE"],["PRG","Praga","CZ"],
+  ["BUD","Budapeste","HU"],["OSL","Oslo","NO"],["IST","Istambul","TR"],["SVO","Moscou – Sheremetyevo","RU"],["DXB","Dubai","AE"],["DOH","Doha","QA"],["NRT","Tóquio – Narita","JP"],["JNB","Joanesburgo","ZA"],
 ];
 const AERO = Object.fromEntries(AEROPORTOS.map(([c,n,p])=>[c,{n,p}]));
 const isoDias = d => { const x = new Date(); x.setDate(x.getDate()+d); return x.toISOString().slice(0,10); };
+/* Buscas já preenchidas. Passagens: ida (e volta) com passageiros e classe; hospedagem: cidade, datas e hóspedes. */
+function linksVoo(o, d, ida, volta, pax, classe="economy"){
+  const yymmdd = s => s.slice(2).replace(/-/g,""), cab = {economy:"", premium:"/premium", business:"/business"}[classe];
+  const kp = pax>1 ? `/${pax}adults` : "", datas = volta ? `${ida}/${volta}` : ida;
+  const gq = `Flights from ${o} to ${d} on ${ida}${volta?` through ${volta}`:" one way"}${classe==="business"?" business class":classe==="premium"?" premium economy":""}${pax>1?` for ${pax} adults`:""}`;
+  return [
+    ["Google Voos", `https://www.google.com/travel/flights?q=${encodeURIComponent(gq)}&hl=pt-BR&curr=BRL`, "calendário de preços e alertas"],
+    ["Skyscanner", `https://www.skyscanner.com.br/transporte/passagens-aereas/${o.toLowerCase()}/${d.toLowerCase()}/${yymmdd(ida)}/${volta?yymmdd(volta)+"/":""}?adultsv2=${pax}&cabinclass=${classe==="premium"?"premiumeconomy":classe}&rtn=${volta?1:0}`, "compara agências e companhias"],
+    ["Kayak", `https://www.kayak.com.br/flights/${o}-${d}/${datas}${kp}${cab}?sort=bestflight_a`, "previsão de alta ou queda"],
+    ["Momondo", `https://www.momondo.com.br/flight-search/${o}-${d}/${datas}${kp}${cab}?sort=bestflight_a`, "boa cobertura internacional"],
+  ];
+}
+function linksHotel(cidade, ida, volta, pax, quartos=1){
+  const c = encodeURIComponent(cidade);
+  return [
+    ["Booking", `https://www.booking.com/searchresults.pt-br.html?ss=${c}&checkin=${ida}&checkout=${volta}&group_adults=${pax}&no_rooms=${quartos}&group_children=0`, "hotéis e pousadas, com filtro de estrelas"],
+    ["Google Hotéis", `https://www.google.com/travel/search?q=${encodeURIComponent(`hotéis em ${cidade}`)}&hl=pt-BR&curr=BRL`, "compara sites de reserva; ajuste as datas"],
+    ["Airbnb", `https://www.airbnb.com.br/s/${c}/homes?checkin=${ida}&checkout=${volta}&adults=${pax}`, "apartamentos e casas inteiras"],
+  ];
+}
+const botaoLink = (n,u,s) => `<a class="lnk" href="${u}" target="_blank" rel="noopener noreferrer"><b>${esc(n)}</b><span>${esc(s)}</span></a>`;
 SIMS.push({
   id:"voos", nav:"Passagens aéreas",
   title:"Onde pesquisar a passagem e vale a pena usar milhas?",
@@ -2062,17 +2093,8 @@ SIMS.push({
     const [jMin, jMax] = intl ? [60, 180] : [30, 90];
     const janela = dias<jMin*0.5 ? "em cima da hora" : dias<jMin ? "um pouco tarde" : dias<=jMax ? "na janela ideal" : "cedo";
     // Links de busca
-    const o = v.origem, d = v.destino, yymmdd = s => s.slice(2).replace(/-/g,"");
-    const kayakCab = {economy:"", premium:"/premium", business:"/business"}[v.classe];
-    const kayakPax = pax>1 ? `/${pax}adults` : "";
-    const datasK = idaVolta ? `${v.ida}/${v.volta}` : v.ida;
-    const gq = `Flights from ${o} to ${d} on ${v.ida}${idaVolta?` through ${v.volta}`:" one way"}${v.classe==="business"?" business class":v.classe==="premium"?" premium economy":""}${pax>1?` for ${pax} adults`:""}`;
-    const links = [
-      ["Google Voos", `https://www.google.com/travel/flights?q=${encodeURIComponent(gq)}&hl=pt-BR&curr=BRL`, "calendário de preços e alertas"],
-      ["Skyscanner", `https://www.skyscanner.com.br/transporte/passagens-aereas/${o.toLowerCase()}/${d.toLowerCase()}/${yymmdd(v.ida)}/${idaVolta?yymmdd(v.volta)+"/":""}?adultsv2=${pax}&cabinclass=${v.classe==="premium"?"premiumeconomy":v.classe}&rtn=${idaVolta?1:0}`, "compara agências e companhias"],
-      ["Kayak", `https://www.kayak.com.br/flights/${o}-${d}/${datasK}${kayakPax}${kayakCab}?sort=bestflight_a`, "previsão de alta ou queda"],
-      ["Momondo", `https://www.momondo.com.br/flight-search/${o}-${d}/${datasK}${kayakPax}${kayakCab}?sort=bestflight_a`, "boa cobertura internacional"],
-    ];
+    const o = v.origem, d = v.destino;
+    const links = linksVoo(o, d, v.ida, idaVolta ? v.volta : null, pax, v.classe);
     const cias = intl ? [["LATAM","https://www.latamairlines.com/br/pt"],["Azul","https://www.voeazul.com.br"],["TAP","https://www.flytap.com/pt-br"],["GOL","https://www.voegol.com.br"]]
                       : [["LATAM","https://www.latamairlines.com/br/pt"],["GOL","https://www.voegol.com.br"],["Azul","https://www.voeazul.com.br"]];
     // Dinheiro × milhas
@@ -2105,72 +2127,84 @@ SIMS.push({
 });
 
 /* ---------- 22. Orçamento de viagem ---------- */
-/* Estimativas de referência (2026) em euros. hosp: quarto duplo por noite; alim: por pessoa/dia; transp: grupo/dia;
+/* Estimativas de referência (2026) na moeda do destino (euro; Noruega em coroas norueguesas). hosp: quarto duplo por noite; alim: por pessoa/dia; transp: grupo/dia;
  * passeios: por pessoa/dia; compras: total; passagem: R$ por pessoa, ida e volta saindo do Brasil (luxo = executiva). */
 const CENARIOS = [["eco","Econômico",C.s3],["med","Médio",C.s1],["lux","Luxo",C.s2]];
 const DESTINOS = {
-  italia:   {em:"na Itália", nome:"Itália (Roma, Florença, Veneza)", hosp:[70,150,450], alim:[35,65,160], transp:[12,20,80], passeios:[15,30,90], passagem:[4800,6800,24000]},
-  franca:   {em:"na França", nome:"França (Paris)", hosp:[85,180,600], alim:[40,75,200], transp:[14,22,100], passeios:[20,35,110], passagem:[4600,6500,23000]},
-  grecia:   {em:"na Grécia", nome:"Grécia (Atenas e ilhas)", hosp:[55,120,400], alim:[28,50,140], transp:[15,30,90], passeios:[12,25,80], passagem:[5200,7500,26000]},
-  alemanha: {em:"na Alemanha", nome:"Alemanha (Berlim, Munique)", hosp:[70,140,380], alim:[32,60,150], transp:[12,20,80], passeios:[12,25,70], passagem:[4800,6800,24000]},
-  holanda:  {em:"na Holanda", nome:"Holanda (Amsterdã)", hosp:[90,190,500], alim:[38,70,170], transp:[14,22,90], passeios:[18,35,90], passagem:[4900,7000,24000]},
-  leste:    {em:"no Leste Europeu", nome:"Leste Europeu (Praga, Budapeste, Cracóvia)", hosp:[40,85,280], alim:[20,38,100], transp:[8,14,60], passeios:[10,20,60], passagem:[5000,7200,25000]},
-  noruega:  {em:"na Noruega", nome:"Noruega (Oslo e fiordes)", hosp:[110,210,550], alim:[50,90,220], transp:[25,40,120], passeios:[30,55,150], passagem:[5500,8000,27000]},
-  russia:   {em:"na Rússia", nome:"Rússia (Moscou, São Petersburgo)", hosp:[45,100,350], alim:[22,45,130], transp:[6,12,60], passeios:[12,25,80], passagem:[6500,9000,30000],
+  italia:   {aero:"FCO", cidade:"Roma", em:"na Itália", nome:"Itália (Roma, Florença, Veneza)", hosp:[70,150,450], alim:[35,65,160], transp:[12,20,80], passeios:[15,30,90], passagem:[4800,6800,24000]},
+  franca:   {aero:"CDG", cidade:"Paris", em:"na França", nome:"França (Paris)", hosp:[85,180,600], alim:[40,75,200], transp:[14,22,100], passeios:[20,35,110], passagem:[4600,6500,23000]},
+  grecia:   {aero:"ATH", cidade:"Atenas", em:"na Grécia", nome:"Grécia (Atenas e ilhas)", hosp:[55,120,400], alim:[28,50,140], transp:[15,30,90], passeios:[12,25,80], passagem:[5200,7500,26000]},
+  alemanha: {aero:"BER", cidade:"Berlim", em:"na Alemanha", nome:"Alemanha (Berlim, Munique)", hosp:[70,140,380], alim:[32,60,150], transp:[12,20,80], passeios:[12,25,70], passagem:[4800,6800,24000]},
+  holanda:  {aero:"AMS", cidade:"Amsterdã", em:"na Holanda", nome:"Holanda (Amsterdã)", hosp:[90,190,500], alim:[38,70,170], transp:[14,22,90], passeios:[18,35,90], passagem:[4900,7000,24000]},
+  leste:    {aero:"PRG", cidade:"Praga", em:"no Leste Europeu", nome:"Leste Europeu (Praga, Budapeste, Cracóvia)", hosp:[40,85,280], alim:[20,38,100], transp:[8,14,60], passeios:[10,20,60], passagem:[5000,7200,25000]},
+  noruega:  {aero:"OSL", cidade:"Oslo", moeda:"NOK", em:"na Noruega", nome:"Noruega (Oslo e fiordes)", hosp:[1290,2460,6440], alim:[585,1050,2575], transp:[290,470,1400], passeios:[350,645,1755], compras:[1170,3510,17550], passagem:[5500,8000,27000]},
+  russia:   {aero:"SVO", cidade:"Moscou", em:"na Rússia", nome:"Rússia (Moscou, São Petersburgo)", hosp:[45,100,350], alim:[22,45,130], transp:[6,12,60], passeios:[12,25,80], passagem:[6500,9000,30000],
              aviso:"Desde 2022, cartões Visa e Mastercard emitidos fora da Rússia não funcionam no país e não há voos diretos da União Europeia. Leve dinheiro em espécie, confira visto e as orientações do Itamaraty antes de planejar."},
-  portugal: {em:"em Portugal", nome:"Portugal (Lisboa, Porto)", hosp:[55,110,350], alim:[25,45,120], transp:[10,16,70], passeios:[10,20,60], passagem:[4200,6000,21000]},
-  espanha:  {em:"na Espanha", nome:"Espanha (Madri, Barcelona)", hosp:[65,130,400], alim:[30,55,140], transp:[12,18,80], passeios:[14,28,80], passagem:[4600,6500,23000]},
+  portugal: {aero:"LIS", cidade:"Lisboa", em:"em Portugal", nome:"Portugal (Lisboa, Porto)", hosp:[55,110,350], alim:[25,45,120], transp:[10,16,70], passeios:[10,20,60], passagem:[4200,6000,21000]},
+  espanha:  {aero:"MAD", cidade:"Madri", em:"na Espanha", nome:"Espanha (Madri, Barcelona)", hosp:[65,130,400], alim:[30,55,140], transp:[12,18,80], passeios:[14,28,80], passagem:[4600,6500,23000]},
 };
 const COMPRAS_EUR = [100, 300, 1500];
-const MULT_CUSTOM = [0.6, 1, 2.6];          // cenários derivados dos valores digitados (que valem como "médio")
+const MULT_CUSTOM = [0.6, 1, 2.6];
+const hojeISO = () => new Date().toISOString().slice(0,10);
+const mesesAte = d => /^\d{4}-\d{2}-\d{2}$/.test(d||"") ? Math.max(0, Math.round((new Date(d)-new Date(hojeISO()))/864e5/30.44)) : 0;          // cenários derivados dos valores digitados (que valem como "médio")
 SIMS.push({
   id:"viagem", nav:"Orçamento de viagem",
   title:"Quanto vai custar a viagem: econômica, média ou de luxo?",
   lede:"Compara três cenários de gastos diários (econômico, médio e luxo) para destinos europeus prontos ou para valores seus. Converte os gastos pelo câmbio com IOF, mostra quanto guardar por mês e se compensa pagar à vista ou parcelar.",
   fields:[
     {k:"destino",label:"Destino",def:"italia",opts:[...Object.entries(DESTINOS).map(([k,d])=>[k,d.nome]),["custom","Personalizado (digitar os valores)"]],wide:true},
-    {k:"moeda",label:"Moeda do destino",def:"EUR",opts:[["BRL","Real (viagem nacional)"],["USD","Dólar americano"],["EUR","Euro"],["OUT","Outra"]],when:["destino","custom"]},
-    {k:"cotEUR",label:"Euro comercial",def:5.8,pre:"R$",when:st=>st.destino!=="custom"||st.moeda==="EUR"},
-    {k:"cotUSD",label:"Dólar comercial",def:5.0,pre:"R$",mkt:"dolar",when:st=>st.destino==="custom"&&st.moeda==="USD"},
-    {k:"cotX",label:"Cotação comercial",def:1,pre:"R$",when:st=>st.destino==="custom"&&st.moeda==="OUT"},
+    {k:"moeda",label:"Moeda do destino",def:"EUR",opts:[["BRL","Real (viagem nacional)"],...OPCOES_MOEDA,["OUT","Outra"]],when:["destino","custom"]},
+    {k:"cot",label:"Cotação comercial",def:5.8,pre:"R$",mkt:"moeda",cur:v=>v.destino==="custom"?v.moeda:(DESTINOS[v.destino]?.moeda||"EUR"),dec:4,hint:"R$ por unidade da moeda do destino",when:st=>!(st.destino==="custom"&&st.moeda==="BRL")},
     {k:"fx",label:"Spread + IOF",def:5.1,suf:"%",hint:"conta global; cartão de crédito chega a 9%",when:st=>!(st.destino==="custom"&&st.moeda==="BRL")},
+    {k:"origem",label:"Saindo de",def:"CGB",opts:AEROPORTOS.filter(a=>a[2]==="BR").map(([c,n])=>[c,`${c} · ${n}`])},
     {k:"pessoas",label:"Pessoas",def:2,suf:"pessoas"},
-    {k:"dias",label:"Dias de viagem",def:10,suf:"dias"},
-    {k:"cenario",label:"Cenário do plano",def:"med",opts:CENARIOS.map(([k,n])=>[k,n]),hint:"usado no plano de poupança e no pagamento"},
+    {k:"ida",label:"Ida",def:isoDias(240),type:"date"},
+    {k:"volta",label:"Volta",def:isoDias(249),type:"date"},
+    {k:"cenario",label:"Cenário do plano",def:"med",opts:CENARIOS.map(([k,n])=>[k,n]),hint:"usado nas buscas, no plano e no pagamento"},
     {sect:"Seus valores (cenário médio)",when:["destino","custom"]},
+    {k:"destAero",label:"Aeroporto de destino",def:"LIS",opts:AEROPORTOS.map(([c,n])=>[c,`${c} · ${n}`]),when:["destino","custom"],wide:true},
+    {k:"cidade",label:"Cidade (para buscar hospedagem)",def:"Lisboa",type:"text",when:["destino","custom"],wide:true},
     {k:"passagem",label:"Passagem por pessoa",def:6500,pre:"R$",hint:"ida e volta, com bagagem",when:["destino","custom"]},
     {k:"diaria",label:"Hospedagem por noite",def:120,suf:"/quarto",hint:"na moeda do destino",when:["destino","custom"]},
     {k:"alim",label:"Alimentação",def:50,suf:"/pessoa/dia",when:["destino","custom"]},
     {k:"transp",label:"Transporte local",def:25,suf:"/dia",hint:"para o grupo",when:["destino","custom"]},
     {k:"passeios",label:"Passeios e ingressos",def:400,suf:"total",when:["destino","custom"]},
     {k:"compras",label:"Compras",def:300,suf:"total",when:["destino","custom"]},
+    {sect:"Preços pesquisados (opcional)"},
+    {k:"passPesq",label:"Passagem encontrada",def:0,pre:"R$",suf:"/pessoa",hint:"ida e volta; deixe 0 para usar a estimativa"},
+    {k:"hospPesq",label:"Hospedagem encontrada",def:0,pre:"R$",suf:"total",hint:"toda a estadia; deixe 0 para usar a estimativa"},
     {sect:"Comum aos cenários"},
     {k:"quartos",label:"Quartos",def:1,suf:"quartos"},
     {k:"seguro",label:"Seguro-viagem",def:25,pre:"R$",suf:"/pessoa/dia",hint:"obrigatório na Europa"},
     {k:"docs",label:"Documentos e vistos",def:0,pre:"R$",hint:"passaporte, visto, vacinas"},
     {k:"imprev",label:"Reserva para imprevistos",def:10,suf:"%"},
     {sect:"Plano para juntar o dinheiro"},
-    {k:"meses",label:"Meses até a viagem",def:8,suf:"meses"},
     {k:"guardo",label:"Consigo guardar",def:2500,pre:"R$",suf:"/mês",sobra:true},
-    {k:"rend",label:"Rendimento líquido",def:10,suf:"% a.a.",mkt:"investLiq",hz:v=>Math.max(1,v.meses)},
+    {k:"rend",label:"Rendimento líquido",def:10,suf:"% a.a.",mkt:"investLiq",hz:v=>Math.max(1,mesesAte(v.ida))},
     {k:"desc",label:"Desconto à vista",def:5,suf:"%",hint:"na passagem e na hospedagem"},
     {k:"parc",label:"Ou parcelado sem juros em",def:10,suf:"vezes"},
   ],
   run(v){
     const custom = v.destino==="custom", Dst = DESTINOS[v.destino];
-    const moeda = custom ? v.moeda : "EUR", nac = moeda==="BRL";
-    const cot = nac ? 1 : moeda==="USD" ? v.cotUSD : moeda==="EUR" ? v.cotEUR : v.cotX;
+    const moeda = custom ? v.moeda : (Dst.moeda||"EUR"), nac = moeda==="BRL";
+    const cot = nac ? 1 : v.cot;
     if (!(cot>0)) return {error:"Informe a cotação da moeda do destino."};
-    const P = Math.max(1, Math.round(v.pessoas)), D = Math.max(1, Math.round(v.dias)), noites = Math.max(0, D-1), Q = Math.max(1, Math.round(v.quartos));
-    const conv = nac ? 1 : cot*(1+v.fx/100), simb = nac ? "R$" : moeda==="USD" ? "US$" : moeda==="EUR" ? "€" : "";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v.ida||"") || !/^\d{4}-\d{2}-\d{2}$/.test(v.volta||"")) return {error:"Informe as datas de ida e de volta."};
+    if (!(v.volta>v.ida)) return {error:"A volta precisa ser depois da ida."};
+    if (v.ida < hojeISO()) return {error:"A data de ida já passou. Escolha uma nova data ou clique em “Restaurar exemplo”."};
+    const noites = Math.round((new Date(v.volta)-new Date(v.ida))/864e5), D = noites+1;
+    const P = Math.max(1, Math.round(v.pessoas)), Q = Math.max(1, Math.round(v.quartos));
+    const conv = nac ? 1 : cot*(1+v.fx/100), simb = nac ? "R$" : MOEDAS[moeda]?.simb || "";
     const loc = x => nac ? money(x) : `${simb} ${nf(x,0)}`;
     /* Custos de um cenário (0 econômico, 1 médio, 2 luxo). */
     const custos = c => {
       const g = custom ? {passagem:v.passagem*MULT_CUSTOM[c], hosp:v.diaria*MULT_CUSTOM[c], alim:v.alim*MULT_CUSTOM[c], transp:v.transp*MULT_CUSTOM[c], passeiosTot:v.passeios*MULT_CUSTOM[c], compras:v.compras*MULT_CUSTOM[c]}
-                       : {passagem:Dst.passagem[c], hosp:Dst.hosp[c], alim:Dst.alim[c], transp:Dst.transp[c], passeiosTot:Dst.passeios[c]*P*D, compras:COMPRAS_EUR[c]};
+                       : {passagem:Dst.passagem[c], hosp:Dst.hosp[c], alim:Dst.alim[c], transp:Dst.transp[c], passeiosTot:Dst.passeios[c]*P*D, compras:(Dst.compras||COMPRAS_EUR)[c]};
       const it = [
-        {nome:"Passagens", brl:g.passagem*P, color:C.s1, det:`${P} × ${money(g.passagem)}`},
-        {nome:"Hospedagem", local:g.hosp*noites*Q, color:C.s2, det:`${noites} noites × ${Q} quarto(s) × ${loc(g.hosp)}`},
+        v.passPesq>0 ? {nome:"Passagens", brl:v.passPesq*P, color:C.s1, det:`${P} × ${money(v.passPesq)}`, pesq:true}
+                     : {nome:"Passagens", brl:g.passagem*P, color:C.s1, det:`${P} × ${money(g.passagem)}`},
+        v.hospPesq>0 ? {nome:"Hospedagem", brl:v.hospPesq, color:C.s2, det:`total de ${noites} noites`, pesq:true}
+                     : {nome:"Hospedagem", local:g.hosp*noites*Q, color:C.s2, det:`${noites} noites × ${Q} quarto(s) × ${loc(g.hosp)}`},
         {nome:"Alimentação", local:g.alim*P*D, color:C.s3, det:`${P} pessoas × ${D} dias × ${loc(g.alim)}`},
         {nome:"Transporte local", local:g.transp*D, color:C.s4, det:`${D} dias × ${loc(g.transp)}`},
         {nome:"Passeios e ingressos", local:g.passeiosTot, color:"var(--accent)", det:custom?"total":`${P} pessoas × ${D} dias × ${loc(Dst.passeios[c])}`},
@@ -2180,13 +2214,13 @@ SIMS.push({
       ].map(i=>({...i, reais: i.brl!=null ? i.brl : i.local*conv}));
       const sub = it.reduce((a,i)=>a+i.reais,0), imp = sub*v.imprev/100;
       it.push({nome:"Imprevistos", reais:imp, color:"repeating-linear-gradient(45deg,var(--muted) 0 3px,transparent 3px 6px)", det:`${nf(v.imprev)}% do total`});
-      const diario = it.filter(i=>i.local!=null && i.nome!=="Compras").reduce((a,i)=>a+i.reais,0)/D;
+      const diario = it.filter(i=>["Hospedagem","Alimentação","Transporte local","Passeios e ingressos"].includes(i.nome)).reduce((a,i)=>a+i.reais,0)/D;
       return {it, total:sub+imp, diario, local:it.filter(i=>i.local!=null).reduce((a,i)=>a+i.local,0)};
     };
     const cen = CENARIOS.map(([k,nome,color],c)=>({k, nome, color, ...custos(c)}));
     const sel = cen.find(c=>c.k===v.cenario) || cen[1], itens = sel.it.filter(i=>i.reais>0), total = sel.total;
     // Plano
-    const n = Math.max(0, Math.round(v.meses)), r = aToM(v.rend/100);
+    const n = mesesAte(v.ida), r = aToM(v.rend/100);
     const fv = (g, m) => r>0 ? g*(Math.pow(1+r,m)-1)/r : g*m;
     const junta = fv(v.guardo, n);
     const mensalDe = T => n<1 ? T : (r>0 ? T*r/(Math.pow(1+r,n)-1) : T/n);
@@ -2199,16 +2233,24 @@ SIMS.push({
     const maxCen = Math.max(...cen.map(c=>c.total)), max = Math.max(...itens.map(i=>i.reais));
     const cats = cen[0].it.map(i=>i.nome).filter(nm=>cen.some(c=>c.it.find(i=>i.nome===nm).reais>0));
     const destNome = custom ? "no seu destino" : `${Dst.em} (${Dst.nome.replace(/^[^(]*\(|\)$/g,"")})`;
+    // Buscas de preços reais para o cenário escolhido (luxo pesquisa classe executiva)
+    const dAero = custom ? v.destAero : Dst.aero, cidade = (custom ? v.cidade : Dst.cidade) || "", classe = sel.k==="lux" ? "business" : "economy";
+    const pesqUsado = sel.it.some(i=>i.pesq), tagP = nm => cen.some(c=>c.it.find(i=>i.nome===nm)?.pesq) ? ` <span class="badge">pesquisado</span>` : "";
+    const buscas = `<section class="panel"><div class="phead"><div><h3>Pesquise os preços reais</h3><div class="sub">Buscas já preenchidas com as datas (${Mercado.dataBR(v.ida)} a ${Mercado.dataBR(v.volta)}) e ${P} ${P===1?"pessoa":"pessoas"}. Depois, preencha o que encontrar em “Preços pesquisados”</div></div></div>
+      <div class="sub" style="margin:4px 0 8px"><b>Passagens</b> ${esc(v.origem)} → ${esc(dAero)}, ${classe==="business"?"classe executiva":"classe econômica"}</div>
+      <div class="lnks">${linksVoo(v.origem, dAero, v.ida, v.volta, P, classe).map(l=>botaoLink(...l)).join("")}</div>
+      ${cidade?`<div class="sub" style="margin:14px 0 8px"><b>Hospedagem</b> em ${esc(cidade)}, ${noites} noites, ${Q} quarto(s)</div><div class="lnks">${linksHotel(cidade, v.ida, v.volta, P, Q).map(l=>botaoLink(...l)).join("")}</div>`:""}</section>`;
     return {
       html: (Dst?.aviso ? verdict("Atenção", Dst.aviso, "", true) : "") +
         verdict(`Cenário ${sel.nome.toLowerCase()}`,
           `${D} dias ${esc(destNome)} para ${P} ${P===1?"pessoa":"pessoas"}: de <b>${money(cen[0].total)}</b> no cenário econômico a <b>${money(cen[2].total)}</b> no de luxo, passando por ${money(cen[1].total)} no médio. No destino, o gasto diário vai de ${money(cen[0].diario)} a ${money(cen[2].diario)} para o grupo.`,
           `${n>0?(falta>1?`No cenário ${sel.nome.toLowerCase()} (${money(total)}), guardando ${money(v.guardo)}/mês por ${yrs(n)} você junta ${money(junta)}: faltam <b>${money(falta)}</b>. Guarde <b>${money(mensal)}/mês</b>${mesesPrecisa?`, ou mantenha os ${money(v.guardo)} e viaje daqui a ${yrs(mesesPrecisa)}`:""}.`:`No cenário ${sel.nome.toLowerCase()} (${money(total)}), guardando ${money(v.guardo)}/mês por ${yrs(n)} você junta ${money(junta)}, o suficiente.`):""} Na passagem e na hospedagem, ${vistaMelhor?`<b>pagar à vista com ${nf(v.desc,1)}% de desconto</b> sai melhor que ${N}× sem juros`:`<b>parcelar em ${N}× sem juros</b> sai melhor que o desconto de ${nf(v.desc,1)}%`} (desconto que empata: ${pct(descEquil,1)}).`) +
-        `<div class="kpis">${cen.map(c=>kpi(c.nome+(c.k===sel.k?" · seu plano":""), money(c.total), `${money(c.total/P)} por pessoa · ${money(c.diario)}/dia no destino`, c.color)).join("")}${kpi("Guardar por mês", n>0?money(mensal):"—", n>0?`cenário ${sel.nome.toLowerCase()}, em ${yrs(n)}`:"informe os meses até a viagem")}</div>` +
-        `<section class="panel"><div class="phead"><div><h3>Os três cenários lado a lado</h3><div class="sub">Custo total da viagem por categoria, em reais${nac?"":` (moeda a ${money2(conv)} com spread e IOF)`}</div></div>${legend(cats.map(nm=>[nm, cen[0].it.find(i=>i.nome===nm).color]))}</div>
+        `<div class="kpis">${cen.map(c=>kpi(c.nome+(c.k===sel.k?" · seu plano":""), money(c.total), `${money(c.total/P)} por pessoa · ${money(c.diario)}/dia no destino`, c.color)).join("")}${kpi("Guardar por mês", n>0?money(mensal):"—", n>0?`cenário ${sel.nome.toLowerCase()}, em ${yrs(n)}`:"a viagem é neste mês")}</div>` +
+        buscas +
+        `<section class="panel"><div class="phead"><div><h3>Os três cenários lado a lado</h3><div class="sub">Custo total da viagem por categoria, em reais${nac?"":` (moeda a ${moneyU(conv)} com spread e IOF)`}</div></div>${legend(cats.map(nm=>[nm, cen[0].it.find(i=>i.nome===nm).color]))}</div>
           <div class="stk">${cen.map(c=>`<div class="stkrow"><span class="stkl">${c.nome}</span><span class="stkbar">${c.it.filter(i=>i.reais>0).map(i=>`<i style="width:${i.reais/maxCen*100}%;background:${i.color}" title="${esc(i.nome)}: ${money(i.reais)}"></i>`).join("")}</span><span class="v">${money(c.total)}</span></div>`).join("")}</div></section>` +
-        `<section class="panel"><div class="phead"><div><h3>Comparação por categoria</h3><div class="sub">Em reais${custom?"; econômico e luxo derivados dos seus valores (×0,6 e ×2,6)":"; estimativas de referência para o destino"}</div></div></div><div class="tablewrap"><table><thead><tr><th>Item</th>${cen.map(c=>`<th class="n">${c.nome}</th>`).join("")}</tr></thead><tbody>
-        ${cats.map(nm=>`<tr><td>${nm}</td>${cen.map(c=>`<td class="n num">${money(c.it.find(i=>i.nome===nm).reais)}</td>`).join("")}</tr>`).join("")}
+        `<section class="panel"><div class="phead"><div><h3>Comparação por categoria</h3><div class="sub">Em reais${custom?"; econômico e luxo derivados dos seus valores (×0,6 e ×2,6)":"; estimativas de referência para o destino"}${pesqUsado?"; itens “pesquisado” usam o preço que você encontrou, igual nos três cenários":""}</div></div></div><div class="tablewrap"><table><thead><tr><th>Item</th>${cen.map(c=>`<th class="n">${c.nome}</th>`).join("")}</tr></thead><tbody>
+        ${cats.map(nm=>`<tr><td>${nm}${tagP(nm)}</td>${cen.map(c=>`<td class="n num">${money(c.it.find(i=>i.nome===nm).reais)}</td>`).join("")}</tr>`).join("")}
           <tr class="best"><td><b>Total</b></td>${cen.map(c=>`<td class="n num"><b>${money(c.total)}</b></td>`).join("")}</tr>
           <tr><td>Por pessoa</td>${cen.map(c=>`<td class="n num">${money(c.total/P)}</td>`).join("")}</tr>
           <tr><td>Gasto diário no destino (grupo)</td>${cen.map(c=>`<td class="n num">${money(c.diario)}</td>`).join("")}</tr>
@@ -2216,12 +2258,13 @@ SIMS.push({
         </tbody></table></div></section>` +
         `<section class="panel"><div class="phead"><div><h3>Para onde vai o dinheiro no cenário ${sel.nome.toLowerCase()}</h3></div></div><div class="bars">${itens.map(i=>`<div class="bar"><span>${esc(i.nome)} <small>${pct(i.reais/total,0)}</small></span><span class="track"><i style="width:${Math.max(2,i.reais/max*100)}%;background:${i.color}"></i></span><span class="v">${money(i.reais)}</span></div>`).join("")}</div></section>` +
         `<section class="panel"><div class="phead"><div><h3>Detalhamento do cenário ${sel.nome.toLowerCase()}</h3></div></div><div class="tablewrap"><table><thead><tr><th>Item</th><th>Como foi calculado</th>${nac?"":`<th class="n">Na moeda</th>`}<th class="n">Em reais</th></tr></thead><tbody>
-        ${itens.map(i=>`<tr><td>${i.nome}</td><td>${i.det}</td>${nac?"":`<td class="n num">${i.local!=null?loc(i.local):"—"}</td>`}<td class="n num">${money(i.reais)}</td></tr>`).join("")}
+        ${itens.map(i=>`<tr><td>${i.nome}${i.pesq?` <span class="badge">pesquisado</span>`:""}</td><td>${i.det}</td>${nac?"":`<td class="n num">${i.local!=null?loc(i.local):"—"}</td>`}<td class="n num">${money(i.reais)}</td></tr>`).join("")}
           <tr class="best"><td><b>Total</b></td><td></td>${nac?"":"<td></td>"}<td class="n num"><b>${money(total)}</b></td></tr>
         </tbody></table></div></section>` +
         notes(["Cenários: econômico (hostel ou hotel simples, mercado e lanchonetes, transporte público, passagem promocional), médio (hotel 3 ou 4 estrelas, restaurantes comuns, alguns passeios pagos) e luxo (hotel 5 estrelas, restaurantes sofisticados, táxi e transfers, passagem em classe executiva).",
-          "Valores dos destinos: estimativas de referência em euros para 2026, com base em médias de preços de viagem. Variam muito com temporada, cidade e antecedência: ajuste com cotações reais.",
-          "No Leste Europeu (Chéquia, Hungria, Polônia), na Noruega e na Rússia a moeda local não é o euro; os valores estão convertidos para euro só para comparar. Pague na moeda local para evitar conversões duplas.",
+          "Valores dos destinos: estimativas de referência para 2026, com base em médias de preços de viagem. Variam muito com temporada, cidade e antecedência: use os botões de busca e preencha os preços encontrados.",
+          "Preços pesquisados: a passagem (por pessoa, ida e volta) e a hospedagem (total da estadia) que você informar, em reais, substituem as estimativas nos três cenários. Se a cobrança for em moeda estrangeira, some o IOF e o spread do cartão.",
+          "Cotações: PTAX de venda do Banco Central do dia (euro, coroa norueguesa e outras), lida ao vivo quando possível. Na Noruega os valores estão em coroas; no Leste Europeu (Chéquia, Hungria, Polônia) e na Rússia, convertidos para euro só para comparar, porque o Banco Central não publica essas moedas. Pague na moeda local para evitar conversões duplas.",
           "Gastos no destino convertidos pela cotação comercial mais spread e IOF. Passagens (saindo do Brasil, ida e volta), seguro e documentos são em reais.",
           "Plano: valor mensal investido até a viagem ao rendimento líquido informado. À vista × parcelado: as parcelas são trazidas a valor presente; se o desconto à vista superar o desconto que empata, pague à vista.",
           "Seguro-viagem é obrigatório para os países do Acordo de Schengen, com cobertura médica mínima de 30 mil euros."]),
@@ -2314,10 +2357,11 @@ function compute(sim){
     const m = MKT ? MKT_FIELDS[f.mkt](MKT, v, f) : null;
     if (!m){ continue; }
     if (!edited[f.k]){
-      el.value = fmtIn(r2(m.valor)); st[f.k] = el.value; v[f.k] = r2(m.valor);
+      const rd = x => f.dec ? Math.round(x*10**f.dec)/10**f.dec : r2(x);
+      el.value = fmtIn(rd(m.valor)); st[f.k] = el.value; v[f.k] = rd(m.valor);
       h.innerHTML = `<span class="mk">● ${esc(m.hint)}</span>`;
-    } else if (Math.abs(v[f.k]-m.valor) > 0.005){
-      h.innerHTML = `Valor seu. Mercado: ${nf(m.valor,2)}. <button type="button" class="linkbtn" data-mkt="${f.k}">Usar mercado</button>`;
+    } else if (Math.abs(v[f.k]-m.valor) > (f.dec ? 0.5/10**f.dec : 0.005)){
+      h.innerHTML = `Valor seu. Mercado: ${nf(m.valor,f.dec||2)}. <button type="button" class="linkbtn" data-mkt="${f.k}">Usar mercado</button>`;
     } else h.innerHTML = `<span class="mk">● ${esc(m.hint)}</span>`;
   }
   // Campos condicionais: aparecem só quando o seletor indicado tem o valor certo.
@@ -2355,6 +2399,8 @@ Mercado.carregar().then(m=>{
     <span><b>Selic esperada</b> ${anos.map(a=>`<span class="num">${nf(f.selic[a],2)}%</span> <small>${a}</small>`).join(" → ")}</span>
     <span><b>IPCA esperado</b> ${anos.map(a=>`<span class="num">${nf(f.ipca[a],2)}%</span> <small>${a}</small>`).join(" → ")}</span>`;
   if (current) compute(current);
+  // Cotações do dia das outras moedas (euro, libra, coroa norueguesa...), lidas ao vivo quando possível.
+  if (Mercado.moedasAoVivo) Mercado.moedasAoVivo(m).then(()=>{ if (current) compute(current); });
 });
 window.SimLib = {
   SIMS, tem: id => SIMS.some(s=>s.id===id), get: id => SIMS.find(s=>s.id===id),

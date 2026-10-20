@@ -348,7 +348,7 @@ window.GUIAS = {
   faq: [["O que mudou em 2026?", "Quem ganha até R$ 5.000 por mês ficou isento pelo redutor, que diminui gradualmente até R$ 7.350."]]
 },
 "cambio": {
-  usar: ["Escolha a moeda e quanto vai gastar na viagem.", "Ajuste spreads e IOF de cartão de crédito, pré-pago, conta global e espécie.", "Informe em quantos meses viaja para ver o risco do câmbio e o rendimento até lá."],
+  usar: ["Escolha a moeda e quanto vai gastar na viagem; a cotação do dia vem do Banco Central (PTAX).", "Ajuste spreads e IOF de cartão de crédito, pré-pago, conta global e espécie.", "Informe em quantos meses viaja para ver o risco do câmbio e o rendimento até lá."],
   entenda: [["Custo real", "O custo total é a cotação comercial mais o spread da instituição mais o IOF. Contas globais costumam ter o menor spread."]],
   faq: [["Vale comprar aos poucos?", "Comprar parcelado ao longo dos meses dilui o risco de pegar o câmbio no pico."]]
 },
@@ -358,7 +358,7 @@ window.GUIAS = {
   faq: [["Qual a melhor antecedência?", "Em geral, 1 a 3 meses para voos nacionais e 2 a 6 meses para internacionais."]]
 },
 "viagem": {
-  usar: ["Escolha o destino ou informe seus próprios valores.", "Defina pessoas, dias e o cenário: econômico, médio ou luxo.", "Inclua passagem, seguro e reserva, e veja quanto guardar por mês até a viagem."],
+  usar: ["Escolha o destino ou informe seus próprios valores; a cotação da moeda do destino vem do Banco Central.", "Defina de onde sai, as datas, as pessoas e o cenário: econômico, médio ou luxo.", "Use os botões de busca de passagens e hospedagem e preencha os preços encontrados: eles substituem as estimativas.", "Veja quanto guardar por mês até a data da ida e se compensa pagar à vista."],
   entenda: [["Planejar evita dívida", "Juntar o dinheiro antes da viagem rende juros a seu favor; parcelar no cartão sem juros só compensa se não houver desconto à vista."]],
   faq: [["Seguro-viagem é obrigatório?", "Para países do Espaço Schengen, sim, com cobertura mínima de 30 mil euros."]]
 }

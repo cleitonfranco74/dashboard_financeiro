@@ -68,6 +68,24 @@ window.Mercado = (() => {
     return promessa;
   }
 
+  /* Cotações PTAX de venda ao vivo (R$ por unidade) das moedas pedidas, pelo serviço Olinda do BCB.
+     Atualiza m.moedas e devolve o objeto; se falhar, mantém o que veio do arquivo diário. */
+  const PTAX = "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/";
+  const mdy = d => `${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}-${d.getFullYear()}`;
+  async function moedasAoVivo(m, codigos = ["EUR", "GBP", "CHF", "NOK", "SEK", "DKK", "JPY", "CAD", "AUD"]) {
+    const fim = new Date(), ini = new Date(Date.now() - 12 * 864e5);
+    m.moedas = m.moedas || {};
+    await Promise.all(codigos.map(async c => {
+      try {
+        const j = await buscar(PTAX + "CotacaoMoedaPeriodo(moeda=@moeda,dataInicial=@dataInicial,dataFinalCotacao=@dataFinalCotacao)" +
+          `?@moeda='${c}'&@dataInicial='${mdy(ini)}'&@dataFinalCotacao='${mdy(fim)}'&$format=json&$select=cotacaoVenda,dataHoraCotacao`);
+        const u = j.value[j.value.length - 1];
+        if (u) m.moedas[c] = { valor: +u.cotacaoVenda, data: u.dataHoraCotacao.slice(0, 10), aoVivo: true };
+      } catch { /* mantém o arquivo */ }
+    }));
+    return m.moedas;
+  }
+
   /* Trajetórias mensais a partir do mês atual. t = 1 é o próximo mês. Retornam taxa anual (decimal). */
   const hoje = new Date(), ANO = hoje.getFullYear(), MES = hoje.getMonth();
   function selicPath(m, selicHoje) {
@@ -108,5 +126,5 @@ window.Mercado = (() => {
   }
   const dataBR = iso => iso ? iso.slice(0, 10).split("-").reverse().join("/") : "";
 
-  return { carregar, selicPath, ipcaPath, mediaAnual, titulo, dataBR };
+  return { carregar, moedasAoVivo, selicPath, ipcaPath, mediaAnual, titulo, dataBR };
 })();
