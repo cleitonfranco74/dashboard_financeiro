@@ -96,5 +96,8 @@ Para editar a lista de ações, altere `ACOES` em `scripts/atualizar_mercado.py`
 ## Visitas
 Todas as páginas contam visitas pelo [GoatCounter](https://www.goatcounter.com) (sem cookies e sem dados pessoais), no painel `https://dashboardfinan.goatcounter.com`. Em Calculadoras e Simuladores, cada ferramenta (`#id`) conta como uma página. O rodapé da página inicial mostra o total de visitas (`/counter/TOTAL.json`) e as chegadas pelo Instagram: quem abre um link com `utm_source=instagram` é contado no caminho `/instagram` (`/counter/%2Finstagram.json`). Se o navegador bloquear o GoatCounter, o rodapé usa a cópia `visitas.json` que a Action `di.yml` grava no branch `dados`. Os contadores públicos exigem ativar *Allow adding visitor counts on your website* nas configurações do GoatCounter. Para saber quantas visitas vêm do Instagram, divulgue o link com a origem marcada, por exemplo `https://cleitonfranco74.github.io/dashboard_financeiro/?utm_source=instagram&utm_medium=bio`.
 
+## Feedback
+Todas as páginas têm o botão **💬 Dê sua opinião** (`assets/feedback.js`), que abre uma caixa com nota de 1 a 5 estrelas, perfil de quem usa e comentário livre. O envio é anônimo e chega por e-mail ao autor pelo [FormSubmit](https://formsubmit.co) (gratuito, sem cadastro). O primeiro envio dispara um e-mail de ativação, que precisa ser confirmado uma única vez.
+
 ## Aviso
 Ferramenta educacional. Estimativas não são recomendação de investimento. As regras tributárias refletem a legislação conhecida na data de criação.
