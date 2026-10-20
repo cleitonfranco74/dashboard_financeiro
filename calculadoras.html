@@ -172,7 +172,7 @@ const C = window.CalcLib, S = window.SimLib, F = window.Ferramentas;
 const ORDEM = {
   fin: ["juros","juros-simples","poup-selic","rentab","reserva","cdb-calc","comp-rf","marcacao","comp-acoes","teto","magico","avista","pix"],
   trab: ["clt-pj","pj","rural","salario","ir","isencao","custo-clt","ferias","ferias-prop","decimo","inss","fgts","horas","seguro","rescisao"],
-  util: ["dias","dias-uteis","custos","cartoes","roma","voos","cambio","viagem"],
+  util: ["dias","dias-uteis","custos","cartoes","voos","cambio","viagem"],
 };
 /* simulações que ficam na aba Simuladores, mostradas como atalhos */
 const ATALHOS = {fin:["milhao","renda","amortizacao","aposentadoria","alugar"], util:["veiculo-ev"]};
@@ -189,7 +189,7 @@ const RESUMO = {
   "horas":"Horas extras, adicional noturno e DSR.", "seguro":"Valor e parcelas do seguro-desemprego.", "isencao":"Quanto você economiza com a nova tabela do IR.",
   "rescisao":"Verbas da rescisão e saque do FGTS.",
   "dias":"Dias entre duas datas, ou a data daqui a N dias.", "dias-uteis":"Dias úteis entre datas, sem feriados nacionais.", "veiculo-ev":"Custo de um carro a combustão contra um elétrico.",
-  "ir":"IR retido no salário e qual declaração compensa.", "cambio":"A forma mais barata de levar dinheiro na viagem.", "voos":"Onde buscar passagens e quando usar milhas.", "viagem":"Quanto custa a viagem em três cenários.", "roma":"Menores preços para Roma por companhia aérea, atualizados todo dia.",
+  "ir":"IR retido no salário e qual declaração compensa.", "cambio":"A forma mais barata de levar dinheiro na viagem.", "voos":"Onde buscar passagens e quando usar milhas.", "viagem":"Quanto custa a viagem em três cenários.",
   "custos":"Seus custos fixos e quanto comprometem da renda.", "cartoes":"Benefícios líquidos de até três cartões de crédito.",
 };
 const ICONES = {
@@ -209,7 +209,7 @@ const ICONES = {
 };
 const ICONE_DE = {"milhao":"grafico","juros":"grafico","juros-simples":"pct","poup-selic":"balanca","rentab":"grafico","renda":"dinheiro","reserva":"dinheiro","cdb-calc":"pct","comp-rf":"balanca","marcacao":"grafico","comp-acoes":"balanca","teto":"dinheiro","magico":"casa","avista":"cartao","pix":"pct","amortizacao":"casa",
   "clt-pj":"balanca","pj":"maleta","rural":"casa","salario":"dinheiro","custo-clt":"maleta","ferias":"calend","ferias-prop":"calend","decimo":"dinheiro","inss":"doc","fgts":"dinheiro","horas":"relogio","seguro":"doc","isencao":"doc","rescisao":"doc",
-  "dias":"calend","dias-uteis":"calend","veiculo-ev":"carro","custos":"pizza","cartoes":"cartao","ir":"doc","cambio":"dinheiro","voos":"aviao","viagem":"aviao","roma":"aviao"};
+  "dias":"calend","dias-uteis":"calend","veiculo-ev":"carro","custos":"pizza","cartoes":"cartao","ir":"doc","cambio":"dinheiro","voos":"aviao","viagem":"aviao"};
 const ic = k => `<span class="cic"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">${ICONES[k]||ICONES.doc}</svg></span>`;
 const GRUPOS = [
   {id:"fin", nome:"Financeiras", sub:"Juros, renda fixa, ações e crédito: contas com resposta exata"},

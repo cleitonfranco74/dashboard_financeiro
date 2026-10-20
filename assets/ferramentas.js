@@ -17,7 +17,7 @@ window.Ferramentas = (() => {
     "renda":["aposentadoria","inflexao"], "aposentadoria":["renda","inflexao"], "milhao":["inflexao","juros"], "inflexao":["milhao","renda","aposentadoria"], "juros":["milhao","rentab"],
     "amortizacao":["imovel","veiculo"], "imovel":["amortizacao","alugar"], "veiculo":["amortizacao","veiculo-ev"], "veiculo-ev":["veiculo"],
     "ir":["salario","isencao"], "salario":["ir","isencao"], "isencao":["ir"], "previdencia":["ir"],
-    "cambio":["viagem","roma"], "voos":["roma","cambio"], "viagem":["roma","cambio"], "roma":["voos","viagem","cambio"],
+    "cambio":["viagem","voos"], "voos":["viagem","cambio"], "viagem":["voos","cambio"],
     "dividas":["pix","avista"], "reserva":["selic"], "magico":["fii"], "fii":["magico"], "teto":["dividendos"], "dividendos":["teto"],
     "comp-acoes":["acoes"], "acoes":["comp-acoes"],
   };

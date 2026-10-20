@@ -532,33 +532,6 @@ Object.assign(window.GUIAS, {
 }
 });
 
-/* ===================== Passagens para Roma ===================== */
-Object.assign(window.GUIAS, {
-"roma": {
-  usar: [
-    "Escolha a <b>cidade de saída</b>: são 16 capitais brasileiras, de São Paulo a Cuiabá.",
-    "Escolha o <b>mês da ida</b> ou deixe “Todos os meses” para ver o período mais barato dos próximos nove meses.",
-    "Veja o <b>menor preço</b>, o voo direto mais barato e a média das ofertas. Clique numa companhia no gráfico “Menor preço por companhia” para ver só as ofertas dela.",
-    "No gráfico por mês, descubra em que mês a viagem sai mais barata.",
-    "Na tabela de ofertas, compare datas, escalas e duração; o botão “Ver” abre a oferta encontrada.",
-    "Informe as <b>datas exatas</b>, os passageiros e a classe para montar a busca pronta: cada companhia tem os botões do site oficial, do Kayak filtrado só para ela e do Google Voos.",
-    "Antes de comprar, confira o preço final com bagagem no site da companhia ou do buscador."
-  ],
-  entenda: [
-    ["De onde vêm os preços", "Todos os dias, uma rotina automática consulta a base de preços da Aviasales: são as tarifas encontradas por pessoas que pesquisaram essas rotas nos últimos dias. É um retrato atualizado do mercado, ótimo para comparar companhias e meses, mas o preço exato muda a cada minuto; por isso a compra sempre é confirmada no site."],
-    ["Como chegar a Roma", "A ITA Airways tem voo direto de São Paulo a Roma (Fiumicino). As demais companhias fazem conexão no próprio hub: TAP em Lisboa ou no Porto, Air France em Paris, KLM em Amsterdã, Lufthansa em Frankfurt ou Munique, Swiss em Zurique, Iberia e Air Europa em Madri, Turkish em Istambul, Emirates em Dubai e Qatar em Doha. Uma conexão bem escolhida pode sair bem mais barata que o voo direto."],
-    ["Quando comprar", "Para a Europa, os melhores preços costumam aparecer de 2 a 6 meses antes da viagem. Alta temporada europeia (junho a agosto), dezembro e janeiro (férias no Brasil) são os períodos mais caros; abril, maio, setembro e outubro costumam equilibrar preço e clima. Terças e quartas costumam ter tarifas menores que sextas e domingos."],
-    ["O que comparar além do preço", "Bagagem despachada incluída, tempo total de viagem e duração das conexões, troca de aeroporto na conexão, regras de remarcação e reembolso, e o acúmulo de milhas no programa que você usa."],
-    ["Documentos", "Para o Espaço Schengen, brasileiros não precisam de visto para turismo de até 90 dias, mas devem levar passaporte válido por pelo menos 3 meses após a volta, seguro-viagem com cobertura mínima de 30 mil euros e comprovantes de hospedagem e de recursos. Verifique se a autorização eletrônica ETIAS já é exigida na data da viagem."]
-  ],
-  faq: [
-    ["Por que o preço no site é diferente?", "Os preços da tabela foram encontrados nos últimos dias e podem ter mudado. Tarifas promocionais acabam rápido e o valor varia com as datas, a classe e a bagagem."],
-    ["Os preços são por pessoa?", "Sim, ida e volta em classe econômica. O total para mais passageiros é uma estimativa: multiplica o preço por pessoa."],
-    ["Vale sair de outra cidade?", "Muitas vezes sim. Compare São Paulo e Rio com a sua cidade: um voo nacional até a capital somado a uma tarifa internacional mais barata pode compensar, mas deixe folga de horário entre os voos se forem bilhetes separados."]
-  ]
-}
-});
-
 window.renderGuia = (id, titulo) => {
   const g = window.GUIAS[id];
   if (!g) return "";
