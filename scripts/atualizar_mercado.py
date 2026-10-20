@@ -100,6 +100,32 @@ def bolsa_cambio() -> dict:
     return out
 
 
+PTAX = "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/"
+MOEDAS = ["EUR", "GBP", "CHF", "NOK", "SEK", "DKK", "JPY", "CAD", "AUD"]
+
+
+def moedas() -> dict:
+    """Última cotação PTAX de venda (R$ por unidade) de cada moeda, pelo serviço Olinda do BCB."""
+    fim, ini = date.today(), date.today() - timedelta(days=12)
+    out = {}
+    for m in MOEDAS:
+        try:
+            url = (PTAX + "CotacaoMoedaPeriodo(moeda=@moeda,dataInicial=@dataInicial,dataFinalCotacao=@dataFinalCotacao)"
+                   f"?@moeda='{m}'&@dataInicial='{ini:%m-%d-%Y}'&@dataFinalCotacao='{fim:%m-%d-%Y}'"
+                   "&$format=json&$select=cotacaoVenda,dataHoraCotacao,tipoBoletim")
+            r = sessao.get(url, timeout=30)
+            r.raise_for_status()
+            v = r.json()["value"]
+            if not v:
+                raise ValueError("sem cotações")
+            u = v[-1]
+            out[m] = {"valor": round(float(u["cotacaoVenda"]), 6), "data": u["dataHoraCotacao"][:10]}
+        except Exception as e:  # noqa: BLE001
+            log(f"  {m}: falhou ({e})")
+    log(f"  Moedas PTAX: {', '.join(out) or 'nenhuma'}")
+    return out
+
+
 def focus(indicador: str) -> tuple[str, dict]:
     # O OData do BCB rejeita espaços codificados como "+", então a query é montada à mão.
     params = {
@@ -229,6 +255,10 @@ def main() -> None:
         log("BCB ok")
     except Exception as e:  # noqa: BLE001
         log(f"BCB falhou: {e}")
+
+    novas = moedas()
+    if novas:
+        dados["moedas"] = {**(anterior.get("moedas") or {}), **novas}    # mantém o que falhou hoje
 
     novo = bolsa_cambio()
     if novo:
