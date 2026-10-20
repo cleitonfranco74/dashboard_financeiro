@@ -119,7 +119,7 @@ def moedas() -> dict:
             if not v:
                 raise ValueError("sem cotações")
             u = v[-1]
-            out[m] = {"valor": round(float(u["cotacaoVenda"]), 4), "data": u["dataHoraCotacao"][:10]}
+            out[m] = {"valor": round(float(u["cotacaoVenda"]), 6), "data": u["dataHoraCotacao"][:10]}
         except Exception as e:  # noqa: BLE001
             log(f"  {m}: falhou ({e})")
     log(f"  Moedas PTAX: {', '.join(out) or 'nenhuma'}")
