@@ -1,0 +1,10 @@
+codigo_siest;sigla;nome;grupo_economico;vinculo;sede;endereco_sede;cep;cidade_sede;status;data_inativacao
+5000;GRUPO BB;GRUPO BANCO DO BRASIL;BB;Grupo;Brasil;SAUN, Quadra 5, Lote B, s/n° - Edifício Banco do Brasil;70.040-912;Brasília - DF;Ativo;
+5500;GRUPO BNDES;GRUPO BANCO NACIONAL DE DESENV. ECONÔMICO E SOCIAL;BNDES;Grupo;Brasil;Av. República do Chile, n° 100;20.031-917;Rio de Janeiro - RJ;Ativo;
+5110;GRUPO CAIXA;GRUPO CAIXA ECONÔMICA FEDERAL;CAIXA;Grupo;Brasil;SBS, Quadra 4, Lotes 3 e 4, Edifício Sede;70.092-900;Brasília - DF;Ativo;
+10022;GRUPO CORREIOS;GRUPO CORREIOS;CORREIOS;Grupo;Brasil;Setor Bancário Norte, Quadra 1, Bloco A, 19° Andar;70.002-900;Brasília - DF;Inativo;03/12/2019
+8605;GRUPO ELETROBRAS;GRUPO ELETROBRAS;ELETROBRAS;Grupo;Brasil;Rua da Quitanda, 196;20.091-005;Rio de Janeiro - RJ;Inativo;17/06/2022
+10071;GRUPO ENBPar;GRUPO ENBPar;ENBPar;Grupo;Brasil;Edifício Parque Cidade Corporate, Setor Comercial Sul – SCS;70.308-200;Brasília - DF;Ativo;
+10074;GRUPO NAV Brasil;GRUPO NAV Brasil;NAV Brasil;Grupo;Brasil;Avenida General Justo, 160;20.021-130;Rio de Janeiro - RJ;Ativo;
+8800;GRUPO PETROBRAS;GRUPO PETROBRAS;PETROBRAS;Grupo;Brasil;Avenida República do Chile, 65;20.031-912;Rio de Janeiro - RJ;Ativo;
+4405;GRUPO TELEBRAS;GRUPO TELEBRAS;TELEBRAS;Grupo;Brasil;SCS Quadra 09 Bloco B sala 301 a 305, 401 a 405;70.308-200;Brasília - DF;Inativo;01/06/2017

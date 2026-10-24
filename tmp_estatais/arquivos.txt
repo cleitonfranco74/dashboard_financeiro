@@ -1,0 +1,9 @@
+-rw-r--r-- 1 runner runner 224612 Jul 13 11:02 ./sestdadosfinanceiros/sest-dadosfinanceiros-composicao-acionaria.csv
+-rw-r--r-- 1 runner runner 314749 Jul 13 11:08 ./sestdadosfinanceiros/sest-dadosfinanceiros-participacao-societaria.csv
+-rw-r--r-- 1 runner runner 96275 Jul 10 12:07 ./sestdadosfinanceiros/sest-dadosfinanceiros-auditoria-externa.csv
+-rw-r--r-- 1 runner runner 68241 Jul 13 10:43 ./sestdadosfinanceiros/sest-dadosfinanceiros-dicionario.pdf
+-rw-r--r-- 1 runner runner 32739942 Jul 13 10:28 ./sestdadosfinanceiros/sest-dadosfinanceiros-demonstracoes.csv
+-rw-r--r-- 1 runner runner 59501 Feb 10  2026 ./sestidentificacao/sest-identificacao/sest-identificacao-empresas-ativas.csv
+-rw-r--r-- 1 runner runner 1390 Dec 10  2025 ./sestidentificacao/sest-identificacao/sest-identificacao-grupos.csv
+-rw-r--r-- 1 runner runner 71563 Feb 12  2026 ./sestidentificacao/sest-identificacao/sest-identificacao-dicionario.pdf
+-rw-r--r-- 1 runner runner 30990 Mar  5  2026 ./sestidentificacao/sest-identificacao/sest-identificacao-empresas-inativas.csv
