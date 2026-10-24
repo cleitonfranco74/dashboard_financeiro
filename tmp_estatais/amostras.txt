@@ -1,237 +1,0 @@
-=== ./sestdadosfinanceiros/sest-dadosfinanceiros-composicao-acionaria.csv
-exercicio;periodicidade;codigo_siest;empresa;acionista;capital_integralizado;capital_a_integralizar;quantidade_acoes_ordinarias;quantidade_acoes_preferenciais;percentual_votante;percentual_total
-2016;Anual;10007;ABGF;UNIÃO FEDERAL;2.071.606.292;0;50.000;0;100;100
-2016;Anual;10006;AMAZUL;UNIÃO FEDERAL;53.500;0;53.500;0;100;100
-2016;Anual;6402;AmE;Centrais Elétricas Brasileiras S.A. - ELETROBRAS;4.610.171.103;0;6.276.666.628;0;100;100
-2016;Anual;10015;AmGT;AMAZONAS DISTRIBUIDORA DE ENERGIA S.A. - AmE;436.750.098;0;436.750.098;0;100;100
-2016;Anual;10034;ARARA AZUL;BRASIL VENTOS ENERGIA S/A;900.000;0;900.000;0;90;90
-2016;Anual;10034;ARARA AZUL;OUTRAS PARTICIPAÇÕES;100.000;100.000;100.000;0;10;10
-2016;Anual;10014;ARAUCÁRIA;PETRÓLEO BRASILEIRO S.A. - PETROBRAS;779.951.000;0;779.951.443;0;100;100
-2016;Anual;10027;ATIVOS GESTÃO;ATIVOS S.A. - SECURITIZADORA DE CRÉDITOS FINANCEIROS;5.000;0;5.000;0;100;100
-2016;Anual;8145;ATIVOS S.A.;BRASILIAN AMERICAN MERCHANT BANK - BAMB;167.306.000;0;167.306.241;0;51;25,5
-2016;Anual;8145;ATIVOS S.A.;BB BANCO DE INVESTIMENTO S.A. - BB INVESTIMENTOS;488.797.000;0;160.745.211;328.051.452;49;74,5
-2016;Anual;5312;BAMB;BANCO DO BRASIL S.A. - BB;785.373.478;0;241.023.010;0;100;100
-2016;Anual;6009;BASA;UNIÃO FEDERAL;827.858.411;0;15.119.443;0;51;51
-2016;Anual;6009;BASA;OUTRAS PARTICIPAÇÕES;795.393.375;0;14.526.524;0;49;49
-2016;Anual;5002;BB;UNIÃO FEDERAL;33.985.851.284;0;1.453.487.115;0;50,73;50,73
-2016;Anual;5002;BB;DEMAIS ACIONISTAS ( PERCENTUAIS INFERIORES A 1% );23.236.681.067;0;993.772.857;0;34,68;34,68
-2016;Anual;5002;BB;CAIXA DE PREVIDÊNCIA DOS FUNC. DO BANCO DO BRASIL;6.575.325.932;0;281.209.714;0;9,81;9,81
-2016;Anual;5002;BB;FFIE - FUNDO FISCAL DE INVESTIMENTO E ESTATIZAÇÃO;2.455.715.224;0;105.024.600;0;3,67;3,67
-2016;Anual;5002;BB;THE LAZARD FUND, INC. - CITIBANK DTVM S.A.;746.426.493;0;31.922.734;0;1,11;1,11
-2016;Anual;5339;BB AG;BANCO DO BRASIL S.A. - BB;116.109.528;0;337.783;0;100;100
-2016;Anual;8133;BB CARTÕES;BANCO DO BRASIL S.A. - BB;9.300.000;0;398.157.958;0;100;100
-2016;Anual;5063;BB CONSÓRCIOS;BANCO DO BRASIL S.A. - BB;98.539.140;0;14.100;0;100;100
-2016;Anual;8141;BB CORRETORA;BB SEGURIDADE PARTICIPAÇÕES S.A.;36.210.584;0;1.000.000;0;100;100
-2016;Anual;9148;BB DTVM;BANCO DO BRASIL S.A. - BB;109.699.000;0;100.000.000;0;100;100
-2016;Anual;5065;BB ELO CARTÕES;BANCO DO BRASIL S.A. - BB;4.369.042.000;0;10.000.000;0;100;100
-2016;Anual;5061;BB INVESTIMENTOS;BANCO DO BRASIL S.A. - BB;1.821.082.000;0;2.540.982;0;100;100
-2016;Anual;8168;BB LAM;BANCO DO BRASIL S.A. - BB;3.261.860.000;0;3.000.000;0;100;100
-2016;Anual;10012;BB SEGURIDADE;BANCO DO BRASIL S.A. - BB;3.740.983.220;0;1.325.000.000;0;66,25;66,25
-2016;Anual;10012;BB SEGURIDADE;OUTRAS PARTICIPAÇÕES;1.905.783.905;0;675.000.000;0;33,75;33,75
-2016;Anual;8169;BB SEGUROS;BB SEGURIDADE PARTICIPAÇÕES S.A.;4.210.871.913;0;278.862.835;0;100;100
-2016;Anual;5347;BB TURISMO;BRASILIAN AMERICAN MERCHANT BANK - BAMB;9.537.000;0;9.536.979;0;99;99
-20
-=== ./sestdadosfinanceiros/sest-dadosfinanceiros-participacao-societaria.csv
-exercicio;periodicidade;codigo_siest;empresa;empresa_participada;nivel_participacao;percentual_votante;percentual_total;valor_participacao
-2016;Anual;10007;ABGF;FUNDO GARANTIDOR DE INFRAESTRUTURA (FGIE);Demais Participações;99,8;0;507.363.284
-2016;Anual;10007;ABGF;FUNDO GARANTIDOR PARA INVESTIMENTOS - FGI;Demais Participações;80,48;80,48;685.795.117
-2016;Anual;10007;ABGF;FUNDO GARANTIDOR DA HABITAÇÃO POPULAR (FGHab);Demais Participações;48,9;48,9;873.556.982
-2016;Anual;10007;ABGF;FUNDO DE GARANTIA DE OPERAÇÕES (FGO);Demais Participações;20,19;20,19;263.206.265
-2016;Anual;6402;AmE;CENTRAIS ELÉTRICAS DO NORTE DO BRASIL S.A. - ELETRONORTE;Controlada;100;100;15.175.041
-2016;Anual;8145;ATIVOS S.A.;Ativos S.A Gestão de Cobrança e Recuperação de Crédito;Controlada;100;100;6.000
-2016;Anual;5312;BAMB;BB SECURITIES áSIA;Controlada;100;100;20.391.558
-2016;Anual;5312;BAMB;BB SECURITIES LTD;Controlada;100;100;176.785.612
-2016;Anual;5312;BAMB;BBTUR VIAGENS E TURISMO LTDA;Controlada;99;99;0
-2016;Anual;5312;BAMB;ATIVOS S.A. - SECURITIZADORA DE CRÉDITOS FINANCEIROS;Controlada;51;24,3;240.104.153
-2016;Anual;5002;BB;BANCO DO BRASIL AG VIENA - BB AG;Controlada;100;100;748.646.000
-2016;Anual;5002;BB;Banco do Brasil Americas;Demais Participações;100;100;122.422.000
-2016;Anual;5002;BB;BB ADMINISTRADORA DE CARTÕES DE CRÉDITO S.A. - BB CARTÕES;Controlada;100;100;18.977.000
-2016;Anual;5002;BB;BB ADMINISTRADORA DE CONSÓRCIOS S.A. - BB CONSÓRCIOS;Controlada;100;100;197.078.000
-2016;Anual;5002;BB;BB BANCO DE INVESTIMENTO S.A. - BB INVESTIMENTOS;Controlada;100;100;3.018.815.000
-2016;Anual;5002;BB;BB ELO CARTÕES PARTICIPAÇÕES S.A.;Controlada;100;100;4.801.031.000
-2016;Anual;5002;BB;BB GESTÃO DE RECURSOS - DISTRIBUIDORA DE TÍTULOS E VALORES MOBILIÁRIOS S.A. - BB DTVM;Controlada;100;100;131.629.000
-2016;Anual;5002;BB;BB-LEASING S.A. - ARRENDAMENTO MERCANTIL - BB LAM;Controlada;100;100;4.376.690.000
-2016;Anual;5002;BB;BB SECURITIES LLC;Demais Participações;100;100;201.037.000
-2016;Anual;5002;BB;BBTUR VIAGENS E TURISMO LTDA;Controlada;100;100;0
-2016;Anual;5002;BB;BB USA HOLDING COMPANY;Demais Participações;100;100;702.000
-2016;Anual;5002;BB;BRASILIAN AMERICAN MERCHANT BANK - BAMB;Controlada;100;100;1.510.626.000
-2016;Anual;5002;BB;BESC DISTRIBUIDORA DE TÍTULOS E VALORES MOBILIÁRIOS S.A. - BESCVAL;Controlada;99,62;99,62;7.169.000
-2016;Anual;5002;BB;BB SEGURIDADE PARTICIPAÇÕES S.A.;Controlada;66,36;66,36;4.716.654.000
-2016;Anual;5002;BB;BANCO PATAGONIA;Demais Participações;58,97;58,97;1.181.802.000
-2016;Anual;5002;BB;COBRA TECNOLOGIA S.A.;Controlada;50;99,99;232.046.000
-2016;Anual;5002;BB;CIA. CATARINENSE DE ASSESSORIA E SERVIçOS;Coligada;48,13;48,13;228.000
-2016;Anual;5002;BB;BANCO VOTORANTIM S.A.;Coligada;40,91;50;4.212.970.000
-2016;Anual;5002;BB;CIA. HIDROMINERAL PIRATUBA;Coligada;14,13;14,13;2.717.000
-2016;Anual;5002;BB;TECNOLOGIA BANCARIA - TECBAN;Coligada;12,52;12,52;18.229.000
-2016;Anual;5002;BB;CIBRASEC;Coligada;9,6;9,7;2.315.000
-2016;Anual;50
-=== ./sestdadosfinanceiros/sest-dadosfinanceiros-auditoria-externa.csv
-exercicio;periodicidade;codigo_siest;empresa;auditoria_externa_empresa;auditoria_externa_cnpj
-2016;Anual;10007;ABGF;MAZARS AUDITORES INDEPENDENTES S.S.;07.326.840/0001-98
-2016;Anual;10006;AMAZUL;AUDIMEC - AUDITORES INDEPENDENTES S/C;11.254.307/0001-35
-2016;Anual;6402;AmE;KPMG AUDITORES INDEPENDENTES;57.755.217/0013-62
-2016;Anual;10015;AmGT;KPMG AUDITORES INDEPENDENTES;57.766.217/0001-24
-2016;Anual;10034;ARARA AZUL;GRANT THORNTON AUDITORES INDEPENDENTES;10.830.108/0002-46
-2016;Anual;10014;ARAUCÁRIA;PRICE WATERHOUSE AUDITORES INDEPENDENTES;61.562.112/0001-20
-2016;Anual;10027;ATIVOS GESTÃO;KPMG - AUDITORES INDEPENDENTES;57.755.217/0001-29
-2016;Anual;8145;ATIVOS S.A.;KPMG - AUDITORES INDEPENDENTES;57.755.217/0001-29
-2016;Anual;5312;BAMB;KPMG AUDITORES INDEPENDENTES;57.755.217/0013-62
-2016;Anual;6009;BASA;KPMG AUDITORES INDEPENDENTES;57.755.217/0012-81
-2016;Anual;5002;BB;KPMG - AUDITORES INDEPENDENTES;57.755.217/0001-29
-2016;Anual;5339;BB AG;KPMG AUDITORES INDEPENDENTES;57.755.217/0012-81
-2016;Anual;8133;BB CARTÕES;KPMG - AUDITORES INDEPENDENTES;57.755.217/0001-29
-2016;Anual;5063;BB CONSÓRCIOS;KPMG - AUDITORES INDEPENDENTES;57.755.217/0001-29
-2016;Anual;8141;BB CORRETORA;KPMG - AUDITORES INDEPENDENTES;57.755.217/0001-29
-2016;Anual;9148;BB DTVM;KPMG - AUDITORES INDEPENDENTES;57.755.217/0001-29
-2016;Anual;5065;BB ELO CARTÕES;KPMG - AUDITORES INDEPENDENTES;57.755.217/0001-29
-2016;Anual;5061;BB INVESTIMENTOS;KPMG - AUDITORES INDEPENDENTES;57.755.217/0001-29
-2016;Anual;8168;BB LAM;KPMG - AUDITORES INDEPENDENTES;57.755.217/0001-29
-2016;Anual;10012;BB SEGURIDADE;KPMG - AUDITORES INDEPENDENTES;57.755.217/0001-29
-2016;Anual;8169;BB SEGUROS;KPMG - AUDITORES INDEPENDENTES;57.755.217/0001-29
-2016;Anual;531;BBTS;AUDIMEC - AUDITORES INDEPENDENTES S/C;11.254.307/0001-35
-2016;Anual;5347;BB TURISMO;KPMG - AUDITORES INDEPENDENTES;57.755.217/0001-29
-2016;Anual;10035;BENTEVI;GRANT THORNTON AUDITORES INDEPENDENTES;10.830.108/0002-46
-2016;Anual;752;BESCVAL;KPMG - AUDITORES INDEPENDENTES;57.755.217/0001-29
-2016;Anual;6025;BNB;ERNST & YOUNG AUDITORES INDEPENDENTES S/S;61.366.936/0002-06
-2016;Anual;5509;BNDES;KPMG - AUDITORES INDEPENDENTES;57.755.217/0001-29
-2016;Anual;5525;BNDESPAR;KPMG - AUDITORES INDEPENDENTES;57.755.217/0001-29
-2016;Anual;5526;BNDES PLC;KPMG - AUDITORES INDEPENDENTES;57.755.217/0001-29
-2016;Anual;7706;BR;PRICE WATERHOUSE & COOPERS AUDITORES;61.562.112/0006-35
-2016;Anual;10029;BRASIL VENTOS;GRANT THORNTON AUDITORES INDEPENDENTES;10.830.108/0002-46
-2016;Anual;7781;BRASOIL;PRICE WATERHOUSE AUDITORES INDEPENDENTES;61.562.112/0001-20
-2016;Anual;8069;BREITENER;PRICE WATERHOUSE AUDITORES INDEPENDENTES;61.562.112/0001-20
-2016;Anual;10004;BREITENER JARAQUI;PRICE WATERHOUSE AUDITORES INDEPENDENTES;61.562.112/0001-20
-2016;Anual;10003;BREITENER TAMBAQUI;PRICE WATERHOUSE AUDITORES INDEPENDENTES;61.562.112/0001-20
-2016;Anual;8045;BSE;PRICE WATERHOUSE AUDITORES INDEPENDENTES;61.562.112/0001-20
-2016;Anual;6401;BVENERGIA;KPMG - AUDITOR
-=== ./sestdadosfinanceiros/sest-dadosfinanceiros-dicionario.pdf
-%PDF-1.7
-
-4 0 obj
-(Identity)
-endobj
-5 0 obj
-(Adobe)
-endobj
-8 0 obj
-<<
-/Filter /FlateDecode
-/Length 18075
-/Length1 54480
-/Type /Stream
->>
-stream
-xí}\ÔUÚÿs~ó.
-30ÜDepA¼;¡ **¢£©  `¨ÙM«­LsËv·µr·²ÖÊí2Û[V[önÛÅZkífeÙ²j{y÷mûWÎü¿çùýf¼¢ù¾÷Î3ç~yÎsç9çw~?HQJö)%³æ½=ñ^¢I±D[2§,ÿo¿XE4±ÈP7kNFÖºÅ"¡TÅÒ)yÙíDA_!nðÒ5ÍöþÃ¬u¨ðC¤»¬qùÊÜÐè>D!6"óå«)âQ_9Òû,¯[·ìÍ'ÖDE¾K³£¦º²*·Îú[ÔôÜDXÞ¹a´OkV6_þi[äÛDJé¯V7Õç¼<vÑ
-"ãOëVnÚ¹õF¢aWa@GWV^ÞhøcÊ(o_YÝ\ÙïW·Ï&Êá¢úÊÕÿØäÚBó/¢àüÆUÍÞ\Zþùª¯:ö¯'¬@6Æ¿äîºiÃÇý·=Ý9ðïn¿mù8æû¹I}v¯GÞ`RH3(gþÀ3CnAú®>;¸¦ #2F¹²É@Óá²P]¤£æ=	2¨¿U!#³Õ×§ö«¼FYÊÕAF%4HU¤Qw+Ò}mÓY3gÈã5ôÌ}Í?¡Å{ddl#%Å®%½¯¨áUO§`Q´Fÿ½Å§n¦ípá¦Ãí¶Ü"º»§:{@ò÷u*7>Gw©Ãí§m¦(*ç²è®Àü¦o´°©ùÍiÆaTHg`ÔeT67«Ëù·PýIçzÚè7!ïpÏhåd¼¡á8¯¼B6¤Ý¨VM¯;öTû
-ÛOg`Tò~Í}Û¥áñl¡9Q:ÚKké&m¾aÎËÿFÎsà¯?~¹ü¼¯?a}Ï½]&¦ÿÏüù_j KYþö!UH>ONÈU)ôì4Òh8¿º¦ÐTA%4ª©!ã.§]´<î}F­ô7úþ[d*Ú#íÉ¯×ËµûêÈä:&q³PG%ê¨£&®ã	zºÇ:÷³ÚÃÇÙ7ÝõIå'N¡tÕ,ÎÄ8§,ï*/;§tvÉ¬3§OZ4¥°`ò¤ü'7vÌèQy¹9#2§§4Ø1(1!Öfµõ	2ªAfw·!Én-¬t8*ÒÓì±5ÓÓ
-n{¥Ý5ÙQTÄQJ·½ÂîNÆOe@tÛËºätj9þÂbGãd»ûõÉû^1v9ü[&;\v÷ìÁ~5}HLD	îì­½À]¸¦fSAú(vLrLªIO£Ý!¡ðÂçêhÜ-NìQÙ­PP_Ù,FZPYå.]^09>1Ñ6ÕæÌI4«t&¹Í\¥½Vv6Ûw§=¿é½ZR1¬O£ªòr·¡e7
-6mºÉmæNqLv§\q4#¯v§9&¸ÉZ§úÛÞÑ¤p,û¦ÿ&ÇñE[çJ=Ædùo^·2É-JË¥/®7m*tØ7UlªÜëÝ°Äa·86íîÓgScÐM%å¨b¯·es¼»ðÛRQ#Æ¸ô¡NwGÎ^PîV
-í5ÁßDGâ¨øD«?OIOÉ´ 9À°]¢±¤|½`ÓæÉñèÞ0»\¢gó^;-Ã\n¥B¦<ïK*)|)Z¤u`§Ï)ßäV¦V9
-ùÍîK@e+ä9,î°¯ã"¬öÑ.Î+{1µªÖî6&Y(X ô#l²p ìkíçx4l°v YO£ Bÿ[S
-ì@xÑ0 æ»áqVê3W°{DJTV`âj'ó¤º3n#ß?ËÚ9å\D/æ¶Mrc7¦rgðúú*&k]u9f?MÙÞOv´Ç?ç,3GOµ%l*¯ZæN¨¯Âú[f/Ot;]i£¼Ú%ÉJù$ÄÅ43·|úÇôÙóËGéÑdujRAjåñZ5 DwPR½\7¸Ñ{!<üqnsRçXIÀùãìå"|¹Ñw½ z²O;Ujd5©ÈWIQÏ¤¢øDW¢fÒÓ$ÛõQ"H"µÈv Ðé¤"¸Äo/wT;\»ÛYR.Ç&ÑÃXÖÁ8×çjn§P ²&JD²/ é.\÷ËeãVæ:@,XWTâ2Ã^°ñ %W|çxDi5¸l¼{êñE§jÊÓçl}vèý$ Ä
-7uP1´[Ñ]HÖY©'Ø79¦VmrÌ)Ï8(-¿:þ
-9Â.¦ÏÍOOÛ­üÝ±qön§Ø8g~98iþÓÑsËP2©"ßµ{0ÒËÆÖÉ±2`Y[)A?þi'ÑNU9ÃK÷
-â¸ _ ¥{-Î¢5Ì9¡
-,Ý«j)N_nqAZÜc³ädÉQÈu[IX)°WI¹ÊU³©Â%E=øná t9&ì©;ÄQïuäËø2~¢oñf¦(Þyî°íý^ßdùB¢Òf²ÉòyºóÎÛEâx{],K?°là8*»òòØ+àÖÕG'Ìº\Ä-37Ô¨ÔCMDEæD¡LE8Ã°Ø Ì2<gø§Á0mÅü+VjG&4.ß°\©ªM¨®±%ÌªýsâËFÄUUfÉ	/¼/9TAIEÏÑ?É`Ø°Á(·ÑÜaÓ÷½Á%Üb£;iÎÙóÝ¦n*¿ |·?vÝ°eÈîÎSþ¡¢b@¾kº»JúNöo~þUÍÃ¤Y+Ô¢ôßXcÅÑÆ¤íÂ½­Þ7>*!g÷¯(e;6ÑÛXÂSê)5îô¬8=m*è¸a?½è} TèÐëô=ÎCßÐÇt7b:Ìß	yñ©"Ïs× ÈLaFÑd Q5ªÄ1BJè¿#2³­Vw­­WÈDßñÚï ËºæÜË#R3X7E°Á@³_ÏÙÙ#2Ã¥Ãoäl±GB[Dþûß/$Ú÷Ï^ñpJvgäAF2MÅ4qÅZ^ö³¼>"3rHnnÃe3]6Õ°YØ­ôì½"~Élaÿ ñ¶e¨ïT*ë3PÄoð/ Y£ºEØÝól{;Ð1ÊøP¬3DÁ@A'Î-2²D«ÉdÎA»ÙV¥ßôWkî9:òsÕQÔ8À3Þ½ñÛ² 5µØ)Ëgl%±¿l¶>»lf¸Î%+Å`&³FPÌht&+ã¥lËKèQn*Íìd2G%åÎÎc4ÌÖË÷¬4~éÂ¹{>Áïüø`ÃE·_¹7EÉxìÇ®M«ºqá²Ëþÿ¼òw«?ÚRÿ«)oeß¦{[ÕTÌT-vf³GÅÅEÙATìr,A©Ñ¶hÛ.`5Á­:ý/w9Ì*z®Æuôyt,#b
-=== ./sestdadosfinanceiros/sest-dadosfinanceiros-demonstracoes.csv
-exercicio;periodicidade;codigo_siest;empresa;demonstrativo;rubrica_codigo;rubrica_nome;valor
-2016;Anual;10007;ABGF;Balanço;110000;ATIVO CIRCULANTE;60.225.820
-2016;Anual;10007;ABGF;Balanço;111000;DISPONIBILIDADES;59.272.121
-2016;Anual;10007;ABGF;Balanço;111100;Caixa e Equivalentes de Caixa;59.272.121
-2016;Anual;10007;ABGF;Balanço;111200;Aplicações Financeiras (Até 90 dias);0
-2016;Anual;10007;ABGF;Balanço;111300;Demais Disponibilidades;0
-2016;Anual;10007;ABGF;Balanço;111310;Títulos e Valores Mobiliários;0
-2016;Anual;10007;ABGF;Balanço;111390;Outras;0
-2016;Anual;10007;ABGF;Balanço;112000;CRÉDITOS;144.327
-2016;Anual;10007;ABGF;Balanço;112200;Ativo Financeiro - Concessões e Itaipu;0
-2016;Anual;10007;ABGF;Balanço;112300;Conta de Consumo de Combustível - CCC;0
-2016;Anual;10007;ABGF;Balanço;112500;Direito de Ressarcimento;0
-2016;Anual;10007;ABGF;Balanço;112600;Valores Vinculados a Aplicação em Infraestrutura;0
-2016;Anual;10007;ABGF;Balanço;112700;Adiantamentos a Terceiros;144.327
-2016;Anual;10007;ABGF;Balanço;112800;Créditos de Funcionários;0
-2016;Anual;10007;ABGF;Balanço;112900;Demais Créditos;0
-2016;Anual;10007;ABGF;Balanço;112910;Outros Valores a Receber;0
-2016;Anual;10007;ABGF;Balanço;112920;Aplicações Financeiras (Mais de 90 dias);0
-2016;Anual;10007;ABGF;Balanço;112990;(-) Perda Estimada em Créditos de Liquidação Duvidosa;0
-2016;Anual;10007;ABGF;Balanço;113000;ESTOQUES;0
-2016;Anual;10007;ABGF;Balanço;113100;Estoques e Mercadorias para Comercialização;0
-2016;Anual;10007;ABGF;Balanço;113200;Almoxarifado;0
-2016;Anual;10007;ABGF;Balanço;113300;Semoventes;0
-2016;Anual;10007;ABGF;Balanço;114000;DEMAIS VALORES DO CIRCULANTE;809.372
-2016;Anual;10007;ABGF;Balanço;114100;Clientes;809.372
-2016;Anual;10007;ABGF;Balanço;114110;Clientes em Normalidade - Estatais Federais;809.372
-2016;Anual;10007;ABGF;Balanço;114120;Clientes em Atraso - Estatais Federais;0
-2016;Anual;10007;ABGF;Balanço;114130;Clientes em Normalidade - Demais;0
-2016;Anual;10007;ABGF;Balanço;114140;Clientes em Atraso - Demais;0
-2016;Anual;10007;ABGF;Balanço;114190;(-) Perda Estimada em Créditos de Liquidação Duvidosa;0
-2016;Anual;10007;ABGF;Balanço;114200;Valores a Recuperar;0
-2016;Anual;10007;ABGF;Balanço;114210;Tributos a Recuperar/Compensar;0
-2016;Anual;10007;ABGF;Balanço;114220;Indenizações - Lei 12.783/2013;0
-2016;Anual;10007;ABGF;Balanço;114300;Despesas Antecipadas;0
-2016;Anual;10007;ABGF;Balanço;114400;Investimentos Temporários;0
-2016;Anual;10007;ABGF;Balanço;114410;Total de Investimentos Temporários;0
-2016;Anual;10007;ABGF;Balanço;114420;(-) Provisão para Perdas em Investimentos Temporários;0
-2016;Anual;10007;ABGF;Balanço;114430;(-) Ajuste de Mercado dos Investimentos Temporários;0
-2016;Anual;10007;ABGF;Balanço;114900;Ativos Circulantes - Diversos;0
-2016;Anual;10007;ABGF;Balanço;114910;Bens Não de Uso;0
-2016;Anual;10007;ABGF;Balanço;114920;Demais Valores;0
-2016;Anual;10007;ABGF;Balanço;114990;(-) Depreciação;0
-2016;Anual;10007;ABGF;Balanço;120000;ATI
-=== ./sestidentificacao/sest-identificacao/sest-identificacao-empresas-ativas.csv
-codigo_siest;sigla;nome;dependencia;grupo_economico;vinculo;setor;capital_aberto_fechado;natureza_juridica;segmento;subsegmento;controle_acionario;ministerio_supervisor;sede;endereco_sede;cep;cidade_sede;telefone;website;cnpj;objetivo;data_criacao;data_constituicao
-10007;ABGF;Agência Brasileira Gestora de Fundos Garantidores e Garantias S.A.;Não dependente do Tesouro Nacional;Sem Grupo Econômico;Não se aplica;Produtivo;Capital Fechado;Sociedade de Economia Mista;Comércio e Serviços;Gestão de Fundos Garantidores;Controle direto;Ministério da Fazenda;Brasil;Setor Comercial Norte, Quadra 02, Bloco A, nº 190, 10º andar;70.712-900;Brasília - DF;61-32466200;www.abgf.gov.br;17.909.518/0001-45;Administrar fundos garantidores e prestar garantias às operações de riscos diluídos em áreas de grande interesse econômico e social.;30/08/2012;27/08/2013
-10073;ALADA;ALADA - Empresa de Projetos Aeroespaciais do Brasil S.A.;Não dependente do Tesouro Nacional;NAV Brasil;Subsidiária;Produtivo;Capital Fechado;Sociedade de Economia Mista;Comércio e Serviços;Aeroportos;Controle indireto;Ministério da Defesa;Brasil;ST EMI NORTE BL M ANEXO DO MINISTERIO DA;70.045-900;BRASILIA - DF;;;61.993.931/0001-22;Atuar no desenvolvimento, gestão e participação em projetos aeroespaciais, incluindo atividades relacionadas a sistemas, tecnologias, serviços e soluções estratégicas para o setor aeroespacial e de defesa.;28/07/2025;29/07/2025
-10006;AMAZUL;AMAZÔNIA AZUL TECNOLOGIA DE DEFESA S.A. - AMAZUL;Dependente do Tesouro Nacional;Sem Grupo Econômico;Não se aplica;Produtivo;Capital Fechado;Empresa Pública;Comércio e Serviços;Pesquisa e Gestão de Projetos e Contratos;Controle direto;Ministério da Defesa;Brasil;Av. Corifeu de Azevedo Marques, 1.847;05.581-001;SÃO PAULO - SP;11-32061722;https://www.amazul.mar.mil.br;18.910.028/0001-21;Absorver, promover, desenvolver, transferir e manter atividades sensíveis às atividades do Programa Nuclear da Marinha (PNM), do Programa de Desenvolvimento de Submarinos (PROSUB) e do Programa Nuclear Brasileiro (PNB).;01/02/2013;16/08/2013
-10014;ANSA;ARAUCÁRIA NITROGENADOS S.A.;Não dependente do Tesouro Nacional;PETROBRAS;Subsidiária;Produtivo;Capital Fechado;Sociedade de Economia Mista;Indústria;Produção de Produtos Químicos;Controle indireto;Ministério de Minas e Energia;Brasil;Rua Doutor Eli Volpato, 999;83.707-746;Araucária - PR;41-36411901;;12.984.254/0002-51;Industrialização e comercialização de fertilizantes e produtos químicos.;13/09/2010;13/09/2010
-9725;APS;AUTORIDADE PORTUARIA DE SANTOS S.A.;Não dependente do Tesouro Nacional;Sem Grupo Econômico;Não se aplica;Produtivo;Capital Fechado;Sociedade de Economia Mista;Administração Portuária;Portos;Controle direto;Ministério de Portos e Aeroportos;Brasil;Avenida Conselheiro Rodrigues Alves, s/nº - Macuco;11.015-900;Santos - SP;13-32026565;www.portodesantos.com.br;44.837.524/0001-07;Exercer as funções de autoridade portuária no âmbito do Porto Organizado de Santos.;15/09/1980;01/10/1980
-6009;BASA;B
-=== ./sestidentificacao/sest-identificacao/sest-identificacao-grupos.csv
-codigo_siest;sigla;nome;grupo_economico;vinculo;sede;endereco_sede;cep;cidade_sede;status;data_inativacao
-5000;GRUPO BB;GRUPO BANCO DO BRASIL;BB;Grupo;Brasil;SAUN, Quadra 5, Lote B, s/n° - Edifício Banco do Brasil;70.040-912;Brasília - DF;Ativo;
-5500;GRUPO BNDES;GRUPO BANCO NACIONAL DE DESENV. ECONÔMICO E SOCIAL;BNDES;Grupo;Brasil;Av. República do Chile, n° 100;20.031-917;Rio de Janeiro - RJ;Ativo;
-5110;GRUPO CAIXA;GRUPO CAIXA ECONÔMICA FEDERAL;CAIXA;Grupo;Brasil;SBS, Quadra 4, Lotes 3 e 4, Edifício Sede;70.092-900;Brasília - DF;Ativo;
-10022;GRUPO CORREIOS;GRUPO CORREIOS;CORREIOS;Grupo;Brasil;Setor Bancário Norte, Quadra 1, Bloco A, 19° Andar;70.002-900;Brasília - DF;Inativo;03/12/2019
-8605;GRUPO ELETROBRAS;GRUPO ELETROBRAS;ELETROBRAS;Grupo;Brasil;Rua da Quitanda, 196;20.091-005;Rio de Janeiro - RJ;Inativo;17/06/2022
-10071;GRUPO ENBPar;GRUPO ENBPar;ENBPar;Grupo;Brasil;Edifício Parque Cidade Corporate, Setor Comercial Sul  SCS;70.308-200;Brasília - DF;Ativo;
-10074;GRUPO NAV Brasil;GRUPO NAV Brasil;NAV Brasil;Grupo;Brasil;Avenida General Justo, 160;20.021-130;Rio de Janeiro - RJ;Ativo;
-8800;GRUPO PETROBRAS;GRUPO PETROBRAS;PETROBRAS;Grupo;Brasil;Avenida República do Chile, 65;20.031-912;Rio de Janeiro - RJ;Ativo;
-4405;GRUPO TELEBRAS;GRUPO TELEBRAS;TELEBRAS;Grupo;Brasil;SCS Quadra 09 Bloco B sala 301 a 305, 401 a 405;70.308-200;Brasília - DF;Inativo;01/06/2017
-
-=== ./sestidentificacao/sest-identificacao/sest-identificacao-dicionario.pdf
-%PDF-1.7
-
-4 0 obj
-(Identity)
-endobj
-5 0 obj
-(Adobe)
-endobj
-8 0 obj
-<<
-/Filter /FlateDecode
-/Length 26246
-/Length1 59080
-/Type /Stream
->>
-stream
-xì½	`EÚ7^UÝ3I&×$!áÌpÈ$ @Â!\	rdr`.'áKDÔ¨à®ë²(	"â¹¢.ë«®².ëÁª(3ýýªºçÈ¸»ïû~ÿÿgWêê:z®zªºJéH&é£Fff©\EÈ·é°µ£²'My:wY!×o'dñ QS¦edÏý¿|KHÈÉISÇÛ· MßA/ùS¦:gÿ¨|óK
-+Õ±	äÏ'Ö*ï#OÒsß(©W1ãÎP3!QhzË<gM5ñ#ÑoÊæ/)¿ZNH¯!Í/-vÙ'3a¼ñ(Pà¥Áñ¼Ï±¥µ7EíÀ½'!;n(vUn°m!#÷"W:'Þ96´­B*«ýo5§ =RQ\ëðÛÅSùúä±JgEñÍÝÒ~"dÔèoWuUM­úI~«xýjWqµá¹â >,^Ð±õ¯Æ=07tÈÒÙðë§\à÷¯K¾¤\~7àÿÄBíB;¿[.ÿ8_RÎG9i~Éñ:#VñDBK3I ÉÂÐ[ðD,b¯þ$y?lÔîl?)aÇ=È_²BØm(Ü}O¢(d	¾|IÃÁ¿KR}BË|¦D²ñTN$äñ2ÉýäÿÑËpøÿÝ¹ÿñH.ÿÎ1äëÈ1Ö¹¶ÇAyÛùAÿ}x±JÒIªçv²íKNÖpu%²°¦UÈ¿â²ú6Ëú¥må]dïØm]²í¿_¾wübõÍñ%Ó®Ö­#­úL"+ÈèîÁzË0ÿß³ùÒ2Ò÷Ëd{rùï\òÐvdýsÒI¾Q¤Ï&é2üzýzýzýzýzýzýzýzý/ê"ÿW_Òuäü¤üzýzý_sÑý^ûßÔÿRò?ñÓE¾oëXòb7w÷Dáç­d8vfÈ\2Tc¿½<C^&{É?h6P¢ßE¦ª4«é$åÄÕFMªªÒé'õõKÒAzHCFR¹¨WP¿k:I÷Ðzc½ÀÅ{u%ñd@;3ØO¾#GÉIrÒ A£h,£ýi"M£Óh.Eé|º®$$}ì#?´á¶µ·®¹eõÍ«V®X¾ì¦¥K/Z¸ ¶ÆucuUeEùóËJç8óçÎ=ëúy¹3¦O:erö¤Æ;fô¨¬1fS@ÚhaQlêÛ4ìÛ¸¨÷õâúôÉ¹q9¹#£-¼h¥>½^¶grpÕºòÐZ¡-º7Å6nòÌ\%³._"gj³'­|§LOÕ³Ssë³âðäó<J<{G·(ã.¶)õ$»®®¨Hvä§G7P0¸33É³ÕÄÙ,¶ÜbÔmð'A©ù#
-r§¨2
-=*{Ì¤ P8Ã¶ê©¹õJ~IÞhÔ&Ì^/~¦ì!)¶ÅZ:¿^)Tz£ÝV[g©§ù¶hý9'£Îè:Í¢äåíQ÷våµmôÅHFÞ>¹!Þ>efîKfHàíSsw2ÊFägä5Ä¢,÷%L¹çòLþ ð23;¿¨ýR:!«D©,2Äs!f!òüÝyîaZYÈ!J&îµtwmyþZÞ*­vO½¶?JÌ¼äeÂ ë¢P»@%p&ÝdH÷OHbÁ¼àY;ó2êPò|¦Ñè3Gdï¡«Ò£_=åè5W¡&Ï[åÉæ¼OGOø4ï¦ÍÌ}> £F¿úöÉl`ãl^±îe6Ðqùmþ(Ù3u}ú\^7?2éÙ·.%×VmËkèÐ¡®:³Ál1®n²&¬ÁitäÇÕi"ÇÍfNJö1¶¬|T±Amð3YÓüúü8$sV]
-'¯M¢do ²%CA7cP½ÉVQhËð#Ã´#/ñ³eÔÓ(ê¶L¥SY]¡­ ;/º$Ï¾ëÓmÎzÙÝ èK')e6qÛ8Èà¤¸ìë¡¤J]ÝH¥!]v8üy¤z_§ÙFÌói©ÔÕ§;óQ#3OT&"3ÓæT@eLbCræLÞfêÌÜº "[NO¯sbÚÑJa^t]^¡ 8Ú5Ò·ÁktãÄ¸ÎÛKíQHA¾­@ËàÚÙ2o^ËÔòÍ³åÃ;÷º±¶Ì"Ôàà,ª q¥(O-ìF»¨O%<×»¨þüÔÕÏkþXêyÌâªÅk²R/;¸äåZêçG×çÅyª8ëW(uÙfãh<C~½UNn\ö1Jndfå×¹%Ídg¤úÊ¸f]Â¤Ò©ÙùtêWe+ùyJ~>r¡=h¥Þ»RâäÂÅÍn¶6lØ~ÜuSÐp®÷Ã
-Pâ,¶Y`­ë¹ÒjÔç8ÊÀLÉ­'Ñuu¶ºz
-íY¨îõFÇ~ÃOuÍY&òñg±htuxoÑ6Kª0» %kQÀ£Â:HcýlhÁV^§¤ÖÁjÍÁÓó±,(f%K¬vB9Æð§<t¤U°óh/~õq³ýìÞñS§Uö½³Üúlw?ñÄqõ¬ã òÉÓØY0Ï`ò¦Cª¢yk¥MÍÕÙ#ÚáM£ÝÓ!G]¾,ZÜøjøjÅOø	°×ûÛÁèz8hÅ~|:^!@Hkm$®6¤1¢äë²½XÌI[n>á(8m¢÷¨odÃFæÛ8äåñáýÅ@¼èºNëËÈÛ">öÈÆ)øfÄÀiS24'¼N½Ô7F9~qá³¼M×J]ï£ëKóâ´VFÝ+°¨°Ü·q=´ÁfñÃô¡UJý8,"bn·iT«Y.4ËF² CzDzbMyD Z¶Ñõm'#Ôß6ßlõµçÆÈC_W_¤-Ô 2=»FFÁè ÁÛÜ4MÍ5DËyBdõât)ÖâqòE\'ýÜôçeuBèn&=^çßf«:ÿkÌ_çf}(ãÖÈáå¡$Ac5veZÏc5;\Ga]7m³C¸9ÂÔRdª%h³¨dó¡ýExºùqt4¶ÙQ`FÝ½h¢ÐlöFkµðó¶ãÜµ5" o]s½Xo­Iç¢¸<¤²8ä£J]u-jaõõî54/´y:ã½ÍÓ#j AðåhFt(f+MÐÓTñ\Ö@ýz¯ÀìiuunûÏÍÿKp@p.I^]ËúåàxÜvËÜ`­s9Øsçº:FÔàþ_¸ Ä¿Ëÿ¨ÛáNøFdqUôÍíÄiïç6	Uqî¶nºÖÛ¶È»¹Rä+I=ÅÝà°pæ¤£q¯ÓÝå»«Ew«ã¥~Ö
-oe_ª^Ûß!\2§SØ!±é_*{ÇØØÌ
-Bh!¾ÏÀ Ûs
-=== ./sestidentificacao/sest-identificacao/sest-identificacao-empresas-inativas.csv
-codigo_siest;sigla;nome;dependencia;grupo_economico;vinculo;setor;capital_aberto_fechado;natureza_juridica;segmento;subsegmento;controle_acionario;sede;endereco_sede;cep;cidade_sede;cnpj;data_criacao;data_constituicao;data_inativacao
-6402;AmE;AMAZONAS DISTRIBUIDORA DE ENERGIA S.A. - AmE;Não dependente do Tesouro Nacional;ELETROBRAS;Subsidiária;Produtivo;Capital Fechado;Sociedade de Economia Mista;Energia;Distribuição de Energia Elétrica;Controle indireto;Brasil;AV. 7 DE SETEMBRO, Nº 2414 - CACHOEIRINHA;69.005-140;MANAUS - AM;02.341.467/0001-20;17/10/1997;23/12/1997;10/04/2019
-10015;AmGT;AMAZONAS GERAÇÃO E TRANSMISSÃO DE ENERGIA S.A. - AmGT;Não dependente do Tesouro Nacional;ELETROBRAS;Subsidiária;Produtivo;Capital Fechado;Sociedade de Economia Mista;Energia;Geração de Energia Elétrica;Controle indireto;Brasil;Rua Tito Bittencourt, nº 142, São Francisco;69.079-040;Manaus - AM;17.957.780/0001-65;04/04/2013;04/04/2013;29/06/2021
-10034;ARARA AZUL;GERADORA EÓLICA ARARA AZUL S.A.;Não dependente do Tesouro Nacional;ELETROBRAS;Subsidiária;Produtivo;Capital Fechado;Sociedade de Economia Mista;Energia;Geração de Energia Elétrica;Controle indireto;Brasil;Rua Voluntários da Pátria, 113 - 5º Pavimento;22.270-000;Rio de Janeiro - RJ;24.477.878/0001-80;29/03/2016;29/03/2016;06/01/2021
-10011;BB COR;BB COR PARTICIPAÇÕES S.A.;Não dependente do Tesouro Nacional;BB;Subsidiária;Produtivo;Capital Fechado;Sociedade de Economia Mista;Comércio e Serviços;Participações;Controle indireto;Brasil;Setor de Autarquias Norte, Quadra 05, Bloco B, 3º andar;70.040-912;Brasília - DF;17.345.055/0001-36;17/12/2012;20/12/2012;27/12/2016
-5355;BB LEASING.;BB LEASING COMPANY LIMITED;Não dependente do Tesouro Nacional;BB;Subsidiária;Financeiro;Capital Fechado;Sociedade de Economia Mista;Financeiro;Financeiro;Controle indireto;Exterior;28 NORTH CHURCH STREET - 2ND FLOOR;;G. CAYMAN-CAYMAN ISLANDS;05.528.423/0001-00;17/12/1981;17/12/1981;29/04/2016
-8030;BEAR;BEAR INSURANCE COMPANY LIMITED - BEAR;Não dependente do Tesouro Nacional;PETROBRAS;Subsidiária;Produtivo;Capital Fechado;Sociedade de Economia Mista;Petróleo, Gás e Derivados;Administração de Contratos;Controle indireto;Exterior;CEDAR HOUSE 41 - CEDAR AVENUE;;HAMILTON - ILHAS BERMUDAS;;18/04/1997;22/04/1997;10/09/2020
-10035;BENTEVI;GERADORA EÓLICA BENTEVI S.A.;Não dependente do Tesouro Nacional;ELETROBRAS;Subsidiária;Produtivo;Capital Fechado;Sociedade de Economia Mista;Energia;Geração de Energia Elétrica;Controle indireto;Brasil;Rua Voluntários da Pátria, 113 - 5º Pavime;22.270-000;Rio de Janeiro - RJ;24.477.830/0001-72;29/03/2016;29/03/2016;06/01/2021
-752;BESCVAL;BESC DISTRIBUIDORA DE TÍTULOS E VALORES MOBILIÁRIOS S.A. - BESCVAL;Não dependente do Tesouro Nacional;BB;Subsidiária;Financeiro;Capital Fechado;Sociedade de Economia Mista;Financeiro;Financeiro;Controle indireto;Brasil;SAUN, Quadra 5, Lote B, Torres Norte, 16° andar;70.040-912;Brasília - DF;82.518.523/0001-99;03/05/1971;03/05/1971;09/12/2020
-5526;BNDES Limited;BNDES L

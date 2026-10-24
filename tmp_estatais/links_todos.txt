@@ -1,5 +1,0 @@
-page2.html:https://www.gov.br/gestao/pt-br/assuntos/estatais/copy_of_transparencia/defeso_relatorio%20agregado
-page2.html:https://www.gov.br/gestao/pt-br/assuntos/estatais/transparencia-relatorios-e-dados-abertos/dados-abertos-1
-page3.html:https://www.gov.br/gestao/pt-br/assuntos/estatais/transparencia/boletim-trimestral-sest/Dados_Desagregados_Boletim_Trimestral_Sest_1T26.xlsx
-page3.html:https://www.gov.br/gestao/pt-br/assuntos/estatais/transparencia/boletim-trimestral-sest/arquivos/dados-desagregados-boletim-trimestral-sest-3t25.xlsx
-page6.html:https://www.gov.br/gestao/pt-br/assuntos/estatais/transparencia-relatorios-e-dados-abertos/sestendividamentolegado.zip
