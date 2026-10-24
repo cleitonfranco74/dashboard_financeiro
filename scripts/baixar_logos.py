@@ -42,7 +42,11 @@ BUSCA = {
 
 
 def arquivo(sigla: str) -> Path:
-    return DEST / (sigla.lower().replace(" ", "-").replace(".", "").replace("ç", "c").replace("á", "a").replace("ã", "a") + ".png")
+    return DEST / nome_logo(sigla)
+
+
+def nome_logo(sigla: str) -> str:
+    return (sigla.lower().replace(" ", "-").replace(".", "").replace("ç", "c").replace("á", "a").replace("ã", "a") + ".png")
 
 
 def logo(termo: str) -> tuple[str, str, str] | None:
@@ -80,6 +84,12 @@ def main() -> int:
             img = requests.get(url, headers=H, timeout=60)
             img.raise_for_status()
             arquivo(s).write_bytes(img.content)
+            if "png" not in img.headers.get("content-type", ""):
+                try:  # JPEG ou WebP do Commons viram PNG de verdade (precisa do Pillow)
+                    from PIL import Image
+                    Image.open(arquivo(s)).convert("RGBA").save(arquivo(s), "PNG", optimize=True)
+                except ImportError:
+                    pass
             linhas.append(f"{s}\t{qid}\t{rotulo}\t{nome}\t{len(img.content)} bytes\t{img.headers.get('content-type')}")
         except Exception as e:  # noqa: BLE001
             linhas.append(f"{s}\t{qid}\t{nome}\tERRO download: {e}")

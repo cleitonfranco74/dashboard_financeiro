@@ -15,6 +15,10 @@
     const [v, u] = a >= 1e6 ? [a / 1e6, "tri"] : a >= 1e3 ? [a / 1e3, "bi"] : [a, "mi"];
     return `${s}${nf(v, v >= 100 ? 0 : v >= 10 ? 1 : 2)} ${u}`;
   };
+  /* logomarca em fundo branco (assets/logos, baixadas do Wikimedia Commons); sem ela, a sigla */
+  const selo = (e, grande) => e.logo
+    ? `<span class="lg${grande ? " g" : ""}"><img src="assets/logos/${esc(e.logo)}" alt="${esc(e.nome)}" loading="lazy"></span>`
+    : `<span class="lg sem${grande ? " g" : ""}" title="${esc(e.nome)}">${esc(e.sigla.length > 9 ? e.sigla.slice(0, 8) + "…" : e.sigla)}</span>`;
   const rs = m => m == null ? "—" : `${m < 0 ? "−" : ""}R$ ${curto(Math.abs(m))}`;
   const pct = (x, d = 1) => x == null || !isFinite(x) ? "—" : `${x < 0 ? "−" : ""}${nf(Math.abs(x) * 100, d)}%`;
 
@@ -76,7 +80,7 @@
     const emps = doGrupo(), ano = st.ano, e = st.emp && emps.find(x => x.sigla === st.emp);
     if (e){
       const v = val(e, ano), ant = val(e, String(+ano - 1));
-      return `<div class="est-det"><div class="est-dh"><span class="sg" style="--c:${COR[e.grupo]}">${esc(e.sigla)}</span><div><h3>${esc(e.nome)}</h3>
+      return `<div class="est-det"><div class="est-dh">${selo(e, true)}<div><h3>${esc(e.nome)}</h3>
           <p>${esc(D.grupos[e.grupo] || "")} · ${esc(e.ministerio)}${e.dependente ? ` · <span class="tag" title="Recebe recursos do Tesouro para pagar despesas de pessoal ou de custeio">dependente do Tesouro</span>` : ""}</p></div></div>
         <div class="est-k">
           <div><span>Receita ${esc(rotAno(ano))}</span><b>${esc(rs(v?.[0]))}</b><small>${ant?.[0] && v?.[0] != null ? `${v[0] >= ant[0] ? "+" : ""}${pct((v[0] - ant[0]) / Math.abs(ant[0]), 0)} sobre ${+ano - 1}` : "&nbsp;"}</small></div>
@@ -113,7 +117,7 @@
       ${rows.slice(0, st.todas ? rows.length : LINHAS).map((e, i) => { const v = val(e, ano);
         return `<div class="tr${st.emp === e.sigla ? " sel" : ""}" role="row" data-emp="${esc(e.sigla)}" tabindex="0">
           <span class="rk num" role="cell">${i + 1}</span>
-          <span class="nm" role="cell"><span class="sg" style="--c:${COR[e.grupo]}">${esc(e.sigla.length > 9 ? e.sigla.slice(0, 8) + "…" : e.sigla)}</span><span><b>${esc(e.nome)}</b><small>${esc(D.grupos[e.grupo] || "")}</small></span></span>
+          <span class="nm" role="cell">${selo(e)}<span><b>${esc(e.nome)}</b><small>${esc(D.grupos[e.grupo] || "")}</small></span></span>
           <span class="c-r" role="cell"><i class="br"><i style="width:${Math.max(.5, (v[0] || 0) / mRec * 100)}%;background:var(--s4)"></i></i><b class="num">${esc(curto(v[0]))}</b></span>
           <span class="c-l" role="cell"><i class="br"><i style="width:${Math.max(.5, Math.abs(v[1]) / mLuc * 100)}%;background:${v[1] < 0 ? NEG : POS}"></i></i><b class="num ${v[1] < 0 ? "neg" : ""}">${esc(curto(v[1]))}</b></span>
           <span class="n num" role="cell">${margem(v)}</span></div>`; }).join("")}
@@ -139,7 +143,7 @@
       ${painel()}
       <div class="est-th"><h4>Quanto cada estatal faturou e quanto lucrou em ${esc(rotAno(st.ano))}</h4><span>${{ todas: "", lucro: "só as que lucraram · ", prej: "só as que tiveram prejuízo · " }[st.mostrar]}clique numa linha para ver o histórico</span></div>
       ${tabela()}
-      <p class="est-fonte">Fonte: ${esc(D.fonte)}, demonstrações validadas pelo contador de cada empresa. Lucro líquido do exercício; receita bruta de vendas e serviços e, nos bancos, receitas da intermediação financeira e de tarifas. Até 2024, dados anuais; desde 2025, trimestrais acumulados no ano. Atualizado em ${new Date(D.atualizado + "T12:00").toLocaleDateString("pt-BR")}.</p>`;
+      <p class="est-fonte">Fonte: ${esc(D.fonte)}, demonstrações validadas pelo contador de cada empresa. Lucro líquido do exercício; receita bruta de vendas e serviços e, nos bancos, receitas da intermediação financeira e de tarifas. Até 2024, dados anuais; desde 2025, trimestrais acumulados no ano. Atualizado em ${new Date(D.atualizado + "T12:00").toLocaleDateString("pt-BR")}. Logomarcas do Wikimedia Commons, marcas de suas respectivas empresas, usadas só para identificá-las.</p>`;
   }
 
   el.addEventListener("click", e => {
