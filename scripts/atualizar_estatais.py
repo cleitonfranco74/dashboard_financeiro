@@ -9,7 +9,9 @@ extraídos do Siest e validados pelo contador de cada empresa:
 Definições:
 - lucro: "Lucro ou prejuízo líquido do exercício" (até 2024) e "Lucro/prejuízo líquido" (2025 em diante);
 - receita: receita bruta de vendas de bens e serviços; nos bancos, receitas da intermediação
-  financeira mais receitas de prestação de serviços e tarifas.
+  financeira mais receitas de prestação de serviços e tarifas;
+- dividendos: dividendos e juros sobre capital próprio pagos no ano (fluxo de caixa), à União e a
+  todos os acionistas. A separação entre União e demais acionistas existe a partir de 2020.
 Se o download falhar, o arquivo anterior é mantido. Roda pela GitHub Action em .github/workflows/mercado.yml.
 """
 from __future__ import annotations
@@ -111,6 +113,13 @@ def cadastro(txt: str) -> dict[str, dict]:
     return out
 
 
+# Fluxo de caixa: dividendos e JCP pagos. Até 2024 há dois planos de contas (4004xx nas empresas,
+# 311xxx nos bancos); desde 2025, 3300xxxxx. Guardados com o prefixo "F" porque códigos do fluxo
+# de caixa coincidem com códigos da DRE de outro plano.
+DIV_UNIAO = ("400411", "400421", "311110", "311210", "330022010", "330025010")
+DIV_TOTAL = ("400410", "400420", "311100", "311200", "330022000", "330025000")
+
+
 def demonstracoes(txt: str, empresas: dict[str, dict]) -> dict:
     """Retorna {codigo: {ano: {"periodo": str, "contas": {rubrica: valor}}}} com o período mais completo de cada ano."""
     contas: dict[tuple, dict] = {}
@@ -119,10 +128,15 @@ def demonstracoes(txt: str, empresas: dict[str, dict]) -> dict:
     i = {c: cab.index(c) for c in ("exercicio", "periodicidade", "codigo_siest", "demonstrativo", "rubrica_codigo", "valor")}
     for l in linhas:
         p = l.split(";")
-        if len(p) < len(cab) or p[i["demonstrativo"]] != "DRE" or p[i["codigo_siest"]] not in empresas:
+        if len(p) < len(cab) or p[i["codigo_siest"]] not in empresas:
+            continue
+        dem, rub = p[i["demonstrativo"]], p[i["rubrica_codigo"]]
+        if dem.startswith("Fluxo") and rub in DIV_TOTAL + DIV_UNIAO:
+            rub = "F" + rub
+        elif dem != "DRE":
             continue
         chave = (p[i["codigo_siest"]], int(p[i["exercicio"]]), p[i["periodicidade"]])
-        contas.setdefault(chave, {}).setdefault(p[i["rubrica_codigo"]], numero(p[i["valor"]]))
+        contas.setdefault(chave, {}).setdefault(rub, numero(p[i["valor"]]))
     ordem = lambda per: 5 if per == "Anual" else int(m.group(1)) if (m := re.match(r"(\d)", per)) else 0
     melhor: dict = {}
     for (cod, ano, per), c in contas.items():
@@ -138,6 +152,13 @@ def receita_lucro(c: dict) -> tuple[float | None, float | None]:
         return rec, c.get("500000")
     rec = c.get("200100000", 0) + c.get("240104000", 0) if "200100000" in c else c.get("220100000")
     return rec, c.get("290000000", c.get("289900000"))
+
+
+def dividendos(c: dict) -> tuple[float | None, float | None]:
+    """Dividendos e JCP pagos (valores positivos): à União e a todos os acionistas."""
+    uniao = [abs(c["F" + k]) for k in DIV_UNIAO if "F" + k in c]
+    total = [abs(c["F" + k]) for k in DIV_TOTAL if "F" + k in c]
+    return (sum(uniao) if uniao else None), (sum(total) if total else None)
 
 
 def main() -> int:
@@ -158,7 +179,10 @@ def main() -> int:
             rec, luc = receita_lucro(d["contas"])
             if luc is None:
                 continue
-            serie[str(ano)] = [round(rec / 1e6, 1) if rec is not None else None, round(luc / 1e6, 1), d["periodo"]]
+            du, dt = dividendos(d["contas"])
+            mi = lambda x: round(x / 1e6, 1) if x is not None else None
+            # [receita, lucro, dividendos à União, dividendos a todos os acionistas], em R$ milhões
+            serie[str(ano)] = ([mi(rec), mi(luc), mi(du), mi(dt)], d["periodo"])
         if serie:
             lista.append({**e, "serie": serie})
     if len(lista) < 20:
@@ -167,15 +191,15 @@ def main() -> int:
     # um ano é parcial enquanto nenhuma empresa tiver o ano completo; num ano completo,
     # a empresa que só entregou parte do ano fica sem dado
     completo = lambda per: per in ("Anual", "4º Trimestre")
-    completos = {a for x in lista for a, v in x["serie"].items() if completo(v[2])}
+    completos = {a for x in lista for a, (v, per) in x["serie"].items() if completo(per)}
     for x in lista:
-        for a, v in list(x["serie"].items()):
-            if a in completos and not completo(v[2]):
+        for a, (v, per) in list(x["serie"].items()):
+            if a in completos and not completo(per):
                 del x["serie"][a]
             else:
-                if not completo(v[2]):
-                    parcial[a] = v[2].replace("Trimestre", "trimestre")
-                x["serie"][a] = v[:2]
+                if not completo(per):
+                    parcial[a] = per.replace("Trimestre", "trimestre")
+                x["serie"][a] = v
                 anos.add(int(a))
     ref = str(max(a for a in anos if str(a) not in parcial))
     lista.sort(key=lambda x: -(x["serie"].get(ref, [0, 0])[1] or 0))

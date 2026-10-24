@@ -289,7 +289,7 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
 .est .lg.g{--w:132px;--h:62px} .est .lg.g.sem{font-size:14px}
 .est-dh p{margin:4px 0 0;color:var(--ink-2);font-size:13.5px}
 .est .tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:1px 8px;font-size:11.5px;color:var(--s4)}
-.est-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:12px;margin-top:18px}
+.est-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:12px;margin-top:18px}
 .est-k > div{border:1px solid var(--line);border-radius:16px;padding:14px 16px;background:var(--bg);min-width:0}
 .est-k > div.pos{border-color:color-mix(in srgb,var(--good) 45%,transparent)} .est-k > div.neg{border-color:rgba(255,107,107,.45)}
 .est-k span{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
@@ -303,7 +303,7 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
 .est-g{width:100%;height:auto;display:block;overflow:visible}
 .est-g .zero{stroke:var(--axis)} .est-g .ax{fill:var(--muted);font:11px var(--mono)} .est-g .nd{fill:var(--muted);font:10px var(--mono)}
 .est-g .vl{fill:var(--ink);font:700 12px var(--mono)}
-.est-g .b{cursor:pointer;outline:none} .est-g .b:hover rect + rect,.est-g .b:focus-visible rect + rect{opacity:1}
+.est-g .b{cursor:pointer;outline:none} .est-g .b:hover .bv,.est-g .b:focus-visible .bv{opacity:1}
 .est-g .b:focus-visible rect:first-child{stroke:var(--accent);stroke-width:1.5}
 .est-cap{margin:8px 0 0;font-size:14px;color:var(--ink-2)} .est-cap b{color:var(--ink)} .est-cap small{color:var(--muted);font-size:12px}
 .est-th{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:28px}
@@ -335,6 +335,19 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
 .est-fonte{margin:18px 0 0;font-size:12.5px;color:var(--muted)}
 .est-mais{display:block;margin:14px auto 0;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:10px 18px;font:700 13.5px var(--sans);cursor:pointer}
 .est-mais:hover{border-color:var(--ink-2)}
+
+/* dividendos à União (reaproveita o visual da seção de estatais) */
+.est-k .az{border-color:rgba(90,162,255,.45)} .est-k .az b{color:#5aa2ff}
+.est-k b.nm1{font-size:clamp(20px,2.2vw,26px);white-space:normal;line-height:1.15}
+.dv-leg{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;font-size:12.5px;color:var(--ink-2)}
+.dv-leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.dv-tb .tr{grid-template-columns:28px minmax(0,1.6fr) minmax(0,1.2fr) 80px 70px 90px}
+.dv-tb .c-l{grid-template-columns:minmax(0,1fr) 72px}
+@media (max-width:760px){
+  .dv-tb .tr{grid-template-columns:18px repeat(3,minmax(0,1fr));grid-template-areas:"rk nm nm nm" "rk l t f"}
+  .dv-tb .tr > :nth-child(4){grid-area:t} .dv-tb .tr > :nth-child(5){grid-area:f} .dv-tb .tr > :nth-child(6){display:none}
+  .dv-tb .th > :nth-child(6){display:none} .dv-tb .br{display:none}
+}
 </style>
 <!-- Contagem de visitas: GoatCounter (sem cookies; painel em dashboardfinan.goatcounter.com) -->
 <script>
@@ -356,6 +369,7 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
       <a href="calculadoras.html">Calculadoras</a>
       <a href="carteira.html">Carteira</a>
       <a href="#estatais">Estatais</a>
+      <a href="#dividendos">Dividendos</a>
       <a href="#equacoes">Metodologia</a>
       <a href="https://github.com/cleitonfranco74/dashboard_financeiro">Código</a>
     </nav>
@@ -512,6 +526,16 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
       </div>
       <div class="est" id="est"><p class="est-fonte">Carregando os dados das estatais…</p></div>
       <div data-fb-util="Estatais federais"></div>
+    </section>
+
+    <section class="blk" id="dividendos" aria-labelledby="hDiv">
+      <div class="shead">
+        <span class="eyebrow">Dividendos</span>
+        <h2 class="sec" id="hDiv">Quanto as estatais pagaram de dividendos à União</h2>
+        <p>Dividendos e juros sobre capital próprio pagos pelas estatais federais ao Tesouro Nacional, ano a ano desde 2020, e quanto foi para os demais acionistas.</p>
+      </div>
+      <div class="est" id="div"><p class="est-fonte">Carregando os dividendos…</p></div>
+      <div data-fb-util="Dividendos das estatais"></div>
     </section>
 
     <section class="blk" id="ferramentas" aria-labelledby="ferr">

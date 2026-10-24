@@ -1,6 +1,7 @@
 /* Estatais federais na página inicial: receita e lucro de cada empresa de controle direto da União,
- * ano a ano, a partir de data/estatais.json (gravado por scripts/atualizar_estatais.py com os dados
- * abertos da SEST/MGI). Valores do arquivo em R$ milhões. */
+ * ano a ano, e os dividendos pagos à União, a partir de data/estatais.json (gravado por
+ * scripts/atualizar_estatais.py com os dados abertos da SEST/MGI). Valores do arquivo em R$ milhões;
+ * cada ano da série é [receita, lucro, dividendos à União, dividendos a todos os acionistas]. */
 (() => {
   const el = document.getElementById("est");
   if (!el) return;
@@ -57,7 +58,7 @@
     const ok = vals.filter(v => v != null), max = Math.max(0, ...ok), min = Math.min(0, ...ok);
     const span = (max - min) || 1, y = v => pt + (max - v) / span * (H - pt - pb), y0 = y(0);
     const bw = (W - pl - pr) / anos.length, gap = Math.min(14, bw * .28);
-    const sel = st.barra ?? anos.filter((a, i) => vals[i] != null).pop();
+    const sel = st.barra ?? (vals[anos.indexOf(st.ano)] != null ? st.ano : anos.filter((a, i) => vals[i] != null).pop());
     const bars = anos.map((a, i) => {
       const v = vals[i], x = pl + i * bw + gap / 2, w = bw - gap;
       const lbl = `<text x="${x + w / 2}" y="${H - 8}" text-anchor="middle" class="ax">${bw < 44 ? "’" + a.slice(2) : a}${D.parcial[a] ? "*" : ""}</text>`;
@@ -65,7 +66,7 @@
       const top = Math.min(y(v), y0), h = Math.max(1.5, Math.abs(y(v) - y0)), on = a === sel;
       return `<g class="b${on ? " on" : ""}" data-a="${a}" tabindex="0" role="button" aria-label="${a}: ${esc(TITULO[st.met][0].toLowerCase())} ${esc(M.txt(serie[a]))}">
         <rect x="${x - gap / 2}" y="${pt - 18}" width="${bw}" height="${H - pt + 18}" fill="transparent"/>
-        <rect x="${x}" y="${top}" width="${w}" height="${h}" rx="4" fill="${M.cor(v)}" opacity="${D.parcial[a] ? .45 : on ? 1 : .78}"/>
+        <rect class="bv" x="${x}" y="${top}" width="${w}" height="${h}" rx="4" fill="${M.cor(v)}" opacity="${D.parcial[a] ? .45 : on ? 1 : .78}"/>
         ${on ? `<text x="${x + w / 2}" y="${v >= 0 ? top - 6 : top + h + 13}" text-anchor="middle" class="vl">${esc(M.txt(serie[a]))}</text>` : ""}${lbl}</g>`;
     }).join("");
     const v = serie[sel], ant = serie[String(+sel - 1)];
@@ -170,14 +171,111 @@
     render();
   });
 
+  /* ---------- dividendos pagos à União ---------- */
+  const dv = document.getElementById("div"), AZ = "#5aa2ff";
+  const sd = { ano: null, emp: "", barra: null, todas: false };
+  let anosDiv = [];
+  const dvd = (e, a) => { const v = e.serie[a]; return v && v[2] != null ? v : null; };
+  const somaDiv = (emps, a) => {
+    let u = 0, t = 0, n = 0;
+    emps.forEach(e => { const v = dvd(e, a); if (!v) return; u += v[2]; t += v[3] || 0; if (v[2] > 0) n++; });
+    return { u, t, n };
+  };
+  function graficoDiv(serie, nome){
+    const W = Math.max(300, Math.min(1000, (dv.clientWidth || 640) - 40)), H = W < 520 ? 200 : 240, pt = 26, pb = 26;
+    const max = Math.max(1, ...anosDiv.map(a => serie[a] ? Math.max(serie[a][0], serie[a][1]) : 0));
+    const y = v => pt + (1 - v / max) * (H - pt - pb), bw = W / anosDiv.length, gap = Math.min(18, bw * .3);
+    const sel = sd.barra ?? (serie[sd.ano] ? sd.ano : anosDiv.filter(a => serie[a]).pop());   // começa no ano escolhido
+    const bars = anosDiv.map((a, i) => {
+      const v = serie[a], x = i * bw + gap / 2, w = bw - gap, on = a === sel;
+      const lbl = `<text x="${x + w / 2}" y="${H - 8}" text-anchor="middle" class="ax">${a}${D.parcial[a] ? "*" : ""}</text>`;
+      if (!v) return lbl;
+      return `<g class="b${on ? " on" : ""}" data-da="${a}" tabindex="0" role="button" aria-label="${a}: ${esc(rs(v[0]))} à União, ${esc(rs(v[1]))} a todos os acionistas">
+        <rect x="${x - gap / 2}" y="${pt - 18}" width="${bw}" height="${H - pt + 18}" fill="transparent"/>
+        <rect x="${x}" y="${y(v[1])}" width="${w}" height="${H - pb - y(v[1])}" rx="4" fill="${AZ}" opacity=".18"/>
+        <rect class="bv" x="${x + w * .18}" y="${y(v[0])}" width="${w * .64}" height="${Math.max(1.5, H - pb - y(v[0]))}" rx="4" fill="${AZ}" opacity="${D.parcial[a] ? .45 : on ? 1 : .8}"/>
+        ${on ? `<text x="${x + w / 2}" y="${y(v[1]) - 6}" text-anchor="middle" class="vl">${esc(curto(v[0]))}</text>` : ""}${lbl}</g>`;
+    }).join("");
+    const v = serie[sel];
+    return `<svg viewBox="0 0 ${W} ${H}" class="est-g" role="group" aria-label="Dividendos pagos por ano: ${esc(nome)}"><line x1="0" x2="${W}" y1="${H - pb}" y2="${H - pb}" class="zero"/>${bars}</svg>
+      <div class="dv-leg"><span><i style="background:${AZ}"></i>Pagos à União</span><span><i style="background:${AZ};opacity:.25"></i>Pagos a todos os acionistas</span></div>
+      <p class="est-cap">${v ? `<b>${esc(rotAno(sel))}</b>: <b style="color:${AZ}">${esc(rs(v[0]))}</b> pagos à União, de ${esc(rs(v[1]))} distribuídos a todos os acionistas${v[1] > 0 ? ` (${pct(v[0] / v[1], 0)} para a União)` : ""}.` : "Sem dados para este ano."}</p>`;
+  }
+  function dividendos(){
+    if (!dv) return;
+    anosDiv = D.anos.map(String).filter(a => D.empresas.some(e => dvd(e, a)));
+    if (!anosDiv.length){ dv.closest("section").hidden = true; return; }
+    const completos = anosDiv.filter(a => !D.parcial[a]);
+    sd.ano = sd.ano || (completos.length ? completos : anosDiv)[(completos.length ? completos : anosDiv).length - 1];
+    renderDiv();
+  }
+  function renderDiv(){
+    const a = sd.ano, ant = String(+a - 1);
+    const pagadoras = D.empresas.filter(e => anosDiv.some(x => dvd(e, x)?.[2] > 0)).sort((x, y) => x.nome.localeCompare(y.nome, "pt-BR"));
+    const emp = sd.emp && D.empresas.find(e => e.sigla === sd.emp);
+    const base = emp ? [emp] : D.empresas;
+    const s = somaDiv(base, a), sa = somaDiv(base, ant);
+    const serie = Object.fromEntries(anosDiv.map(x => { const z = somaDiv(base, x); return [x, z.u || z.t ? [z.u, z.t] : null]; }));
+    const rows = D.empresas.filter(e => dvd(e, a)?.[2] > 0).sort((x, y) => dvd(y, a)[2] - dvd(x, a)[2]);
+    const maior = rows[0], mU = rows.length ? dvd(rows[0], a)[2] : 1;
+    const luc = e => e.serie[ant]?.[1];
+    const varia = sa.u > 0 && anosDiv.includes(ant) ? (s.u - sa.u) / sa.u : null;
+    dv.innerHTML = `
+      <div class="est-ctl">
+        <label class="f"><span>Ano</span><select id="divAno">${anosDiv.slice().reverse().map(x => `<option value="${x}" ${x === a ? "selected" : ""}>${esc(rotAno(x))}</option>`).join("")}</select></label>
+        <label class="f"><span>Estatal</span><select id="divEmp"><option value="">Todas as estatais</option>${pagadoras.map(e => `<option value="${esc(e.sigla)}" ${e.sigla === sd.emp ? "selected" : ""}>${esc(e.nome)}</option>`).join("")}</select></label>
+      </div>
+      <div class="est-det">
+        ${emp ? `<div class="est-dh">${selo(emp, true)}<div><h3>${esc(emp.nome)}</h3><p>${esc(D.grupos[emp.grupo] || "")} · ${esc(emp.ministerio)}</p></div></div>` : `<div class="est-dh"><div><h3>Todas as estatais</h3><p>Dividendos e juros sobre capital próprio pagos em ${esc(rotAno(a))}.</p></div></div>`}
+        <div class="est-k">
+          <div class="az"><span>Pagos à União</span><b>${esc(rs(s.u))}</b><small>${varia != null ? `${varia >= 0 ? "+" : ""}${pct(varia, 0)} sobre ${ant}` : "&nbsp;"}</small></div>
+          <div><span>Pagos a todos os acionistas</span><b>${esc(rs(s.t))}</b><small>${s.t > 0 ? `${pct(s.u / s.t, 0)} ficou com a União` : "&nbsp;"}</small></div>
+          ${emp ? `<div><span>Lucro de ${ant}</span><b>${esc(rs(luc(emp)))}</b><small>${luc(emp) > 0 && s.t ? `pagou o equivalente a ${pct(s.t / luc(emp), 0)} dele` : "&nbsp;"}</small></div>`
+            : `<div><span>Maior pagadora</span><b class="nm1">${maior ? esc(maior.nome) : "—"}</b><small>${maior ? `${esc(rs(mU))} · ${pct(mU / (s.u || 1), 0)} do total à União` : "&nbsp;"}</small></div>
+          <div><span>Empresas que pagaram</span><b>${s.n}</b><small>de ${D.empresas.length} estatais de controle direto</small></div>`}
+        </div>
+        <div class="est-gh"><h4>Dividendos ${emp ? "pagos" : "somados"}, ano a ano</h4></div>${graficoDiv(serie, emp ? emp.nome : "Todas as estatais")}
+      </div>
+      <div class="est-th"><h4>Quem pagou dividendos à União em ${esc(rotAno(a))}</h4><span>clique numa linha para ver o histórico da estatal</span></div>
+      <div class="est-tb dv-tb" role="table" aria-label="Dividendos pagos em ${esc(rotAno(a))}">
+        <div class="tr th" role="row"><span role="columnheader">#</span><span role="columnheader">Empresa</span><span role="columnheader" class="c-l">À União</span><span role="columnheader" class="n">A todos</span><span role="columnheader" class="n">% União</span><span role="columnheader" class="n">Lucro de ${ant}</span></div>
+        ${rows.slice(0, sd.todas ? rows.length : LINHAS).map((e, i) => { const v = dvd(e, a);
+          return `<div class="tr${sd.emp === e.sigla ? " sel" : ""}" role="row" data-demp="${esc(e.sigla)}" tabindex="0">
+            <span class="rk num" role="cell">${i + 1}</span>
+            <span class="nm" role="cell">${selo(e)}<span><b>${esc(e.nome)}</b><small>${esc(D.grupos[e.grupo] || "")}</small></span></span>
+            <span class="c-l" role="cell"><i class="br"><i style="width:${Math.max(.5, v[2] / mU * 100)}%;background:${AZ}"></i></i><b class="num">${esc(curto(v[2]))}</b></span>
+            <span class="n num" role="cell">${esc(curto(v[3]))}</span>
+            <span class="n num" role="cell">${v[3] > 0 ? pct(v[2] / v[3], 0) : "—"}</span>
+            <span class="n num${luc(e) < 0 ? " neg" : ""}" role="cell">${esc(curto(luc(e)))}</span></div>`; }).join("")}
+      </div>${rows.length > LINHAS && !sd.todas ? `<button type="button" class="est-mais" data-dtodas>Mostrar as ${rows.length - LINHAS} restantes</button>` : ""}
+      <p class="est-fonte">Fonte: ${esc(D.fonte)}, demonstração dos fluxos de caixa de cada empresa (dividendos e juros sobre capital próprio pagos à União e aos demais acionistas). É o dinheiro pago no ano, que em geral corresponde ao lucro do ano anterior. A separação entre União e demais acionistas existe a partir de 2020. O que a Petrobras paga ao BNDES e à BNDESPar não entra como pago à União.</p>`;
+  }
+  if (dv){
+    dv.addEventListener("click", e => {
+      const t = e.target.closest("[data-demp],[data-da],[data-dtodas]");
+      if (!t) return;
+      if (t.dataset.da) sd.barra = t.dataset.da;
+      else if ("dtodas" in t.dataset) sd.todas = true;
+      else { sd.emp = sd.emp === t.dataset.demp ? "" : t.dataset.demp; sd.barra = null; renderDiv(); dv.querySelector(".est-det")?.scrollIntoView({ behavior: "smooth", block: "nearest" }); return; }
+      renderDiv();
+    });
+    dv.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches("[data-demp],[data-da]")){ e.preventDefault(); e.target.click(); } });
+    dv.addEventListener("change", e => {
+      if (e.target.id === "divAno"){ sd.ano = e.target.value; sd.barra = null; sd.todas = false; }
+      if (e.target.id === "divEmp"){ sd.emp = e.target.value; sd.barra = null; }
+      renderDiv();
+    });
+  }
+
   let rt, larg = 0;
-  window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (D && el.clientWidth !== larg){ larg = el.clientWidth; render(); } }, 150); });
+  window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (D && el.clientWidth !== larg){ larg = el.clientWidth; render(); if (dv && anosDiv.length) renderDiv(); } }, 150); });
 
   fetch("data/estatais.json").then(r => r.ok ? r.json() : Promise.reject(r.status)).then(d => {
     D = d;
     const completos = d.anos.filter(a => !d.parcial[a]);
     st.ano = String(completos.length ? completos[completos.length - 1] : d.anos[d.anos.length - 1]);
     render();
+    dividendos();
     const t = document.getElementById("estResumo");
     if (t){ const s = soma(d.empresas, st.ano);
       t.innerHTML = `<b>${esc(rs(s.luc))}</b> de lucro somado em ${st.ano} · <span class="pos">${s.nPos} com lucro</span> · <span class="neg">${s.nNeg} com prejuízo</span>`; }
