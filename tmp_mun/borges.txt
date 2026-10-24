@@ -1,0 +1,103 @@
+Ideological classification of Brazilian parties
+André Borges – University of Brasília
+November 2023
+The dataset of elections and party ideology provides data on Brazilian parties’ ideology,
+legislative contingent and share of the vote in lower chamber elections. The dataset relies
+on surveys with parliamentary elites and experts, as explained below. You will also find
+in this document a description of the variables included in the dataset.
+The dataset as well as the ideological classification of Brazilian parties were created for
+my research on the reorganization of the Brazil’s political right. The table with the list of
+parties by ideological bloc and the explanation of the procedures utilized to create the
+ideological classification have originally appeared in the 2023 book I have coedited with
+Robert Vidigal. To quote the dataset and/or the ideological classification you should make
+reference to our book on the Brazilian new right:
+Borges, André; Vidigal, Robert. (eds). Para Entender a Nova Direita Brasileira:
+Polarização, populismo e antipetismo. Porto Alegre: Editora Zouk, 2023.
+Sources and operationalization criteria
+The ideological classification of parties was constructed mainly by relying on the
+scores estimated by Zucco and Power (2020) based on legislators’ responses to several
+editions of the Brazilian Legislative Surveys (BLS) from 1990 to 2017. However, since
+the Brazilian Legislative Surveys do provide information for some parties and/or
+legislative periods, I have utilized two additional sources: the 2006, 2011, 2015 and 2018
+waves of the Political Representation, Executives and Political Parties (PREPPS) expert
+survey (https://dataverse.harvard.edu/ dataverse/prepps) and the 2020 V-Party
+expert survey.
+Although the ideological scores obtained for each party and election differ slightly
+between these three sources, the correlation between the measures is extremely high
+(around r=0.9), which suggests that both the data from the surveys with federal deputies
+and the scores obtained from the experts' evaluation are consistent with a single
+underlying distribution of the parties in the ideological space. I calculated average party
+ideology scores across the available sources. Then I estimated an overall ideology score
+for each party considering all the elections for which there was a valid ideological
+classification.
+To calculate the ideological position of União Brasil (UB), a party that did not
+exist at the start of the 2019-2023 legislature, a simple average of the scores given to PSL
+and DEM by the V-Party 2020 and PREPPS 2019 expert surveys was calculated. This
+seems justified considering that UB resulted from the merging of these two parties, and
+approximately 80% of the legislators that joined UB in 2021 were originally from the
+1
+DEM or the PSL. Finally, I classified a remaining group of small parties based on the
+categorical classification developed by Codato et al (2018).1
+The left, centre and right categories were defined by building equally sized, 7-
+point intervals for the left and right blocs within the 20-point scale. The center was
+defined as the remaining 6-point interval, ranging from 8 to 13. Parties were placed within
+each category according to their mean scores. This procedure is justifiable considering
+that the relative positions of the major parties within the system have remained mostly
+stable between 1990 and 2018, even though the absolute differences between the parties
+positioned at the extremes of the ideological scale have decreased over time. There are,
+however, two cases of parties that have changed very substantially their ideological
+profile, by abandoning their original center-left positions in the early 1990s and becoming
+more alike the center-right – the PSDB and the PPS. In the recent years, the PSDB has
+actually crossed, by a very small margin, the threshold that separates the center from the
+right. Still, given that both the PSDB and the PPS differ from right-wing parties in that
+they are, on average, significantly more secular and more socially progressive, according
+to the PREPPS 2015 and 2018 expert surveys, I opted for classifying them as center
+parties.
+The resulting classification of Brazilian parties is presented in table A.1 below:
+Table A.1 – Ideological Classification of Brazilian Parties
+Left Center Right
+PSTU PROS PSD PFL/DEM
+Rede PSDB PTB PSL
+PSOL PMDB PSC NOVO
+PCdoB SD PODEMOS PRTB
+PT PHS PL/PR PRONA
+PSB PTC PRB PEN/PATRI
+PDT PPS PDC/DC PRP
+PMN
+AVANTE PRN PTR
+PV
+PRONA UB
+PDS/PPB/PP
+Sources: BLS and PREPPS surveys (various years), Codato and Bolognesi (2018). Author’s
+elaboration.
+1 The parties not included in the classification are very small, transient organizations and their joint vote
+never surpassed 2% of the national total in all lower chamber elections considered in my analysis.
+2
+Variable description
+election Election year
+Unique codes for party and election year considering changes in party names throughout
+party_code time
+Unique codes for party and election year utilizing original party names (e.g., party
+party_code2 names utilized previous to changes in acronyms)
+Ideological classification of parties, according to average ideological scores
+cat_ideo3 (averageideo3)
+scalePZorig Power-Zucco (2021) original ideology scores, obtained from BLS (1990-2017)
+sdPZ Standard deviation of mean ideology scores obtained from Power and Zucco (2021)
+ideologyPZ Power-Zucco scale converted to the PREPPS 20-point scale
+ideopp Ideology scores obtained from PREPPS expert surveys (2006, 2011, 2015 and 2019)
+ideovd Ideology scores obtained from the V-Party 2020 dataset
+Average ideology scores for party x and election t across available sources. Whenever
+there is a single measure of party ideology in a specific year, ideo3 is equal to the
+ideo3 ideology score reported by the available source.
+Averageideo 3 was calculated by averaging ideo3 across all election years for which
+averageideo3 there existed valid observations for the party
+legvote Share of the valid national vote obtained by the party in lower chamber elections
+legseat Share of lower chamber seats obtained by the party
+party_facts_id Unique party facts id code
+References:
+Codato A, Berlatto F and Bolognesi B. (2018) Tipologia dos políticos de direita no
+Brasil: uma classificação empírica. Análise Social: 870-897.
+Zucco Jr, Cesar, e Power, Timothy J. (2021), "Fragmentation without cleavages?
+Endogenous fractionalization in the Brazilian party system". Comparative Politics,
+53(3): 477-500.
+3

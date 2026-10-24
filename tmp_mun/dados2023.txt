@@ -1,0 +1,943 @@
+ARTIGOS ORIGINAIS
+Uma Nova Classificação Ideológica dos Partidos
+Políticos Brasileiros
+Bruno Bolognesi1
+1Professor associado. Departamento de Ciência Política. Universidade Federal do Paraná.
+E-mail: bolognesi@ufpr.br
+Ednaldo Ribeiro2
+2Professor associado. Departamento de Ciências Sociais. Universidade Estadual de Maringá.
+E-mail: ednaldoribeiro@icloud.com
+Adriano Codato3
+3Professor associado. Departamento de Ciência Política. Universidade Federal do Paraná.
+E-mail: adrianocodato@gmai1.com
+INTRODUÇÃO1
+Atualizações na classificação ideológica dos partidos políticos são
+frequentes nas democracias. Ocorrem pela mudança no quadro
+partidário, com a entrada e saída de novos partidos, pela alternância nos
+postos de poder ou como fruto do contexto político em que determinado
+país se encontra. Alternativamente, podem se dever às modificações
+de sentido que cada posição ideológica desvela, pois os conceitos de
+esquerda e de direita são relacionais e se alteram no tempo, ressignifi-
+cando suas definições. Ainda que não pretendamos fazer uma discussão
+conceitual sobre o que cada visão de mundo representa, reconhecemos a
+necessidade de atualizar periodicamente o modo como o eixo ideológico
+se relaciona com as agremiações partidárias no Brasil.
+O tema da ideologia dos partidos políticos brasileiros sempre foi
+tratado como secundário na literatura, que privilegiou os compor-
+tamentos eleitoral e legislativo e suplantou a dimensão ideológica
+como incapaz de diferenciar as legendas partidárias (Epstein, 2009;
+Tarouco, Madeira, 2015; Zucco Jr., 2011). As distâncias espaciais entre
+DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023
+https://doi.org/10.1590/dados.2023.66.2.303 1-29
+Uma Nova Classificação Ideológica dos Partidos Políticos Brasileiros
+os partidos políticos estariam diluídas pelo personalismo eleitoral e
+pela patronagem partidária (Ames, 2003; Mainwaring, 1993). Ainda
+que o fenômeno da desideologização ocorra em várias democracias
+(Bolleyer, 2013; Scarrow, 1996; Van Biezen, Mair, Poguntke, 2012), o
+Brasil não experimentou uma “era de ouro” de partidos políticos com
+organizações perenes, programáticas e de ideologia expressa, como
+ocorreu com frequências nas democracias avançadas (Desposato, 2006;
+Janda, Colman, 1998; Samuels, 1999). Ou seja, o quadro brasileiro é de
+baixa programaticidade permanente, independentemente do estágio
+de desenvolvimento de seu sistema partidário.
+O paradigma dos partidos políticos brasileiros sempre esteve entre
+uma força de peso eleitoral virtualmente desprezível – em que predo-
+minam campanhas personalistas, financiamento eleitoral privado, alta
+fragmentação e clientelismo – e partidos dando cartas no legislativo
+nacional – organizando a agenda de votações, apresentando taxas
+de coesão acima de 50% e compondo coalizões pela governabilidade
+(Figueiredo, Limongi, 2000; Melo, 2015; Pereira, Mueller, 2003). Essa
+dicotomia comportamental dos partidos brasileiros envia um sinal con-
+fuso para o entendimento acerca de suas bases programáticas, gerando
+parca clareza sobre as posições da maioria dessas organizações.
+Por outro lado, especialistas e políticos têm clareza da clivagem ideo-
+lógica e de seus efeitos na condução da coisa pública e no comporta-
+mento legislativo. Para saber o conteúdo dessa clivagem, diferentes
+estratégias são mobilizadas. Podemos mensurar a ideologia partidá-
+ria através dos programas dos partidos (Babireski, 2014; Franzmann,
+Kaiser, 2006; Tarouco, Madeira, 2013a), a partir do comportamento de
+seus representantes (Scheeffer, 2016), do comportamento eleitoral (Car-
+reirão, 2006; Dantas, Praça, 2010), da composição social (Rodrigues,
+2002), da percepção de seus representantes (Power, Zucco Jr., 2009) ou
+da percepção de especialistas (Tarouco, Madeira, 2015; Wiesehomeier,
+Benoit, 2007). Nossa proposta de classificação se filia à última forma,
+com seus problemas e vantagens.
+Para tanto, aplicamos um survey junto aos associados da Associação
+Brasileira de Ciência Política (ABCP) durante vinte dias do mês de
+julho de 2018. Os entrevistados foram convidados a responder, através
+de uma plataforma web-based, sobre a forma como classificavam os
+então trinta e cinco partidos políticos brasileiros no eixo esquerda-
+-direita numa escala espacial de zero a dez. Esses especialistas não
+2-31 DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023
+Bruno Bolognesi, Ednaldo Ribeiro e Adriano Codato
+tinham acesso ao ponto numérico, mas apenas ao ponto espacial que
+distanciava mais ou menos cada um dos partidos em relação aos extre-
+mos. Isso teve o intuito de evitar um possível problema de anteci-
+pação de pontos ideológicos, em que valores numéricos coincidem
+com posições já conhecidas como extrema-esquerda, centro-direita,
+esquerda ou direita. A reta, portanto, estimulava uma classificação
+por proximidade – e não por coincidência entre posições ordinais e
+ideológicas. A possível agregação de valores médios, como se sabe,
+pode ser feita após a coleta dos dados.
+Foram enviados 963 convites, com uma taxa de retorno de 59,3%. A
+alta adesão demonstra a pertinência do tema e o perfil colaborativo da
+comunidade da Ciência Política. Contudo, levando em conta os erros
+de envio (envios duplicados) e as respostas incompletas, a taxa final foi
+de 53,9%, totalizando um universo de 519 indivíduos. A maior parte
+dos respondentes possuía título de doutor (48,4%), enquanto mestres
+foram 32,8% e graduados, 18,8%. Ainda que cansativa, a pesquisa foi
+respondida em uma média de 17 minutos por aqueles que a concluí-
+ram. O resultado é uma estimativa da posição média ideológica de
+cada legenda, colocando os partidos mais ou menos próximos dos
+polos de esquerda ou direita.
+O texto está dividido do seguinte modo. Apresentamos a seguir o
+debate sobre ideologia partidária, sua pertinência teórica e a forma
+como o tema foi discutido na literatura. Em seguida, mostramos o
+resultado da classificação ideológica dos partidos políticos brasileiros
+e discutimos possíveis problemas, comparando esta classificação com
+classificações anteriores. Por fim, sugerimos duas explicações para as
+mudanças na classificação de nossas agremiações partidárias.
+IDEOLOGIA PARTIDÁRIA: COMO E PARA QUÊ?
+O entendimento dos partidos políticos como portadores de uma visão
+de mundo e de um programa que a reflita aponta a ideologia como um
+“atalho cognitivo” para a tomada de decisão no momento do voto e
+como uma linha a ser perseguida nas tomadas de decisão dos partidos
+quando ocupam os governos (Rose, 1984). A ideologia estrutura a
+comunicação e a captação de interesses dispersos ao longo do tempo
+e do espaço. Os partidos políticos seriam assim as organizações res-
+ponsáveis por realizar esse movimento nas democracias através da
+diferenciação eleitoral.
+DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023 3-31
+Uma Nova Classificação Ideológica dos Partidos Políticos Brasileiros
+Além disso, a ideologia possibilita comparações ao longo do tempo e
+do espaço, permitindo que notemos movimentações nas preferências
+dos indivíduos e nas dinâmicas dos sistemas partidários, seus (des)ali-
+nhamentos, suas polarizações e suas direções concorrentes entre pares.
+É comum que a distinção entre esquerda e direita nos partidos políticos
+obedeça unidimensionalmente às distintas visões sobre a intervenção
+do Estado na economia (Downs, 1999) e à defesa da igualdade social
+como natural ou construída (Bobbio, 1995). Contudo, o entendimento
+sobre os significados de tais posições e as mudanças sofridas pelos
+ideais que elas contêm tem se alterado ao longo do tempo e do espaço.
+A definição que separa direita e esquerda em torno da defesa da igual-
+dade se tornou opaca na medida em que agendas específicas entram
+em cena e demandas sociais passam a se fragmentar com o declínio
+das sociedades de classe na Europa ocidental a partir dos anos 1960
+(Arce, 2010; Botelho, 2018), por exemplo.
+Ou seja, reafirmamos que conhecer e classificar partidos políticos a partir
+de sua ideologia é um instrumento de análise para entender as próprias
+organizações partidárias. Porém, também é importante ver como estas
+são percebidas de forma diferente ao longo do tempo. Ainda que os par-
+tidos políticos possam ser classificados a partir de seu comportamento
+eleitoral (Carreirão, 2006; Dantas, Praça, 2010), pelo comportamento
+legislativo (Scheeffer, 2016), pela autoimputação ideológica (Power,
+Zucco Jr., 2009; Zucco Jr., 2011), por sua composição social (Rodrigues,
+2002), pelas escolhas de políticas públicas (Dias, 2012) ou pelas posições
+expressas pelos próprios partidos (Franzmann, Kaiser, 2006; Tarouco,
+Madeira, 2013b), todos os métodos possuem vantagens e desvantagens.
+A classificação através de survey com especialistas – ou expert survey –,
+como a que apresentamos aqui, traz também prós e contras.
+A primeira vantagem é que os surveys realizados com especialistas
+produzem medidas válidas e confiáveis, conforme apontam Benoit e
+Laver (2006) e Laver (2001). Quando comparados com outros indicado-
+res, como o comportamento dos partidos em eleições, as classificações
+dos estudiosos convergiram. Em segundo lugar, consultar especialis-
+tas aumenta a chance de que a classificação tenha sido realizada sem
+contaminações típicas das arenas políticas, como a lógica de alianças
+eleitorais e legislativas, o peso de decisões difíceis quando no governo
+ou a frivolidade com que os manifestos partidários são tratados, espe-
+cialmente no Brasil.2 Ainda, as classificações baseadas em mass surveys
+como o Latinobarómetro, carregam a dificuldade típica de nosso sis-
+4-31 DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023
+Bruno Bolognesi, Ednaldo Ribeiro e Adriano Codato
+tema partidário, em que a quantidade e diversidade de legendas se
+torna um problema para diferenciá-las. Este problema afeta também
+a capacidade dos especialistas, mas é nesse momento que contar com
+eles pode ser também uma vantagem.
+Por outro lado, Benoit e Laver (2006) apontam que métodos de survey
+com especialistas apresentam uma enorme vantagem em relação a outras
+formas de mensuração ideológica. Em primeiro lugar, qualquer que seja a
+forma de classificação de partidos, haverá possível fonte de erros ou vie-
+ses. Em segundo lugar, ideologia política é um conceito que exige algum
+grau de abstração e complexidade, não sendo, portanto, um elemento
+de fácil acesso. Nesse sentido, os especialistas estariam mais capacita-
+dos para oferecer respostas precisas sobre ideologia se comparados com
+outros grupos sociais. Posições políticas estabelecidas num espaço são
+ainda informações mais precisas, exigem mais do respondente para que
+se reduza o funcionamento diferencial de itens (differential item functioning
+– DIF), ou seja, a capacidade de que todos os respondentes compreendam
+a pergunta da mesma forma (King et al., 2004).
+No entanto, a classificação de partidos políticos por seus estudiosos
+também apresenta problemas. O primeiro deles é que, como em toda
+pesquisa que utiliza survey, os resultados são sensíveis ao tempo e ao
+local de coleta dos dados. Eventos contundentes, episódios políticos
+impactantes e o contexto que afetam o respondente podem influenciar
+os resultados. Em segundo lugar, surveys com especialistas podem
+apresentar tendências de polarização, alocando partidos ideologica-
+mente opostos em maiores distâncias entre si. Por outro lado, tendem
+também a utilizar tais partidos como referência espacial e a ocupar o
+restante da reta matizando as posições dos demais partidos em rela-
+ção aos posicionados nos polos. Isso é especialmente sensível para
+sistemas altamente fragmentados (Mair, 2001; Wiesehomeier, Benoit,
+2007) como o Brasil, onde se tenta diferenciar uma legenda de outra
+evitando espaços vazios e levando a uma possível polarização artificial.
+UMA CLASSIFICAÇÃO IDEOLÓGICA ATUALIZADA DOS PARTIDOS
+POLÍTICOS BRASILEIROS
+O primeiro ponto dos resultados do questionário que chamam atenção
+é a ausência de respostas para algumas agremiações e a variação de
+respostas para outras (Tabela 1). A correlação entre estes dois itens é
+intuitiva. Quanto maior a quantidade de respostas dadas à classificação
+DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023 5-31
+Uma Nova Classificação Ideológica dos Partidos Políticos Brasileiros
+de uma determinada legenda, maior o coeficiente de variação apre-
+sentado. A correlação apresentada (r .437) indica que, com uma maior
+quantidade de indivíduos que se julgam aptos a classificar ideologi-
+camente um partido específico, ocorre aumento na heterogeneidade
+da classificação e, portanto, os pontos atribuídos variam mais. Isso é
+especialmente verdade para partidos classificados à esquerda da reta
+ideológica, como o Partido Socialista dos Trabalhadores Unificado
+(PSTU), o Partido da Causa Operária (PCO), o Partido Comunista
+Brasileiro (PCB), o Partido Socialismo e Liberdade (PSOL) e o Partido
+Comunista do Brasil (PCdoB), que apresentam valores muito acima
+dos cem pontos em seus coeficientes de variação.
+Uma possível explicação para esse fenômeno talvez esteja na pró-
+pria forma como os especialistas classificam os partidos políticos e
+“dividem” a reta espacial. Note, se utilizarmos o Partido Verde (PV)
+como partido de centro, que divide a reta entre esquerda e direita, o
+segmento à esquerda engloba dez agremiações, enquanto o segmento
+à direita tem exatamente o dobro. Ou seja, os partidos tidos como à
+direita no espectro ideológico ficam mais espremidos na reta, obri-
+gando o respondente a escalonar com mais precisão um seguimento
+do que o outro. Assim, com um segmento muito mais populoso, é
+esperado que a indiferenciação ocorra mais de um lado do que de
+outro. É preciso lembrar, é claro, que estamos falando da comunidade
+de Ciência Política, de respondentes experimentados que possuem
+formação e conhecimento suficiente para estabelecer relações compa-
+ráveis. Contudo, ao operacionalizar tantas vezes a mesma instrução
+diante dessa quantidade de legendas, até o mais treinado dos olhos
+terá dificuldade em estabelecer uma memória.
+Tabela 1
+Descritivas por partido: ideologia3
+Desvio Coeficiente
+Partido Média Mediana Moda N
+Padrão de variação
+PSTU 0,51 0 0 1,13 514 220,23
+PCO 0,61 0 0 1,19 509 196,03
+PCB 0,91 0,9 0 1,27 512 139,91
+PSOL 1,28 1 1 1,18 513 92,45
+PCdoB 1,92 2 2 1,50 512 78,26
+PT 2,97 3 3 1,34 504 44,99
+6-31 DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023
+Bruno Bolognesi, Ednaldo Ribeiro e Adriano Codato
+Tabela 1
+Descritivas por partido: ideologia (cont.)
+Desvio Coeficiente
+Partido Média Mediana Moda N
+Padrão de variação
+PDT 3,92 4 4 1,48 483 37,84
+PSB 4,05 4 4 1,59 468 39,33
+Rede 4,77 4 4 1,72 451 35,99
+PPS 4,92 5 4 2,36 472 47,83
+PV 5,29 5 6 1,79 435 33,83
+PTB 6,1 6 7 2,18 481 35,74
+Avante 6,32 6 6 2,27 451 35,88
+SDD 6,5 7 6 1,98 469 30,51
+PMN 6,88 7 7 2,10 444 30,48
+PMB 6,9 7 7 2,03 431 29,46
+PHS 6,96 7 7 1,94 443 27,82
+MDB 7,01 7 6 1,66 453 23,71
+PSD 7,09 7 6 1,72 479 24,22
+PSDB 7,11 7 6 1,69 496 23,81
+Podemos 7,24 7 8 1,76 469 24,27
+PPL 7,27 8 10 2,68 465 36,87
+PRTB 7,45 8 7 1,98 462 26,52
+Pros 7,47 7 8 1,58 472 24,47
+PRP 7,59 7 7 1,57 472 20,66
+PRB 7,78 8 8 1,48 495 19,97
+PR 7,78 8 8 1,53 488 19,61
+PTC 7,86 8 8 1,65 480 20,97
+DC 8,11 8 8 1,55 503 19,09
+PSL 8,11 8 10 1,69 489 20,79
+Novo 8,13 8 10 1,72 474 21,17
+Progressistas 8,20 8 8 1,53 496 18,69
+PSC 8,33 8 10 1,52 505 18,23
+Patriota 8,55 9 10 1,58 490 18,54
+DEM 8,57 9 10 1,40 511 16,31
+Fonte: survey UFPR/ABCP
+DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023 7-31
+Uma Nova Classificação Ideológica dos Partidos Políticos Brasileiros
+Por outro lado, quando olhamos a outra ponta da tabela, vemos que
+os partidos tradicionais de direita possuem bastante consistência, com
+baixo coeficiente de variação. Progressistas (antes PP, e antes PPB),
+PSC, Patriota (antes PEN) e DEM (antes PFL) são partidos facilmente
+associados à direita. O Patriota é uma exceção digna de nota, figurando
+com o segundo partido “mais à direita”. Isso provavelmente se deve
+à sua aproximação de Jair Bolsonaro, frustrada apenas em janeiro de
+2018, quando o partido já havia inclusive alterado a antiga nomencla-
+tura para abrigar o então futuro candidato. Todos os outros partidos
+compõem o núcleo duro da direita longeva brasileira. Progressistas e
+DEM são herdeiros da ditadura e responsáveis pela condução da repre-
+sentação das bases do agronegócio e da agenda neoliberal no Brasil.
+Fecha o bloco o PSC, ligado tanto à ala mais conservadora da Igreja
+Católica quanto à representação de origem evangélica. Em resumo: são
+legendas com histórico ou contextos específicos que permitem que o
+analista as aloque sem titubear no apertado espaço em que sente que
+é preciso diferenciar os partidos entre si.
+Tabela 2
+Taxa de não respostas por partido
+Partido %
+PMB 16,95
+PV 16,18
+PHS 14,64
+PMN 14,45
+Avante 13,10
+Rede 13,10
+MDB 12,72
+PRTB 10,98
+PPL 10,40
+PSB 9,83
+Podemos 9,63
+SDD 9,63
+Pros 9,05
+PRP 9,05
+PPS/CDD 9,05
+Novo 8,67
+8-31 DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023
+Bruno Bolognesi, Ednaldo Ribeiro e Adriano Codato
+Tabela 2
+Taxa de não respostas por partido (cont.)
+Partido %
+PSD 7,71
+PTC 7,51
+PTB 7,32
+PDT 6,94
+PR 5,97
+PSL 5,78
+Patriota 5,59
+PRB 4,62
+PSDB 4,43
+Progressistas 4,43
+DC 3,08
+PT 2,89
+PSC 2,70
+PCO 1,93
+DEM 1,54
+PCdoB 1,35
+PCB 1,35
+PSOL 1,16
+PSTU 0,96
+Fonte: survey UFPR/ABCP
+DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023 9-31
+Uma Nova Classificação Ideológica dos Partidos Políticos Brasileiros
+Gráfico 1
+Coeficiente de variação das classificações na escala ideológica por partido
+Fonte: survey UFPR/ABCP
+Já a ausência de respostas sobre partidos como o Partido da Mobili-
+zação Nacional (PMN), Partido da Mulher Brasileira (PMB), Avante
+(antigo PTdoB), Partido Humanista Social (PHS), Partido Renovador
+Trabalhista Brasileiro (PRTB) e Partido Pátria Livre (PPL) está nor-
+malmente ligada à baixa saliência que tais partidos possuem em seus
+posicionamentos, somada à mudança de nomenclatura recente ou
+então ao pouco tempo de existência da legenda. Por outro lado, par-
+tidos como PV, Rede e MDB têm pouca coesão na dimensão esquerda-
+-direita. Pode até ser que sejam vistos como programáticos – no caso
+da Rede, por exemplo – ou que tenham uma agenda clara, como o
+ambientalismo dos Verdes, mas não têm uma posição distinta no que
+se refere aos principais critérios que formam as categorias de esquerda
+ou de direita. Já o caso do MDB é um caso clássico de partido catch-all
+que possui muitas colorações em diferentes lugares e pontos do tempo
+no Brasil. Seu histórico de partido amorfo data de sua fundação, e o
+passado dificulta sua alocação em um posto definitivo (Kinzo, 1988).
+Quando buscamos conteúdo para a forma como os cientistas políticos
+classificaram os partidos políticos brasileiros, conseguimos captar mais
+precisamente onde está a dificuldade em classificar a miríade de legen-
+das do nosso sistema partidário. Perguntamos também como seria a
+classificação de cada partido baseada na distinção comportamental
+10-31 DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023
+Bruno Bolognesi, Ednaldo Ribeiro e Adriano Codato
+– ou dos objetivos partidários – teorizada por Müller e Strøm (1999)
+e aplicada aos modelos de partido por Wolinetz (2002). Os objetivos
+partidários seriam um proxy daquilo que o partido tem como razão de
+ser e refletiriam os fins pelos quais a organização partidária trabalha.
+Por exemplo, dois diferentes partidos podem ter uma grande quanti-
+dade de filiados, mas, enquanto um deles persegue políticas públicas
+e mobiliza seus membros para convencer eleitores, o segundo utiliza
+propaganda eleitoral e adapta seu programa de modo a angariar a
+maior quantidade de votos possível. O primeiro estaria mais próximo
+do modelo de policy-seeking party, enquanto o segundo se aproxima
+do vote-seeking party. Já agremiações que primam por fazer parte de
+coligações, tirando proveito de cabeças de chapa, ou que abrem mão
+de seu espaço em determinada região para no futuro encontrar cargos
+e patronagem no interior do governo são normalmente classificados
+como office-seeking parties.
+Figura 1
+Objetivos partidários e modelos de partido4
+Fonte: Elaboração própria, com base em Müller e Strøm (1999) e Wolinetz (2002).
+Segundo Wolinetz (2002), o modelo que tenta classificar os partidos
+políticos por seu comportamento tende a ser mais vantajoso, na
+medida em que é mais flexível e permite que as variações ao longo
+do tempo e do espaço sejam captadas de forma mais sensível. Ao
+DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023 11-31
+Uma Nova Classificação Ideológica dos Partidos Políticos Brasileiros
+mesmo tempo, o indicador que busca mensurar comportamentos
+partidários não deve ser interpretado como tendo um objetivo iso-
+lado de outro. Os partidos, na maioria das vezes, fazem as três
+coisas ou se utilizam um comportamento para atingir outro. Um
+partido dificilmente conseguirá implementar seu programa polí-
+tico sem que tenha uma votação expressiva, seja para legitimar
+suas propostas, seja para conquistar o poder de governar. Mas os
+partidos priorizam estratégias e dão intensidades para cada um
+desses comportamentos conforme respondem aos constrangimentos
+políticos e institucionais.
+Assim os diferentes objetivos dos partidos convivem em (des)equilí-
+brio, fazendo dessas instituições unidades complexas – o que é dife-
+rente das proposições reducionistas da escolha racional (Downs, 1999;
+Smith, 2004). A questão então é saber se há como sobrepor as dimen-
+sões ideológica e comportamental dos partidos e encontrar alguma
+consistência na forma como essas duas classificações foram entendidas
+em nosso survey.
+12-31 DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023
+Bruno Bolognesi, Ednaldo Ribeiro e Adriano Codato
+Figura 2
+Classificação dos partidos políticos brasileiros em policy, office ou vote-seeking em 2018
+DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023 13-31
+Uma Nova Classificação Ideológica dos Partidos Políticos Brasileiros
+Figura 2
+Classificação dos partidos políticos brasileiros em policy, office ou vote-seeking em 2018 (cont.)
+Fonte: Elaboração própria, com base no survey UFPR/ABCP.
+14-31 DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023
+Bruno Bolognesi, Ednaldo Ribeiro e Adriano Codato
+A figura 2 mostra os partidos políticos brasileiros a partir da imputação
+de seus objetivos partidários conforme Wolinetz (2002). Precisamente,
+a pergunta feita aos entrevistados continha uma vignette que dizia:
+Um modo de entender os partidos políticos é classificá-los quanto ao prin-
+cipal objetivo que perseguem e as consequências organizacionais a partir
+dele. A literatura utiliza três categorias conforme abaixo resumidas (Müller,
+Strøm, 1999; Strøm, 1990; Wolinetz, 2002), partidos podem ser então:
+- vote-seeking: partidos que buscam a maximização dos votos indepen-
+dentemente do contexto competitivo ou das limitações programáticas ou
+alianças em que estejam inseridos. As posições políticas são flexíveis. A
+organização do partido se intensifica durante eleições e passa despercebida
+nos períodos entre elas. São flexíveis na construção de alianças, moldando
+sua visão de mundo a cada contenda eleitoral ou adversário político na
+tentativa de amealhar a maior quantidade de eleitores possível;
+- office-seeking: partidos políticos que maximizam a participação em gover-
+nos e alianças políticas ainda que isso exija não maximizar a obtenção
+de votos junto ao eleitorado ou garantir seu programa político. Visando
+sobreviver, preferem desfrutar dos cargos distribuídos pelo espólio de seu
+parceiro eleitoral vitorioso a ficar fora do governo. As atividades partidárias
+se restringem aos períodos eleitorais e a estrutura do partido depende dos
+recursos advindos dos cargos ocupados;
+- policy-seeking: partidos que priorizam ocupar o Estado para garantir a per-
+secução de uma agenda de political issues. Tendem a ser permanentemente
+mobilizados mesmo entre eleições e com envolvimento de várias esferas
+do partido. No limite, buscam convencer o eleitor ao invés de adaptar seu
+programa ao sabor das preferências dos votantes. Em situações críticas, pre-
+ferem escolher alianças com partidos que partilham sua visão de mundo,
+ainda que isso signifique realizar algumas concessões programáticas.
+Ao mesmo tempo, a figura 2 apresenta a coloração ideológica de
+cada legenda de acordo com cortes a partir da média de pontuação
+na dimensão esquerda-direita. Como se pode observar, o ponto mais
+à esquerda coincide com o valor zero, e o mais à direita, com o valor
+dez. Por um lado, a alta taxa de não resposta (Tabela 2) pode ser expli-
+cada pela dificuldade de identificar partidos políticos que perseguem
+políticas públicas fora do espectro da esquerda. Com exceção de Rede,
+DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023 15-31
+Uma Nova Classificação Ideológica dos Partidos Políticos Brasileiros
+Novo e PSDB, todos os demais partidos ou não têm um objetivo claro
+(como PSB, PDT, PPL,5 PV e DEM) ou se aproximam do par “office –
+vote-seeking”, sugerindo que o fisiologismo/clientelismo parece ser a
+tônica no sistema partidário nacional.
+Olhando mais detidamente para os cortes ideológicos representados
+na reta pelas diferenciações de cores, vemos que segmentos de mesma
+amplitude apresentam algumas constantes. A escala foi dividida de
+modo que partidos que tiveram média ideológica entre 0 e 1,5 foram
+classificados como de extrema-esquerda. Os que pontuaram de 1,51 a
+3, como esquerda. De 3,01 a 4,49 estão as legendas de centro-esquerda.
+Já entre 4,5 e 5,5, as de centro. Valores entre 5,51 e 7 englobam a centro-
+-direita. Os de 7,01 a 8,5 foram classificados como de direita. Por fim,
+partidos que pontuaram na média entre 8,51 e 10, foram considerados
+de extrema-direita. Os dois partidos mais à direita do espectro são o
+DEM, que teve ideologia média de 8,57, e o Patriota, com 8,55 – ambos
+ocupando a extrema-direita. Já no extremo oposto temos o PSTU, com
+0,51, e o PCO com 0,61.
+Os partidos de extrema-esquerda (PSTU, PCO e PCB), por sua vez,
+podem ser classificados como antissistema6 (Ribeiro, 2003; Sartori,
+1980). São partidos que têm como único objetivo a propagação de
+ideias políticas e não possuem nenhuma preocupação em amealhar
+votos. Habitualmente militam contra o sistema democrático, propondo
+sua desestruturação por vias que não a eleitoral. Ao passo que se cami-
+nha para o centro da classificação, a introdução de comportamentos
+sistêmicos aparece e a esquerda amplia seu “triângulo” dando mais
+espaço para a persecução de votos e do governo. Tanto PCdoB quanto
+PT se aproximam mais dos partidos programáticos, conforme a posição
+na Figura 1. Ainda que tenham em seu fulcro forte orientação progra-
+mática, parecem dispostos a fazê-lo através da conquista de eleitores
+e da execução de políticas públicas quando ocupam o Estado.
+Já a centro-esquerda se aproxima mais do centro do que da própria
+esquerda. São partidos que parecem não ter clareza de seus objetivos
+e são apontados como portadores de uma poligonal que não aponta
+em nenhum sentido. Com exceção do Rede, os demais partidos de
+centro-esquerda e centro sugerem um comportamento pouco coeso e
+incapaz de, mesmo dentre especialistas, despertar um entendimento
+sobre o que propõem. Talvez o PPS/Cidadania seja entendido como
+uma legenda que prioriza a busca por cargos e posições no governo
+16-31 DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023
+Bruno Bolognesi, Ednaldo Ribeiro e Adriano Codato
+acima da média de seus pares, mas está longe de ter um comporta-
+mento coeso em uma ou duas direções. A centro-direita – grafada em
+azul-claro – é o retrato de partidos preocupados com conseguir votos
+e patronagem, estando sempre no governo seja via eleição, seja via
+patronagem. É uma fatia ideológica que se caracteriza por um domínio
+absoluto de partidos fisiológicos.
+A centro-direita, que se inicia com PTB e acaba com PHS, e a direita,
+que começa com MDB7 e segue até o PSC, apresenta também um
+domínio do fisiologismo, ainda que conte com algumas exceções.
+A primeira é o PSDB, cuja geometria aufere peso razoável para as
+dimensões vote e policy-seeking da classificação. O gráfico tucano, aliás,
+se assemelha ao encontrado em outra pesquisa que utiliza dados de
+comportamento eleitoral para estabelecer os padrões de comporta-
+mento partidário, fazendo uso do mesmo modelo aqui apresentado
+(Rebello, Giora, Pereira, 2020:94). A segunda exceção está no partido
+Novo, que é entendido como uma organização mais preocupada com
+o aspecto programático, colocando-o em paralelo com os partidos
+de esquerda. Por fim, o DEM, de extrema-direita, que apresenta um
+comportamento tido como similar aos partidos de centro-esquerda e
+centro, não tem um objetivo claro no entendimento dos entrevistados.
+O caso do DEM poderia ensejar um partido satélite que sempre esteve
+a serviço do PSDB nos governos e disputas eleitorais (Bolognesi, 2013;
+Carreirão, 2006). Porém, é interessante notar que esse padrão não se
+repete quando a “lua” é de esquerda. O PCdoB, que sempre foi uma
+força auxiliar do PT (Braga, 2007, 2010), não é percebido como um
+partido que busca posições no governo.
+A extrema-direita, ainda que povoada somente por duas legendas,
+inclui em seus objetivos a busca de comportamentos programáticos
+– o que que não é a moda entre seus pares das colorações ideológicas
+vizinhas. Mesmo longe do comportamento da esquerda e da extrema-
+-esquerda, focadas nas políticas, esse é um elemento consistente em
+partidos que têm posições polarizadas, apresentando ideologia mani-
+festa tanto no Patriota, quanto no DEM.
+Apenas como critério comparativo, o trabalho de Rebello, Giora e
+Pereira (2020:92) utiliza a tríade policy, office e vote-seeking e estabelece
+os objetivos de alguns partidos políticos a partir de seu comportamento
+em eleições estaduais. De modo semelhante ao que encontramos aqui
+sobre a percepção dos cientistas políticos sobre esse comportamento,
+DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023 17-31
+Uma Nova Classificação Ideológica dos Partidos Políticos Brasileiros
+os autores mostram que a maioria dos partidos analisados prioriza
+ocupar cargos em governos e Estados – é o caso de PSDB, PDT, DEM,
+PSB e Progressistas. O MDB atua de forma diversa e não prioriza
+nenhum objetivo específico, enquanto o PT é o único partido que coloca
+a dimensão policy na frente das outras.
+Entretanto, as posições dos partidos políticos se alteram ao longo do
+tempo. O Patriota, por exemplo, um partido sem muita expressão
+que até então se chamava Partido Ecológico Nacional (PEN) e ope-
+rava como o braço político de igrejas evangélicas neopentecostais
+(Cassotta, 2016), ganha destaque quando muda seu nome em 2018,
+objetivando abrigar a candidatura do atual presidente da República.
+Isso pode, com efeito, tê-lo colocado na extrema direita – em vez de
+no fisiologismo esperado.
+Para observar o movimento dessas mudanças, comparamos nossa
+classificação à produzida por Tarouco e Madeira (2015), também con-
+sultando a comunidade de especialistas da Ciência Política. Há, é claro,
+muitas outras classificações e formas de mensuração da ideologia par-
+tidária, como afirmamos acima. Contudo, preservar a comunidade
+de respondentes – ainda que este não seja um estudo de painel – nos
+parece ser um critério importante para ganharmos em controle na
+comparação (Harmel, Janda, 1978; Ragin, 1987; Sartori, 1991).8
+O primeiro dado que merece destaque é a tendência centrífuga à direita
+do sistema partidário. O Gráfico 2 aponta nessa direção entre 2010 –
+quando a primeira pesquisa com os associados da ABCP foi realizada
+– para 2018. Mais partidos passaram a ocupar a posição da direita
+e, ainda, mais partidos passaram a ter posições mais extremadas. A
+esquerda, por outro lado, não cresce em tamanho, mas tem suas posi-
+ções aprofundadas, com exceção do PT.
+A hipótese para esse fenômeno reside justamente na centralidade do
+PT para a compreensão e classificação de seus pares. A imutabilidade
+do partido após duas rodadas de classificação, duas eleições (2010 e
+2014) disputadas e um episódio importante na história do partido – o
+impeachment de Dilma Rousseff em abril de 2016 – pode ser inter-
+pretada como a solidez da legenda como referência para estabelecer
+a posição dos demais partidos. O PT serve como baliza ideológica
+para que os cientistas políticos brasileiros apresentem sua visão de
+mundo sobre os partidos políticos brasileiros – o que já foi observado
+18-31 DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023
+Bruno Bolognesi, Ednaldo Ribeiro e Adriano Codato
+em outros países –, sugerindo que os grandes partidos que possuem
+saliência programática tendem a servir de referência para estruturar
+a percepção dos demais (Mair, 2001:12-13).
+Gráfico 2
+Comparação do posicionamento ideológico em 2010 e em 2018
+Fonte: survey ABCP/UFPR e Tarouco e Madeira (2015)
+Outro partido que apresenta pouca mudança é o PSOL. Ainda que seja
+mais jovem que o PT, ele também parece servir de referência para o
+posicionamento dos demais. É interessante que, em ambas as classifi-
+cações, o PCdoB – agremiação satélite do PT – é o que se coloca entre
+PT e PSOL. Num primeiro momento mais próximo ao PT, quando este
+governava o país e o PCdoB fazia parte da sustentação de governo, e
+agora, em 2018, mais afastado, numa tendência de distanciamento e
+diferenciação geral das organizações de esquerda em relação ao PT.
+É a partir desse último também que a tendência centrífuga à direita
+ganha corpo. Sem nenhuma exceção, todos os partidos classificados à
+direita do PT têm suas posições aprofundadas no sentido oposto dele.
+Mesmo partidos ora próximos, como o Partido Socialista Brasileiro
+(PSB), que comungava quase do mesmo ponto médio petista em 2010,
+caminham incisivamente para a direita.
+DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023 19-31
+Uma Nova Classificação Ideológica dos Partidos Políticos Brasileiros
+Como afirmamos na introdução, as mudanças na classificação dos par-
+tidos podem ser também produto de rearranjo do sistema partidário.
+A crescente de partidos tende a promover uma corrida do centro em
+relação às franjas, onde os especialistas tentam ocupar toda a reta. Mair
+(2001) sugere que a fragmentação pode levar à polarização, de modo
+que o centro da reta é menos ocupado do que os polos. Contudo, o
+que vemos aqui é uma fragmentação que não polariza propriamente,
+mas apenas dificulta o posicionamento dos partidos de centro-direita
+e direita. Essa é uma das possíveis interpretações para a tendência cen-
+trífuga apontada no Gráfico 2, já que, de 2010 para 2018, nada menos
+do que dez partidos foram acrescidos ao levantamento, em sua maio-
+ria ocupando posições à direita do espectro. Por fim, a classificação
+é realizada a partir de julgamentos individuais que podem levar em
+conta diferentes dimensões (comportamento legislativo, proposição de
+políticas públicas, comportamento eleitoral, opinião pública etc.) para
+posicionar os partidos. Isso é especialmente sensível no caso de espe-
+cialistas, na medida em que suas formações os treinam no sentido de
+compreender um fenômeno – ou um partido – como uma organização
+complexa e de desprender sua avaliação de experiências particulares
+(Tarouco, Madeira, 2015:26).
+Além disso, há outro problema fundamental relativo à dinâmica par-
+tidária em si. Os partidos políticos não são organizações congeladas
+no tempo. As percepções sobre os partidos se alteram conforme eles
+passam por governos, assumem posições públicas, apoiam determina-
+das personalidades e adequam seus programas para disputa eleitoral
+(Wills-Otero, 2016). Isso também pode afetar a percepção dos analistas
+sobre as colorações ideológicas das agremiações ao longo do tempo,
+portanto. Esse problema esteve ligado à relação que os partidos da
+Europa Ocidental teriam com seus eleitores e com a imagem proje-
+tada na opinião pública. A história dos partidos, principalmente sua
+origem, torna-se uma dimensão basilar para sua classificação ideoló-
+gica por especialistas na Europa, que tendem a encontrar nas famílias
+partidárias (Mair, Mudde, 1998) as respostas mais precisas para seu
+posicionamento espacial (Kligemann et al., 2006). No Brasil, essa talvez
+possa ser a resposta para a imutabilidade posicional do PT, um partido
+com origem e história capazes de diferenciá-lo na fauna partidária
+(Amaral, Power, 2016). Entretanto, ocorre exatamente o oposto com o
+restante do sistema partidário, em que os laços históricos são fluídos
+e inconstantes (Carreirão, 2014).
+20-31 DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023
+Bruno Bolognesi, Ednaldo Ribeiro e Adriano Codato
+CONCLUSÃO
+De forma descritiva, o trabalho tenta apresentar uma classificação atua-
+lizada da constelação partidária brasileira. Nem a técnica e tampouco
+o objeto são novidade. O que conseguimos trazer para o interessado
+no debate sobre partidos políticos e suas posições programáticas é
+um apanhado completo do sistema partidário e uma classificação que
+tenta ir além da díade esquerda-direita.
+Quando incluímos todos os partidos políticos na pesquisa, podemos
+listar alguns ganhos e perdas. O primeiro ganho é termos uma clas-
+sificação de todo o sistema partidário brasileiro sem que seja preciso
+apelar para procedimentos de baixa validade, como a análise de mani-
+festos ou de coligações. Partidos pequenos e não ideológicos pululam
+em nossa democracia, ou seja, tendem a ter programas vazios e com-
+portamento eleitoral pragmático – o que dificulta sua classificação.
+Ao pedir para que especialistas os classifiquem, mesmo que através
+da comparação e oposição aos partidos programáticos, ganhamos
+compreensão sobre a forma como o sistema representativo se organiza.
+Por outro lado, adicionar os objetivos dos partidos políticos aponta de
+que modo a classificação ideológica é mais saliente para algumas cate-
+gorias do que para outras. Notadamente as agremiações de esquerda
+e extrema-esquerda têm o programatismo saliente, enquanto centro,
+centro-direita e direita estão mais associadas com partidos fisiológicos
+e catch-all (Wolinetz, 1991).
+Cabe acrescentar que, ao comparar os dados com classificações ante-
+riores, conseguimos notar movimentos gerais do conjunto de partidos.
+No caso, observamos uma tendência centrífuga que moveu a maioria
+das legendas para a direita, com algumas exceções que estavam à
+esquerda do PT na primeira onda. Esse movimento foi observado
+também quando analisamos os partidos a partir de seus legisladores
+(Zucco, Power, 2021). Nossa interpretação está ligada tanto ao impe-
+dimento de uma presidente do PT em 2016, que deslocou partidos
+aliados e centristas para a oposição ao petismo, quanto à ascensão da
+extrema-direita, que encolheu o espaço da direita e da centro-direita.
+(Recebido para publicação em 6 de julho de 2021)
+(Aprovado para publicação em 16 de janeiro de 2022)
+DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023 21-31
+Uma Nova Classificação Ideológica dos Partidos Políticos Brasileiros
+NOTAS
+1. Esta pesquisa não seria possível sem a colaboração da Associação Brasileira de Ciência
+Política (ABCP), que nos cedeu gentilmente a lista de cadastro de seus filiados dispostos
+a colaborar com o levantamento de dados para fins científicos, sem o qual o acesso aos
+respondentes não seria possível. Agradecemos também a Ana Paula Maciel pelo apoio
+na coleta de dados, a Gabriela Tarouco, André Castro, Maria Cecília Eduardo e Simone
+Dourado pela colaboração no pré-teste do questionário, fornecendo importante feedback
+para a melhora do instrumento. Foram contatados apenas os cientistas políticos associa-
+dos que permitiram em sua ficha junto à associação o uso de suas informações cadastrais
+para fins acadêmicos e científicos. Adicionalmente, os respondentes manifestaram seu
+consentimento com a pesquisa através de uma pergunta filtro em que poderiam optar
+ou não por preencher o questionário. Além disso, nenhuma identificação pessoal foi
+armazenada ou publicizada, de modo que zelamos pela garantia do anonimato de quem
+colaborou com a pesquisa.
+2. Sobre classificações baseadas em comportamento político, ver a revisão de Benoit e
+Laver (2006) e a forma como os manifestos podem apresentar problemas na análise de
+Franzmann e Kaiser (2006).
+3. PSTU – Partido Socialista dos Trabalhadores Unificado, PCO – Partido da Causa Ope-
+rária, PCB – Partido Comunista Brasileiro, PSOL – Partido Socialismo e Liberdade,
+PCdoB – Partido Comunista do Brasil, PT – Partido dos Trabalhadores, PDT – Partido
+Democrático Trabalhista, PSB – Partido Socialista Brasileiro, Rede – Rede Sustentabili-
+dade, PPS – Partido Popular Socialista, PV – Partido Verde, PTB – Partido Trabalhista
+Brasileiro, SDD – Solidariedade, PMN – Partido da Mobilização Nacional, PMB – Partido
+da Mulher Brasileira, PHS – Partido Humanista da Solidariedade, MDB – Movimento
+Democrático Brasileiro, PSD – Partido Social Democrático, PSDB – Partido da Social
+Democracia Brasileira, PPL – Partido Pátria Livre, PRTB – Partido Renovador Trabalhista
+Brasileiro, PROS – Partido Republicano da Ordem Social, PRP – Partido Republicano
+Progressista, PR – Partido da República, PTC – Partido Trabalhista Cristão, DC – Demo-
+cracia Cristã, PSL – Partido Social Liberal, Partido Social Cristão, DEM – Democratas.
+4. O termo “partidos fisiológicos” não é um conceito comumente usado na literatura par-
+tidária internacional. O mais comum é que se use “partidos personalistas” ou “partidos
+clientelistas”. Ambas as definições, porém, não parecem ter o mesmo sentido do fisiolo-
+gismo brasileiro, em que os candidatos e eleitos são atributos dos partidos – em vez de
+o partido ser um atributo do candidato. O partido opera a reboque de seus membros,
+que mantêm práticas paroquiais de conexão eleitoral centradas no indivíduo e qualun-
+quismo no legislativo. Difere assim do partido personalista, que é calcado na figura de
+um líder carismático, e do clientelista, que se sustenta na rede de clientelismo formada
+por notáveis locais e coordenada pelo partido centralizado, mas possui posição na arena
+governamental (Singer, Kitschelt, 2011).
+5. Incorporado pelo PCdoB em 2018.
+6. Wolinetz atribui a posição dos partidos antissistema aos partidos de “integração de mas-
+sa”, termo cunhado por Neumann (1955) para descrever o mesmo modelo encontrado
+por Duverger (1980) de partido de massa. A ideia central é a mesma: partidos que estão
+mais preocupados com a militância política do que com disputar eleições.
+22-31 DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023
+Bruno Bolognesi, Ednaldo Ribeiro e Adriano Codato
+7. O (P)MDB se encontra na posição ideológica de centro na maioria dos trabalhos que
+se prestam ao tema. Recentemente tem-se observado uma realocação do partido numa
+posição mais à direita, principalmente após a posição do partido frente ao impeachment
+da então presidente da República, Dilma Rousseff (PT). O primeiro dado que temos com
+o MDB à direita está em Power e Rodrigues-Silveira (2019), que mobilizam o método de
+posicionamento a partir de parlamentares. O primeiro autor do presente texto fez crítica
+a essa posição em Bolognesi et. al. (2020), mas o acúmulo das rodadas de classificação
+ideológica parece mostrar um acerto.
+8. Para prosseguir com a comparação, normalizamos os valores na escala 0 a 10.
+DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023 23-31
+Uma Nova Classificação Ideológica dos Partidos Políticos Brasileiros
+REFERÊNCIAS
+Amaral, Oswaldo Estanislau do; Power, Timothy J. (2016), “The PT at 35: Revisiting Schol-
+arly Interpretations of the Brazilian Workers’ Party”. Journal of Latin American Studies,
+v. 48, n. 1, pp. 147-171.
+Ames, Barry. (2003), Os entraves da democracia no Brasil. Rio de Janeiro, FGV.
+Arce, Moisés. (2010), “Parties and Social Protest in Latin America’s Neoliberal Era”.
+Party Politics, v. 16, n. 5, pp. 669-686. Disponível em: http://ppq.sagepub.com/cgi/
+doi/10.1177/1354068809346005
+Babireski, Flávia. (2014), “As Diferenças Entre a direita do Brasil, Chile e Uruguai: Análise
+dos Programas e Manifestos Partidários. Paraná Eleitoral, v. 3, n. 1, pp. 171-198.
+Benoit, Kenneth; Laver, Michael. (2006), Party Policy in Modern Democracies. London, Routledge.
+Bobbio, Norberto. (1995), Direita e esquerda: razões e significados de uma distinção política. São
+Paulo, Editora UNESP.
+Bolleyer, Nicole. (2013), New Parties in Old Party Systems: Persistence and Decline in Seventeen
+Democracies. Oxford, Oxford University Press.
+Bolognesi, Bruno. (2013), “A Seleção de Candidaturas no DEM, PMDB, PSDB e PT nas
+Eleições Legislativas Federais Brasileiras de 2010: Percepções dos Candidatos Sobre a
+Formação das Listas”. Revista de Sociologia e Política, v. 21, n. 46, pp. 45-68.
+Bolognesi, Bruno; Graça, Luis Felipe Guedes da; Bonifácio, Robert; Nunes, Wellington.
+(2020), “Resenha de Routledge Handbook of Brazilian Politics”. Brazilian Political Science
+Review, v. 14, n. 1, pp. 1-17.
+Botelho, João Carlos Amoroso. (2018), “Da Perda de Legitimidade à Polarização: Os Partidos e
+os Sistemas Partidários de Argentina e Venezuela”. Cadernos CRH, v. 31, n. 83, p. 407-426.
+Braga, Maria do Socorro Sousa. (2010), Eleições e Democracia no Brasil: a Caminho de
+Partidos e Sistemas Partidários Institucionalizados. Revista Brasileira de Ciência Política,
+n. 4, p. 43-73.
+Braga, Maria do Socorro Sousa. (2007), “O Processo Político-partidário Brasileiro e as Eleições
+de 2006”. Política & Sociedade, v. 6, n. 10, pp. 53-89.
+Carreirão, Yan de Souza. (2006), “Ideologia e Partidos Políticos: Um Estudo sobre Coligações
+em Santa Catarina”. Opinião Pública, v. 12, n. 1, pp. 136-163.
+Carreirão, Yan de Souza. (2014), “O Sistema Partidário Brasileiro: Um Debate com a Literatura
+Recente”. Revista Brasileira de Ciência Política, n. 14, pp. 255-295.
+Cassotta, Priscilla Leine. (2016), “Uma Análise do Comportamento dos Deputados Evangé-
+licos no Legislativo Brasileiro”. E-Legis, v. 9, n. 20, pp. 75-101.
+Dantas, Humberto; Praça, Sérgio. (2010), “Pequenos Partidos no Brasil: Uma Análise do Posi-
+cionamento Ideológico com Base nas Coligações Municipais de 2000 a 2008”, in Krause,
+S.; Dantas, H.; Miguel, L. (orgs.). Coligações partidárias na nova democracia brasileira: perfis e
+tendências. Rio de Janeiro; São Paulo, Konrad-Adenauer-Stiftung; Ed. Enesp, pp. 99-133.
+24-31 DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023
+Bruno Bolognesi, Ednaldo Ribeiro e Adriano Codato
+Desposato, Scott W. (2006), “Parties for Rent? Ambition, Ideology, and Party Switching in
+Brazil’s Chamber of Deputies”. American Journal of Political Science, v. 50, n. 1, pp. 62–80.
+Disponível em: http://doi.wiley.com/10.1111/j.1540-5907.2006.00170.x
+Dias, Marcia Ribeiro; Menezes, Daiane Boelhouwer; Ferreira, Geison da Cunha. (2012),
+“‘A Quem Serve o Graal?’ Um Estudo Sobre a Classificação Ideológica dos Partidos
+Políticos Através de Seus Projetos de Lei”. Civitas – Revista de Ciências Sociais, v. 12,
+n. 2, pp. 209-235.
+Downs, Anthony. (1999), Um teoria econômica da democracia. São Paulo, Edusp.
+Epstein, David. J. (2009), “Clientelism Versus Ideology: Problems of Party Development in
+Brazil”. Party Politics, v. 15, n. 3, pp. 335-355.
+Figueiredo, Argelina; Limongi, Fernando. (2000), “Presidential Power, Legislative Organiza-
+tion, and Party Behavior in Brazil”. Comparative Politics, v. 32, n. 2, pp. 151-170.
+Franzmann, Scott; Kaiser, André. (2006), “Locating Political Parties in Policy Space: A Re-
+analysis of Party Manifesto Data”. Party Politics, v. 12, n. 2, pp. 163-188.
+Harmel, Robert; Janda, Kenneth. (1978), Comparing Political Parties. Washington, The Ameri-
+can Political Science Association.
+Janda, Kenneth; Colman, Tyler. (1998), “Effects of Party Organization on Performance During
+the ‘Golden Age’ of Parties”. Political Studies, v. 46, n. 3, pp. 611-632.
+King, Gary; Murray, Christopher; Solomon, Joshua; Tandon, Ajay. (2004), “Enhancing the
+Validity and Measurement in Survey Research”. American Political Science Review, v. 98,
+n. 1, pp. 191-297.
+Kinzo, Maria D’ Alva Gil. (1988), Oposição e autoritarismo: gênese e trajetória do MDB (1966-
+1979). São Paulo, Vértice.
+Kligemann, Hans-Dieter; Volkens, Andrea; Bara, Judith; Budge, Ian. (2006), Mapping Policy
+Preferences II: Estimates for Parties, Electors, and Governments in Eastern Europe, European
+Union and OECD 1990-2003. Oxford: Oxford University Press.
+Laver, Michael. (2001), “Why Should We Estimate the Policy Positions of Political Actors?”,
+in Laver, Michael (ed.). Estimating the Policy Position of Political Actors. New York, Rout-
+ledge, pp. 3-9.
+Mainwaring, Scott. (1993), “Democracia Presidencialista Multipartidária: O Caso do Brasil.
+Lua Nova: Revista de Cultura e Política, n. 28-29, pp. 21-74.
+Mair, Peter. (2001), “Searching for the Positions of Political Actors: A Review of Approaches
+and a Critical Evaluation of Expert Surveys”, in Laver, Michael (ed.). Estimating the Policy
+Position of Political Actors. New York: Routledge, p. 10–30.
+Mair, Peter; Mudde, Cas. (1998), “The Party Family and Its Study”. Annual Review of Political
+Science, v. 1, n. 1, p. 211–228.
+Melo, Carlos Ranulfo. (2015), “Avaliando Vínculos Entre Partidos e Deputados nas As-
+sembleias Legislativas Brasileiras”. Opinião Pública, v. 21, n. 2, pp. 365-392. Disponível em:
+http://www.scielo.br/scielo.php?script=sci_arttext&pid=S0104-62762015000200365&ln
+g=pt&nrm=iso&tlng=en
+DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023 25-31
+Uma Nova Classificação Ideológica dos Partidos Políticos Brasileiros
+Müller, Wolfgang C.; Strøm, Kaare. (1999), Policy, Office, or Votes? How Political Parties in
+Western Europe Make Hard Decisions. Cambridge, Cambridge University Press.
+Neumann, Sigmund. (1955), Modern Political Parties. Chicago, University of Chicago Press.
+Pereira, Carlos; Mueller, Bernardo. (2003), “Partidos Fracos na Arena Eleitoral e Partidos
+Fortes na Arena Legislativa: A Conexão Eleitoral no Brasil”. Dados, v. 46, n. 4, pp. 735-771.
+Disponível em: http://www.scielo.br/pdf/dados/v46n4/a04v46n4.pdf
+Power, Timothy J.; Rodrigues-Silveira, Rodrigo. (2019), “The Political Right and Party Poli-
+tics”, in Ames, B. Routledge Handbook of Brazilian Politics. New York, Routledge.
+Power, Timothy J.; Zucco JR. (2009), Cesar. “Estimating Ideology of Brazilian Legislative
+Parties, 1990–2005”. Latin American Research Review, v. 44, n. 1, pp. 218-246.
+Ragin, Charles C. (1987), The Comparative Method. Moving Beyond Qualitative and Quantitative
+Strategies. Berkley: University of California Press.
+Rebello, Maurício Michel; Giora, Gustavo; Pereira, Matheus Henrique Gomes. (2020),
+“Os Objetivos dos Partidos no Brasil (1982-2018): Construindo o IOP”. Revista De-
+bates, v. 14, n. 3, pp. 70-98.
+Ribeiro, Pedro Floriano. (2003), “O PT Sob uma Perspectiva Sartoriana: de Partido Anti-
+Sistema a Legitimador do Sistema”. Política & Sociedade, n. 3, pp. 45-70.
+Rodrigues, Leôncio Martins. (2002), “Partidos, ideologia e Composição Social: Um Estudo
+das Bancadas Partidárias na Câmara dos Deputados”. São Paulo, Edusp.
+Rose, Richard. (1984), Do Parties Make a Difference? London; Basingstoke, The Macmillan Press.
+Samuels, David J. (1999), “Incentives to Cultivate a Party Vote in Candidate-centric Electoral
+Systems: Evidence from Brazil”. Comparative Political Studies, v. 32, n. 4, pp. 487-518.
+Sartori, Giovanni. (1991), “Comparing and Miscomparing”. Journal of Theoretical Politics, n. 3,
+pp. 243–257.
+Sartori, Giovanni. (1980), Partidos y sistemas de partidos. Madrid, Alianza Editorial.
+Scarrow, Susan E. (1996), Parties and Their Members. Oxford, Oxford University Press.
+Scheeffer, Fernando. (2016), Ideologia e comportamento parlamentar na Câmara dos Deputados:
+faz sentido ainda falar em esquerda e direita? Tese de Doutorado em Sociologia Política,
+Universidade Federal de Santa Catarina, Florianópolis, Brasil.
+Singer, Matthew; Kitschelt, Herbert. (2011), “ ‘Do Everything’ (DoE) Parties: When Can Poli-
+ticians Combine Clientelistic and Programmatic Appeals?”, in Workshop on Democratic
+Accountability Strategies, Durham, pp. 1-31.
+Smith, Claire M. (2004), “Money to Burn: Party Finance and Party Organization in Germany
+and Austria, in Midwest Political Science Association, Ohio, pp. 1-46.
+Strøm, Kaare. (1990), “A Behavioral Theory of Competitive Political Parties”. American Journal
+of Political Science, v. 34, n. 2, pp. 565-598.
+Tarouco, Gabriela da Silva; Madeira, Rafael Machado. (2015), “Os Partidos Brasileiros Se-
+gundo Seus Estudiosos: Análise de um Expert Survey”. Civitas, v. 15, n. 1, pp. 24-39.
+26-31 DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023
+Bruno Bolognesi, Ednaldo Ribeiro e Adriano Codato
+Tarouco, Gabriela da Silva; Madeira, Rafael Machado. (2013a), “Partidos, Programas e o
+Debate Sobre Esquerda e Direita no Brasil. Revista de Sociologia e Política, v. 21, n. 45,
+pp. 149-165.
+Tarouco, Gabriela da Silva; Madeira, Rafael Machado. (2013b), “Esquerda e Direita no Sistema
+Partidário Brasileiro: Análise de Conteúdo de Documentos Programáticos”. Revista
+Debates, v. 7, n. 2, pp. 93-114.
+Van Biezen, Ingrid; Mair, Peter; Poguntke, Thomas. (2012), “Going, Going, . . . Gone? The
+Decline of Party Membership in Contemporary Europe”. European Journal of Political
+Research, v. 51, n. 1, pp. 24-56.
+Wiesehomeier, Nina; Benoit, Kenneth. (2007), Parties and Presidents in Latin America: Data from
+Expert Surveys in 18 Latin American Countries, 2006-2007. Konstanz; Dublin: University
+of Konstanz, Trinity College Dublin.
+Wills-Otero, Laura. (2016), “The Electoral Performance of Latin American Traditional Parties,
+1978–2006: Does the Internal Structure Matter?”. Party Politics, v. 22, n. 6, pp. 758-772.
+Wolinetz, Steven B. (2002), “Beyond the Catch-All Party: Approaches to the Study of Parties
+and Party Organization in Contemporary Democracies”, in Ghunter, R.; Montero, J.;
+Linz, J. (eds.). Political Parties: Old Concepts, New Challenges. Oxford, Oxford University
+Press, pp. 136-165.
+Wolinetz, Steven B. (1991), “Party System Change : The Catch-all Thesis Revisited. West
+European Politics, v. 14, n. 1, pp. 113-128.
+Zucco Jr., Cesar; Power, Timothy J. (2021), “Fragmentation Without Cleavages? Endogenous
+Fractionalization in the Brazilian Party System”. Comparative Politics, v. 53, n. 3, pp. 477-500.
+Zucco Jr., Cesar. (2011), “Esquerda, Direita e Governo: A Ideologia dos Partidos Políticos
+Brasileiros”, in Power, T.; Zucco, Cesar (orgs.). O Congresso por ele mesmo: autopercepçoes
+da classe política brasileira. Belo Horizonte, UFMG, pp. 37-60.
+DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023 27-31
+Uma Nova Classificação Ideológica dos Partidos Políticos Brasileiros
+RESUMO
+Uma Nova Classificação Ideológica dos Partidos Políticos Brasileiros
+Assim como a política democrática se modifica, a percepção sobre os partidos que
+ela compõe também se altera. O objetivo desse trabalho é oferecer uma classifi-
+cação ideológica nova e atualizada dos partidos políticos brasileiros. Através de
+um survey aplicado à comunidade de cientistas políticos em 2018, pedimos que
+classificassem os partidos na dimensão esquerda-direita e também quanto ao seu
+principal objetivo: a persecução de votos, de posições de governo ou de políticas.
+Os resultados apontam para um movimento centrífugo do sistema partidário, com
+a maioria dos partidos caminhando para a direita, e para o predomínio de partidos
+que podem ser classificados como fisiológicos, priorizando a díade votos-cargos
+e desprezando a programaticidade.
+Palavras-chave: partidos políticos; ideologia política; survey; modelos de partido;
+eleições
+ABSTRACT
+A New Ideological Classification of Brazilian Political Parties
+Just as democratic politics changes, so does the perception about the parties out of
+which it is composed. This paper’s main purpose is to provide a new and upda-
+ted ideological classification of Brazilian political parties. To do so, we applied a
+survey to political scientists in 2018, asking them to position each party on a left-
+-right continuum and, additionally, to indicate their major goal: to pursue votes,
+government offices, or policy issues. Our findings indicate a centrifugal force
+acting upon the party system, pushing most parties to the right. Furthermore, we
+show a prevalence of patronage and clientelistic parties, which emphasize votes
+and offices rather than policy.
+Keywords: political parties; political ideology; survey; party models; elections
+28-31 DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023
+Bruno Bolognesi, Ednaldo Ribeiro e Adriano Codato
+RÉSUMÉ
+Une Nouvelle Classification Idéologique des Partis Politiques Brésiliens
+À mesure que la politique démocratique change, la perception des partis qu’elle
+compose change également. L’objectif de ce travail est d’offrir une classification
+idéologique nouvelle et actualisée des partis politiques brésiliens. À travers une
+enquête appliquée à la communauté des politologues en 2018, nous leur avons
+demandé de classer les partis dans la dimension gauche-droite et aussi en fonction
+de leur objectif principal : la poursuite des votes, des positions gouvernementales
+ou politiques. Les résultats indiquent un mouvement centrifuge du système de
+partis, avec une majorité de partis vers la droite, et la prédominance de partis
+que l’on peut qualifier de physiologiques, privilégiant la dyade votes-positions
+et faisant fi de la programmaticité.
+Mots-Clés: partis politiques ; opinions politiques; survey; modèles de parti; élections
+RESUMEN
+Una Nueva Clasificación Ideológica de los Partidos Políticos Brasileños
+A medida que la política democrática cambia, también lo hace la percepción de
+los partidos que la componen. El objetivo de este trabajo es ofrecer una nueva y
+actualizada clasificación ideológica de los partidos políticos brasileños. A través
+de una encuesta aplicada a la comunidad de politólogos en 2018, les pedimos que
+clasificaran a los partidos en la dimensión izquierda-derecha y también en cuanto
+a su objetivo principal: la búsqueda de votos, posiciones de gobierno o políticas.
+Los resultados apuntan a un movimiento centrífugo del sistema de partidos, con
+la mayoría de los partidos moviéndose hacia la derecha, y al predominio de los
+partidos que se pueden clasificar como fisiológicos, priorizando la díada voto-
+-posición y despreciando la programática.
+Palabras-clave: partidos políticos; ideología política; encuesta; modelos de
+partidos; elecciones
+DADOS, Rio de Janeiro, vol.66 (2): e20210164, 2023 29-31
+Uma Nova Classificação Ideológica dos Partidos Políticos Brasileiros
+ERRATA
+No artigo “Uma Nova Classificação Ideológica dos Partidos Políticos Brasileiros”, com número de DOI: 10.1590/
+dados.2023.66.2.303, publicado no periódico DADOS – Revista de Ciências Sociais, 66(2):1-29, na página 14:
+ONDE SE LIA:
+Figura 2
+Classificação dos partidos políticos brasileiros em policy, office ou vote-seeking em 2018 (cont.)
+Fonte: Elaboração própria, com base no survey UFPR/ABCP.
+30-31 DADOS, Rio de Janeiro, vol.67 (2): e20210164E, 2024
+https://doi.org/10.1590/dados.2023.66.2.303e
+Bruno Bolognesi, Ednaldo Ribeiro e Adriano Codato
+LEIA-SE:
+Figura 2
+Classificação dos partidos políticos brasileiros em policy, office ou vote-seeking em 2018 (cont.)
+Fonte: Elaboração própria, com base no survey UFPR/ABCP.
+DADOS, Rio de Janeiro, vol.67 (2): e20210164E, 2024 31-31

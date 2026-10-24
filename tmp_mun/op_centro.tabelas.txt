@@ -1,0 +1,48 @@
+--- pág 12
+Partido |  | 2018 |  | 2022
+(média) |  |  | NR |  |  | NR |  |  | CV |  |  | CV |  |  | Média |  |  | Ideologia | 
+None | None | (média) | None | None | None | None | 2018 | None | None | 2022 | None | None | 2018 | None | None | 2022 | None | None | ponderada | None | None | categórica | None
+None | 0.51 | None | None | 0.51 | None | 5 | None | None | 63 | None | None | 2.2157 | None | None | 2.098 | None | None | 0,525 | None | None | None | None | None
+None | 0.61 | None | None | 0.55 | None | 10 | None | None | 68 | None | None | 1.9508 | None | None | 2.2909 | None | None | 0,566 | None | None | None | None | None
+None | 0.91 | None | None | 0.69 | None | 7 | None | None | 64 | None | None | 1.3956 | None | None | 1.6957 | None | None | 0,711 | None | None | None | None | None
+None | 1.28 | None | None | 1.41 | None | 6 | None | None | 62 | None | None | 0.9297 | None | None | 0.8085 | None | None | 1,453 | None | None | None | None | None
+None |  | None | None | 1.63 | None |  | None | None | 130 | None | None |  | None | None | 1.5031 | None | None | 1,679 | None | None | None | None | None
+None | 4.60 | None | None | 1.78 | None | 30 | None | None | 63 | None | None | 0.5749 | None | None | 0.7022 | None | None | 1,834 | None | None | None | None | None
+None | 2.97 | None | None | 2.68 | None | 15 | None | None | 70 | None | None | 0.4512 | None | None | 0.4254 | None | None | 2,761 | None | None | None | None | None
+None | 4.05 | None | None | 3.59 | None | 51 | None | None | 106 | None | None | 0.3926 | None | None | 0.376 | None | None | 3,699 | None | None | None | None | None
+None | 4.77 | None | None | 3.69 | None | 68 | None | None | 120 | None | None | 0.3606 | None | None | 0.3957 | None | None | 3,802 | None | None | None | None | None
+None | 3.93 | None | None | 3.86 | None | 36 | None | None | 108 | None | None | 0.3791 | None | None | 0.3705 | None | None | 3,977 | None | None | None | None | None
+None | 5.29 | None | None | 4.12 | None | 84 | None | None | 173 | None | None | 0.3384 | None | None | 0.3811 | None | None | 4,245 | None | None | None | None | None
+None | 6.50 | None | None | 6.01 | None | 50 | None | None | 164 | None | None | 0.3046 | None | None | 0.3111 | None | None | 6,193 | None | None | None | None | None
+None | 4.93 | None | None | 6.17 | None | 47 | None | None | 159 | None | None | 0.4787 | None | None | 0.3047 | None | None | 6,358 | None | None | None | None | None
+None | 6.32 | None | None | 6.47 | None | 68 | None | None | 148 | None | None | 0.3592 | None | None | 0.3029 | None | None | 6,667 | None | None | None | None | None
+None | 7.02 | None | None | 6.50 | None | 66 | None | None | 98 | None | None | 0.2365 | None | None | 0.2292 | None | None | 6,698 | None | None | None | None | None
+None | 6.88 | None | None | 6.74 | None | 75 | None | None | 168 | None | None | 0.3052 | None | None | 0.3323 | None | None | 6,945 | None | None | None | None | None
+None | 7.11 | None | None | 6.76 | None | 23 | None | None | 118 | None | None | 0.2377 | None | None | 0.2115 | None | None | 6,966 | None | None | None | None | None
+None | 7.09 | None | None | 6.94 | None | 40 | None | None | 128 | None | None | 0.2426 | None | None | 0.2291 | None | None | 7,151 | None | None | None | None | None
+None | 6.90 | None | None | 7.29 | None | 88 | None | None | 153 | None | None | 0.2942 | None | None | 0.2647 | None | None | 7,512 | None | None | None | None | None
+None | 7.10 | None | None | 7.44 | None | 63 | None | None | 100 | None | None | 0.2609 | None | None | 0.2003 | None | None | 7,666 | None | None | None | None | None
+None | 7.47 | None | None | 7.45 | None | 47 | None | None | 131 | None | None | 0.245 | None | None | 0.255 | None | None | 7,677 | None | None | None | None | None
+--- pág 13
+Partido |  | 2018 |  |  | 2022 |  |  | NR |  |  | NR |  |  | CV |  |  | CV |  |  | Média |  |  | Ideologia | 
+None | None | (média) | None | None | (média) | None | None | 2018 | None | None | 2022 | None | None | 2018 | None | None | 2022 | None | None | ponderada | None | None | categórica | None
+None | 7.45 | None | None | 7.49 | None | None | 57 | None | None | 140 | None | None | 0.2658 | None | None | 0.283 | None | None | 7,718 | None | None | None | None | None
+None | 7.86 | None | None | 7.55 | None | None | 39 | None | None | 149 | None | None | 0.2099 | None | None | 0.2278 | None | None | 7,780 | None | None | None | None | None
+None | 6.10 | None | None | 7.72 | None | None | 38 | None | None | 88 | None | None | 0.3574 | None | None | 0.3044 | None | None | 7,955 | None | None | None | None | None
+None | 8.20 | None | None | 8.15 | None | None | 23 | None | None | 73 | None | None | 0.1866 | None | None | 0.1767 | None | None | 8,398 | None | None | None | None | None
+None | 8.11 | None | None | 8.21 | None | None | 16 | None | None | 83 | None | None | 0.1911 | None | None | 0.1766 | None | None | 8,460 | None | None | None | None | None
+None | 7.78 | None | None | 8.33 | None | None | 24 | None | None | 79 | None | None | 0.1902 | None | None | 0.1573 | None | None | 8,584 | None | None | None | None | None
+None | 8.33 | None | None | 8.41 | None | None | 14 | None | None | 74 | None | None | 0.1825 | None | None | 0.1546 | None | None | 8,666 | None | None | None | None | None
+None | 8.34 | None | None | 8.49 | None | None | 19 | None | None | 64 | None | None | 0.1859 | None | None | 0.1614 | None | None | 8,749 | None | None | None | None | None
+None | 8.08 | None | None | 8.60 | None | None | 38 | None | None | 80 | None | None | 0.1963 | None | None | 0.157 | None | None | 8,862 | None | None | None | None | None
+None | 8.13 | None | None | 8.67 | None | None | 45 | None | None | 77 | None | None | 0.2116 | None | None | 0.158 | None | None | 8,934 | None | None | None | None | None
+None | 7.78 | None | None | 8.80 | None | None | 31 | None | None | 82 | None | None | 0.1967 | None | None | 0.1432 | None | None | 9,068 | None | None | None | None | None
+--- pág 18
+de cada partido político. O cálculo é realizado através da diferença quadrática entre cada
+resposta individual sobre a ideologia de um partido e a média das respostas para esse
+--- pág 18
+métrica permite identificar partidos com maior consenso ideológico (baixa distância média)
+versus aqueles com percepções mais heterogêneas (alta distância média) entre os
+--- pág 18
+2022 e as médias de 2018, o que ajuda a entender como as percepções sobre os partidos
+evoluíram ao longo do tempo. Valores baixos de distância indicam maior convergência nas
