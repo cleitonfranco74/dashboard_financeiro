@@ -1,0 +1,44 @@
+PETROBRAS	Q210047	Petrobras — empresa brasileira de energia	Petrobras horizontal logo.svg	4714 bytes	image/png
+PPSA	sem logomarca no Wikidata
+ENBPar	Q112873557	Empresa Brasileira de Participações em Energia Nuclear e Binacional — 	Logotipo da ENBPar.svg	11968 bytes	image/png
+EPE	sem logomarca no Wikidata
+CPRM	Q18477649	Companhia de Pesquisa de Recursos Minerais — government organization in Rio de Janeiro, Brazil	CPRM (2015).jpg	10553 bytes	image/jpeg
+BNDES	Q796822	Banco Nacional de Desenvolvimento Econômico e Social — empresa pública federal	Logo do BNDES.svg	5603 bytes	image/png
+BB	Q610817	Banco do Brasil — Instituição bancária brasileira	Banco do Brasil Logo.svg	3509 bytes	image/png
+CAIXA	Q835283	Caixa — Instituição financeira estatal brasileira	Caixa Econômica Federal logo 1997.svg	5020 bytes	image/png
+BNB	Q4854137	Banco do Nordeste — Instituição bancária brasileira	Logo do Banco do Nordeste.svg	10654 bytes	image/png
+BASA	Q16496429	Banco da Amazônia — banco público brasileiro	Logotipo do Banco da Amazônia (2025).svg	6991 bytes	image/png
+FINEP	Q5449568	Financiadora de Estudos e Projetos — government agency of Brazil	Finep logo.webp	9372 bytes	image/webp
+EMGEA	sem logomarca no Wikidata
+ABGF	sem logomarca no Wikidata
+APS	sem logomarca no Wikidata
+CDC	sem logomarca no Wikidata
+CDP	sem logomarca no Wikidata
+CDRJ	sem logomarca no Wikidata
+CODEBA	sem logomarca no Wikidata
+CODERN	sem logomarca no Wikidata
+INFRAERO	Q1662654	Infraero — Administração de aeroportos do Brasil	Logotipo da Infraero.svg	6680 bytes	image/png
+NAV Brasil	sem logomarca no Wikidata
+CBTU	Q1121190	Companhia Brasileira de Trens Urbanos — Operadora de transporte ferroviário metropolitano no Brasil	CBTU Logo2.svg	6073 bytes	image/png
+TRENSURB	Q1418233	Metrô de Porto Alegre — rapid transit line in Brazil	Trensurb logo.png	8891 bytes	image/png
+INFRA S.A.	Q115842865	Infra S.A. — empresa pública federal	Logotipo da Infra SA.svg	3906 bytes	image/png
+ECT	Q3375004	Correios do Brasil — empresa pública federal responsável pelo serviço de correspondências no Brasil	Correios (2014).svg	7054 bytes	image/png
+SERPRO	Q10370598	Serviço Federal de Processamento de Dados — empresa pública brasileira de serviços de TI	Logotipo da Serpro (2024).svg	11177 bytes	image/png
+DATAPREV	Q10263483	DATAPREV — empresa pública brasileira, vinculada ao Ministério da Economia	Logotipo da Dataprev.svg	9383 bytes	image/png
+TELEBRAS	Q4381995	Sistema Telebras — empresa brasileira de telecomunicações	Logotipo da Telebras (2025).svg	4685 bytes	image/png
+EBC	Q10272499	Empresa Brasil de Comunicação — empresa pública de difusão por rádio brasileira	EBC logo 2023.svg	3840 bytes	image/png
+CMB	Q5047900	Casa da Moeda do Brasil — empresa pública federal	Logotipo da Casa da Moeda do Brasil.svg	4904 bytes	image/png
+IMBEL	sem logomarca no Wikidata
+NUCLEP	Q6955573	Nuclebrás Equipamentos Pesados — empresa brasileira de tecnologia nuclear	Logo da NUCLEP.png	7279 bytes	image/png
+CEITEC	Q5010251	Centro de Excelência em Tecnologia Eletrônica Avançada — Brazilian technology center	Logo do Centro Nacional de Tecnologia Eletrônica Avançada.svg	2738 bytes	image/png
+HEMOBRÁS	sem logomarca no Wikidata
+AMAZUL	sem logomarca no Wikidata
+EMGEPRON	sem logomarca no Wikidata
+EBSERH	sem logomarca no Wikidata
+HCPA	sem logomarca no Wikidata
+CONCEIÇÃO	Q10291837	Grupo Hospitalar Conceição — rede pública federal de hospitais em Porto Alegre, Rio Grande do Sul, Brasil	GHC Logo.png	21380 bytes	image/png
+EMBRAPA	Q1339456	Empresa Brasileira de Pesquisa Agropecuária — empresa pública federal brasileira	Embrapa.svg	5815 bytes	image/png
+CODEVASF	sem logomarca no Wikidata
+CONAB	sem logomarca no Wikidata
+CEAGESP	sem logomarca no Wikidata
+CEASAMINAS	sem logomarca no Wikidata
