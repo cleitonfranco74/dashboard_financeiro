@@ -27,13 +27,14 @@ import requests
 
 RAIZ = Path(__file__).resolve().parent.parent
 SAIDA = RAIZ / "data" / "estatais.json"
+LOGOS = RAIZ / "assets" / "logos"   # logomarcas baixadas por scripts/baixar_logos.py
 BASE = "https://www.gov.br/gestao/pt-br/assuntos/estatais/transparencia/"
 H = {"User-Agent": "Mozilla/5.0 (dashboard-financeiro; +github.com/cleitonfranco74/dashboard_financeiro)"}
 INICIO = 2016
 
 # Nome curto e grupo de cada estatal (os nomes do cadastro variam entre maiúsculas e minúsculas).
 GRUPOS = {
-    "financeiro": "Bancos e crédito",
+    "financeiro": "Bancos públicos e crédito",
     "energia": "Petróleo, energia e minas",
     "infra": "Portos, aeroportos e transportes",
     "tec": "Tecnologia, correios e comunicação",
@@ -62,6 +63,11 @@ EMPRESAS = {
     "CODEVASF": ("Codevasf", "social"), "CONAB": ("Conab", "social"), "CEAGESP": ("Ceagesp", "social"),
     "CEASAMINAS": ("CeasaMinas", "social"),
 }
+
+
+def nome_logo(sigla: str) -> str:
+    """Mesmo nome de arquivo usado por scripts/baixar_logos.py."""
+    return (sigla.lower().replace(" ", "-").replace(".", "").replace("ç", "c").replace("á", "a").replace("ã", "a") + ".png")
 
 
 def log(msg: str) -> None:
@@ -95,8 +101,9 @@ def cadastro(txt: str) -> dict[str, dict]:
             continue
         sigla = e["sigla"].strip()
         nome, grupo = EMPRESAS.get(sigla, (sigla, "social"))
+        logo = LOGOS / nome_logo(sigla)
         out[e["codigo_siest"].strip()] = {
-            "sigla": sigla, "nome": nome, "grupo": grupo,
+            "sigla": sigla, "nome": nome, "grupo": grupo, **({"logo": logo.name} if logo.exists() else {}),
             "ministerio": e.get("ministerio_supervisor", "").strip(),
             "dependente": e.get("dependencia", "").strip().startswith("Dependente"),
             "banco": e.get("segmento", "").strip() == "Financeiro",
