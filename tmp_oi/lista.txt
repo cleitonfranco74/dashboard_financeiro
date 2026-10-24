@@ -1,0 +1,9 @@
+Archive:  oi.zip
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+        0  2026-02-06 16:25   sest-oi/
+  1367366  2026-02-06 16:25   sest-oi/oi-despesa.csv
+    67088  2025-01-10 11:42   sest-oi/sest-oi-dicionario.pdf
+   212192  2026-02-06 15:46   sest-oi/sest-oi-receita.csv
+---------                     -------
+  1646646                     4 files

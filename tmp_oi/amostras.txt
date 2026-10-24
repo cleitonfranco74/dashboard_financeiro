@@ -1,0 +1,64 @@
+=== x/sest-oi/oi-despesa.csv 1367366
+linhas 4550
+exercicio;empresa;funcao;descricaofuncao;subfuncao;descricaosubfuncao;programa;tituloprograma;acao;tituloacao;regiao;uf;pac;ploa;loa;lei_creditos;realizado_jan;realizado_fev;realizado_mar;realizado_abr;realizado_mai;realizado_jun;realizado_jul;realizado_ago;realizado_set;realizado_out;realizado_nov;realizado_dez
+2016;ABGF;23;Comércio e Serviços;122;Administração Geral;807;Programa de Gestão e Manutenção de Infraestrutura de Empresas Estatais Federais;4102;Manutenção e Adequação de Bens Móveis, Veículos, Máquinas e Equipamentos;NA;;-;337.800 ;337.800 ;337.800 ;0 ;0 ;0 ;0 ;0 ;0 ;892 ;11.176 ;11.176 ;11.176 ;11.176 ;11.176 
+2016;ABGF;23;Comércio e Serviços;126;Tecnologia da Informação;807;Programa de Gestão e Manutenção de Infraestrutura de Empresas Estatais Federais;4103;Manutenção e Adequação de Ativos de Informática, Informação e Teleprocessamento;NA;;-;1.198.100 ;1.198.100 ;1.198.100 ;0 ;0 ;0 ;4.494 ;4.494 ;4.494 ;4.494 ;4.494 ;22.494 ;22.494 ;22.494 ;22.494 
+2016;AmE;25;Energia;752;Energia Elétrica;2033;Energia Elétrica;11XU;Ampliação da Rede Rural de Distribuição de Energia Elétrica - Luz para Todos (AM);NO;AM;-;174.580.561 ;174.580.561 ;100.103.857 ;1.708.140 ;10.775.304 ;16.279.600 ;23.076.203 ;33.068.694 ;45.399.067 ;48.875.389 ;56.106.698 ;61.359.536 ;67.250.595 ;72.374.972 ;86.483.553 
+2016;AmE;25;Energia;752;Energia Elétrica;2033;Energia Elétrica;14L7;Ampliação do Sistema de Distribuição de Energia Elétrica - PPA 2016-2019 (AM);NO;AM;-;422.738.571 ;422.738.571 ;91.316.117 ;954.880 ;5.571.109 ;9.102.483 ;12.821.968 ;19.165.090 ;26.264.135 ;35.604.325 ;42.856.323 ;53.411.916 ;54.098.022 ;55.821.144 ;60.231.428 
+2016;AmE;25;Energia;752;Energia Elétrica;2033;Energia Elétrica;20PD;Adequação do Sistema de Comercialização e Distribuição de Energia Elétrica - Redução de Perdas Comerciais (AM);NO;AM;-;129.077.599 ;129.077.599 ;101.270.774 ;2.649.958 ;6.310.312 ;11.507.257 ;18.292.461 ;24.895.295 ;28.523.680 ;35.372.343 ;47.240.088 ;56.453.778 ;62.735.862 ;67.978.269 ;80.630.818 
+2016;AmE;25;Energia;752;Energia Elétrica;2033;Energia Elétrica;20PE;Manutenção do Sistema de Geração de Energia Elétrica no Interior (AM);NO;AM;-;4.500.000 ;4.500.000 ;17.040.000 ;0 ;0 ;0 ;0 ;3.348.254 ;3.348.254 ;4.326.803 ;4.432.023 ;4.432.023 ;4.432.023 ;4.432.023 ;15.488.218 
+2016;AmE;25;Energia;752;Energia Elétrica;2033;Energia Elétrica;20PI;Manutenção do Sistema de Distribuição de Energia Elétrica (AM);NO;AM;-;79.752.179 ;79.752.179 ;77.758.017 ;2.637.870 ;9.789.861 ;12.145.694 ;15.050.286 ;16.437.307 ;22.470.394 ;25.424.046 ;31.042.037 ;35.417.630 ;40.200.131 ;45.829.338 ;65.345.413 
+2016;AmE;25;Energia;752;Energia Elétrica;2119;Programa de Gestão e Manutenção do Ministério de Minas e Energia;20PM;Preservação e Conservação Ambiental em Empreendimentos de Distribuição de Energia Elétrica (AM);NO;AM;-;2.400.000 ;2.400.000 ;2.400.000 ;0 ;0 ;0 ;0 ;0 ;0 ;161.021 ;294.386 ;608.800 ;820.226 ;1.355.650 ;2.266.298 
+2016;AmE;25;Energia;752;Energia Elétrica;2033;Energia Elétrica;3267;Ampliação da Capacidade do Parque de Geração Térmica de Energia Elétrica no Interior (AM);NO;AM;-;7.212.223 ;7.212.223 ;8.000.000 ;0 ;0 ;0 ;0 ;1.627.067 ;1.838.923 ;5.074.369 ;5.074.369 ;5.093.403 ;5.469.310 ;6.379.055 ;7.182.034 
+2016;AmE;25;Energia;122;Administração Geral;807;Programa de Gestão e Manutenção de Infraestrutura de Empresas Estatais Federais;4101;Manutenção e Adequação de Bens Imóveis;NO;AM;-;4.000.000 ;4.000.000 ;4.000.000 ;0 ;0 ;0 ;243.079 ;243.079 ;815.524 ;815.524 ;1.958.577 ;2.146.264 ;2.424.793 ;2.825.751 ;3.384.198 
+2016;AmE;25;Energia;122;Administração Geral;807;Programa de Gestão e Manutenção de Infraestrutura de Empresas Estatais Federais;4102;Manutenção e Adequação de Bens Móveis, Veículos, Máquinas e Equipamentos;NO;AM;-;2.500.000 ;2.500.000 ;2.500.000 ;0 ;87.127 ;101.319 ;355.212 ;1.556.663 ;1.619.429 ;1.802.043 ;1.802.043 ;1.804.554 ;2.082.275 ;2.367.796 ;2.369.571 
+2016;AmE;25;Energia;126;Tecnologia da Informação;807;Programa de Gestão e Manutenção de Infraestrutura de Empresas Estatais Federais;4103;Manutenção e Adequação de Ativos de Informática, Informação e Teleprocessamento;NO;AM;-;15.989.427 ;15.989.427 ;13.880.557 ;82.984 ;82.984 ;1.583.365 ;3.087.365 ;3.100.965 ;3.148.455 ;6.224.405 ;8.424.765 ;8.452.555 ;8.480.299 ;8.895.425 ;11.253.342 
+2016;AmGT;25;Energia;752;Energia Elétrica;2033;Energia Elétrica;151B;Implantação da Usina Termelétrica MAUÁ 3, em ciclo combinado, com Capacidade de Geração de até 650 MW, em Manaus (AM);NO;AM;-;225.065.971 ;225.065.971 ;281.350.604 ;3.715.230 ;7.936.629 ;14.906.165 ;15.920.043 ;53.956.975 ;78.623.039 ;102.540.376 ;121.548.216 ;135.367.927 ;155.443.544 ;171.853.333 ;184.853.578 
+2016;AmGT;25;Energia;752;Energia Elétrica;2033;Energia Elétrica;212U;Manutenção do Sistema de Geração de Energia Elétrica (AM);NO;AM;-;26.797.000 ;26.797.000 ;7.230.471 ;0 ;0 ;35.691 ;35.691 ;35.691 ;86.267 ;155.627 ;212.862 ;748.771 ;805.377 ;1.732.717 ;2.115.147 
+=== x/sest-oi/sest-oi-dicionario.pdf 67088
+Dicionário de variáveis - OI Receita
+exercicio Exercício de referência.
+empresa Sigla que identifica a empresa estatal na SEST, conforme denominação social constante do Estatuto Social.
+fonte_mae_codigo Código do agregador da natureza da receita.
+fonte_mae_descricao Descrição do agregador da natureza da receita.
+fonte_codigo Código da fonte da receita.
+fonte_descricao Descrição da fonte da receita.
+ploa Valor no Projeto de Lei Orçamentária Anual.
+loa Valor na Lei Orçamentária Anual.
+loa+credito Valor na Lei Orçamentária Anual somado às alterações orçamentárias do exercício de referência.
+realiz. ate (mês de referência) Valor realizado (executado) da receita do OI até o mês de referência.
+Dicionário de variáveis - OI Despesa
+exercicio Exercício de referência.
+empresa Sigla que identifica a empresa estatal na SEST, conforme denominação social constante do Estatuto Social.
+funcao_codigo Código da função; compreende o maior nível de agregação das áreas de atuação do setor público e reflete a competência institucional do órgão.
+funcao_descricao Descrição da função; compreende o maior nível de agregação das áreas de atuação do setor público e reflete a competência institucional do órgão.
+subfuncao_codigo Código da subfunção; evidencia a natureza da atuação governamental.
+subfuncao_descricao Descrição da subfunção; evidencia a natureza da atuação governamental.
+programa_codigo Código do programa; instrumento que expressa e orienta a ação governamental para a entrega de bens e serviços à sociedade.
+programa_descricao Descrição do programa; instrumento que expressa e orienta a ação governamental para a entrega de bens e serviços à sociedade.
+acao_codigo Código da ação; operação da qual resultam produtos (bens e serviços) que contribuem para atender ao objetivo de um programa.
+acao_descricao Descrição da ação; operação da qual resultam produtos (bens e serviços) que contribuem para atender ao objetivo de um programa.
+regiao Região de execução da despesa: NA - Nacional; EX - Exterior; CO - Centro-Oeste; NE - Nordeste; NO - Norte; SD - Sudeste; SL - Sul.
+uf Unidade Federativa de execução da despesa.
+pac Marcador de despesa executada no PAC.
+ploa Valor no Projeto de Lei Orçamentária Anual.
+loa Valor na Lei Orçamentária Anual.
+loa+credito Valor na Lei Orçamentária Anual somado às alterações orçamentárias do exercício de referência.
+realiz. ate (mês de referência) Valor realizado (executado) da despesa do OI até o mês de referência.
+=== x/sest-oi/sest-oi-receita.csv 212192
+linhas 1024
+exercicio;empresa;fonte_mae_codigo;fonte_mae_descricao;fonte_codigo;fonte_descricao;ploa;loa;loa+credito;realiz. ate jan;realiz. ate fev;realiz. ate mar;realiz. ate abr;realiz. ate mai;realiz. ate jun;realiz. ate jul;realiz. ate ago;realiz. ate set;realiz. ate out;realiz. ate nov;realiz. ate dez
+2016;ABGF;61000000;Recursos Próprios;61100000;Geração Própria;1.535.900 ;1.535.900 ;1.535.900 ;0 ;0 ;0 ;4.494 ;4.494 ;4.494 ;5.386 ;15.670 ;33.670 ;33.670 ;33.670 ;33.670 
+2016;AmE;61000000;Recursos Próprios;61100000;Geração Própria;174.580.561 ;174.580.561 ;334.389.883 ;5.847.213 ;17.259.656 ;29.652.725 ;40.905.954 ;59.576.629 ;77.395.404 ;104.989.310 ;136.369.828 ;163.432.815 ;172.581.675 ;192.211.511 ;254.040.092 
+2016;AmE;63000000;Operações de Crédito de Longo Prazo;63100000;Internas;551.969.999 ;551.969.999 ;0 ;0 ;0 ;0 ;0 ;0 ;0 ;0 ;0 ;0 ;0 ;0 ;0 
+2016;AmE;69000000;Outros Recursos de Longo Prazo;69200000;Controladora;116.200.000 ;116.200.000 ;83.879.439 ;2.186.619 ;15.357.041 ;21.066.993 ;32.020.620 ;43.865.785 ;56.032.457 ;58.690.958 ;62.861.481 ;65.747.644 ;75.411.861 ;76.047.912 ;77.707.341 
+2016;AmGT;61000000;Recursos Próprios;61100000;Geração Própria;11.493.477 ;11.493.477 ;15.123.477 ;39.904 ;39.904 ;39.904 ;39.904 ;39.904 ;39.904 ;46.688 ;46.688 ;46.688 ;46.688 ;4.515.421 ;6.214.793 
+2016;AmGT;63000000;Operações de Crédito de Longo Prazo;63100000;Internas;283.630.000 ;283.630.000 ;0 ;0 ;0 ;0 ;0 ;0 ;0 ;0 ;0 ;0 ;0 ;0 ;0 
+2016;AmGT;69000000;Outros Recursos de Longo Prazo;69200000;Controladora;0 ;0 ;280.000.000 ;3.798.389 ;8.463.469 ;15.468.696 ;16.513.897 ;54.629.706 ;79.381.012 ;103.367.709 ;122.559.760 ;137.019.514 ;157.151.737 ;171.853.333 ;184.853.578 
+2016;APS;61000000;Recursos Próprios;61100000;Geração Própria;52.140.130 ;52.140.130 ;52.140.130 ;1.768.764 ;3.787.265 ;5.434.835 ;7.896.733 ;8.870.677 ;14.161.996 ;14.377.776 ;17.113.754 ;17.207.110 ;17.799.472 ;18.345.161 ;19.148.702 
+2016;APS;62000000;Recursos para aumento do Patrimônio Líquido;62110000;Direto;117.460.000 ;72.958.828 ;219.716.582 ;13.018.937 ;28.813.409 ;39.915.477 ;40.708.340 ;42.452.279 ;44.496.361 ;52.490.631 ;60.492.232 ;67.472.729 ;71.373.244 ;75.209.558 ;89.540.557 
+2016;APS;62000000;Recursos para aumento do Patrimônio Líquido;62130000;Saldos de Exerc. Anteriores;0 ;0 ;15.599.021 ;206.638 ;780.751 ;780.751 ;2.848.225 ;3.458.513 ;4.380.130 ;6.750.698 ;9.281.564 ;10.881.442 ;10.881.442 ;10.881.442 ;10.881.442 
+2016;ARARA AZUL;62000000;Recursos para aumento do Patrimônio Líquido;62200000;Controladora;0 ;0 ;1.937.600 ;0 ;0 ;0 ;0 ;0 ;0 ;0 ;0 ;0 ;0 ;0 ;33.219 
+2016;ARAUCÁRIA;61000000;Recursos Próprios;61100000;Geração Própria;117.322.000 ;117.322.000 ;107.500.000 ;1.081.874 ;1.982.240 ;2.978.551 ;4.794.259 ;5.906.522 ;6.647.553 ;13.130.970 ;27.932.920 ;75.014.970 ;87.412.473 ;93.923.900 ;99.268.383 
+2016;ATIVOS S.A.;61000000;Recursos Próprios;61100000;Geração Própria;1.700.000 ;1.700.000 ;2.210.000 ;0 ;5.600 ;5.600 ;6.680 ;6.680 ;6.680 ;6.680 ;10.130 ;10.130 ;10.130 ;10.130 ;10.130 
+2016;BASA;61000000;Recursos Próprios;61100000;Geração Própria;57.364.456 ;57.364.456 ;53.348.221 ;0 ;0 ;527.227 ;864.384 ;1.136.732 ;2.437.035 ;3.014.740 ;6.224.117 ;6.645.841 ;14.143.378 ;17.113.706 ;27.218.723 
