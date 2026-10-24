@@ -33,7 +33,7 @@ INICIO = 2016
 
 # Nome curto e grupo de cada estatal (os nomes do cadastro variam entre maiúsculas e minúsculas).
 GRUPOS = {
-    "financeiro": "Bancos e crédito",
+    "financeiro": "Bancos públicos e crédito",
     "energia": "Petróleo, energia e minas",
     "infra": "Portos, aeroportos e transportes",
     "tec": "Tecnologia, correios e comunicação",

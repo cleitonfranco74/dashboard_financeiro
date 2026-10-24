@@ -18,13 +18,15 @@
   const rs = m => m == null ? "—" : `${m < 0 ? "−" : ""}R$ ${curto(Math.abs(m))}`;
   const pct = (x, d = 1) => x == null || !isFinite(x) ? "—" : `${x < 0 ? "−" : ""}${nf(Math.abs(x) * 100, d)}%`;
 
-  let D, st = { ano: null, grupo: "todos", emp: null, semBC: false, ordem: "lucro", barra: null, todas: false, met: "lucro" };
+  let D, st = { ano: null, grupo: "todos", emp: null, semPetro: false, semBancos: false, mostrar: "todas", ordem: "lucro", barra: null, todas: false, met: "lucro" };
   const LINHAS = 12;
   /* margem acima de 100% em módulo aparece em empresas com pouca receita própria (as dependentes do Tesouro) */
   const margemTxt = v => { const m = margem(v); return m.startsWith(">") ? "margem acima de 100%" : m.startsWith("<") ? "margem abaixo de −100%" : `margem de ${m}`; };
   const margem = v => !(v[0] > 0) ? "—" : Math.abs(v[1] / v[0]) > 1 ? (v[1] > 0 ? "> 100%" : "< −100%") : pct(v[1] / v[0]);
 
-  const lista = () => D.empresas.filter(e => !(st.semBC && (e.banco || e.sigla === "PETROBRAS")));
+  /* bancos públicos: BB, Caixa, BNDES, BNB, Banco da Amazônia e Finep (segmento "Financeiro" do cadastro da SEST) */
+  const lista = () => D.empresas.filter(e => !(st.semPetro && e.sigla === "PETROBRAS") && !(st.semBancos && e.banco));
+  const excluidas = () => [st.semPetro && "Petrobras", st.semBancos && "bancos públicos"].filter(Boolean).join(" e ") + (st.semPetro && st.semBancos ? " (critério do Banco Central)" : "");
   const doGrupo = () => lista().filter(e => st.grupo === "todos" || e.grupo === st.grupo);
   const val = (e, ano) => e.serie[ano] || null;
   const soma = (emps, ano) => {
@@ -86,11 +88,13 @@
     const serie = Object.fromEntries(anos.map(a => { const x = soma(emps, a); return [a, x.n ? [x.rec, x.luc] : null]; }));
     const tot = Math.abs(s.pos) + Math.abs(s.neg) || 1;
     const nome = st.grupo === "todos" ? "Todas as estatais" : D.grupos[st.grupo];
-    return `<div class="est-det"><div class="est-dh"><div><h3>${esc(nome)}${st.semBC ? " <small>sem Petrobras e bancos</small>" : ""}</h3>
+    return `<div class="est-det"><div class="est-dh"><div><h3>${esc(nome)}${excluidas() ? ` <small>sem ${excluidas()}</small>` : ""}</h3>
         <p>${s.n} empresas somadas em ${esc(rotAno(ano))}. Escolha uma estatal acima para ver a receita e o lucro dela.</p></div></div>
       <div class="est-k">
         <div><span>Receita somada</span><b>${esc(rs(s.rec))}</b><small>vendas e serviços + receitas dos bancos</small></div>
-        <div class="${s.luc < 0 ? "neg" : "pos"}"><span>${s.luc < 0 ? "Prejuízo" : "Lucro"} somado</span><b>${esc(rs(Math.abs(s.luc)))}</b><small>${s.rec > 0 ? `margem de ${pct(s.luc / s.rec)}` : "&nbsp;"}</small></div>
+        <div class="${s.luc < 0 ? "neg" : "pos"}"><span>${s.luc < 0 ? "Prejuízo" : "Lucro"} somado</span><b>${esc(rs(Math.abs(s.luc)))}</b><small>${s.rec > 0 ? `margem de ${pct(s.luc / s.rec)} · lucros menos prejuízos` : "&nbsp;"}</small></div>
+        <div class="pos"><span>Lucros</span><b>${esc(rs(s.pos))}</b><small>${s.nPos} ${s.nPos === 1 ? "empresa lucrou" : "empresas lucraram"}</small></div>
+        <div class="neg"><span>Prejuízos</span><b>${esc(rs(Math.abs(s.neg)))}</b><small>${s.nNeg} ${s.nNeg === 1 ? "empresa teve" : "empresas tiveram"} prejuízo</small></div>
       </div>
       <h4>Quem puxa para cima e quem puxa para baixo</h4>
       <div class="est-pn"><span>Lucros: <b class="pos">${esc(rs(s.pos))}</b> em ${s.nPos} empresas</span><span>Prejuízos: <b class="neg">${esc(rs(s.neg))}</b> em ${s.nNeg} empresas</span></div>
@@ -101,7 +105,8 @@
   /* ---------- tabela ---------- */
   function tabela(){
     const ano = st.ano, f = st.ordem === "receita" ? v => v[0] ?? -Infinity : st.ordem === "margem" ? v => v[0] > 0 ? v[1] / v[0] : -Infinity : v => v[1];
-    const rows = doGrupo().filter(e => val(e, ano)).sort((a, b) => f(val(b, ano)) - f(val(a, ano)));
+    const rows = doGrupo().filter(e => val(e, ano) && (st.mostrar === "todas" || (st.mostrar === "prej") === (val(e, ano)[1] < 0))).sort((a, b) => f(val(b, ano)) - f(val(a, ano)));
+    if (st.mostrar === "prej" && st.ordem === "lucro") rows.reverse();   // maiores prejuízos primeiro
     const mRec = Math.max(...rows.map(e => val(e, ano)[0] || 0), 1), mLuc = Math.max(...rows.map(e => Math.abs(val(e, ano)[1])), 1);
     return `<div class="est-tb" role="table" aria-label="Receita e lucro em ${esc(rotAno(ano))}">
       <div class="tr th" role="row"><span role="columnheader">#</span><span role="columnheader">Empresa</span><span role="columnheader" class="c-r">Receita</span><span role="columnheader" class="c-l">Lucro / prejuízo</span><span role="columnheader" class="n">Margem</span></div>
@@ -122,7 +127,9 @@
     el.innerHTML = `
       <div class="est-ctl">
         <label class="f"><span>Ano</span><select id="estAno">${D.anos.slice().reverse().map(a => `<option value="${a}" ${String(a) === st.ano ? "selected" : ""}>${esc(rotAno(a))}</option>`).join("")}</select></label>
-        <label class="f tg"><input type="checkbox" id="estBC" ${st.semBC ? "checked" : ""}><span class="sw" aria-hidden="true"></span><span><b>Excluir Petrobras e bancos públicos</b><small>critério do Banco Central nas contas fiscais</small></span></label>
+        <label class="f tg"><input type="checkbox" id="estPetro" ${st.semPetro ? "checked" : ""}><span class="sw" aria-hidden="true"></span><span><b>Excluir Petrobras</b><small>a maior estatal, sozinha</small></span></label>
+        <label class="f tg"><input type="checkbox" id="estBancos" ${st.semBancos ? "checked" : ""}><span class="sw" aria-hidden="true"></span><span><b>Excluir bancos públicos</b><small>BB, Caixa, BNDES, BNB, Basa e Finep</small></span></label>
+        <div class="f"><span id="estMosR">Mostrar na tabela</span><div class="seg" role="group" aria-labelledby="estMosR">${[["todas", "Todas"], ["lucro", "Com lucro"], ["prej", "Com prejuízo"]].map(([k, n]) => `<button type="button" data-mos="${k}" aria-pressed="${st.mostrar === k}">${n}</button>`).join("")}</div></div>
         <div class="f"><span id="estOrdR">Ordenar tabela por</span><div class="seg" role="group" aria-labelledby="estOrdR">${[["lucro", "Lucro"], ["receita", "Receita"], ["margem", "Margem"]].map(([k, n]) => `<button type="button" data-ord="${k}" aria-pressed="${st.ordem === k}">${n}</button>`).join("")}</div></div>
       </div>
       <div class="est-tabs" role="tablist" aria-label="Grupos de estatais">${[["todos", "Todas"], ...Object.entries(D.grupos)].map(([k, n]) =>
@@ -130,7 +137,7 @@
       <div class="est-chips" aria-label="Estatais do grupo"><button type="button" data-emp="" aria-pressed="${!st.emp}">Total do grupo</button>${chips.map(e =>
         `<button type="button" data-emp="${esc(e.sigla)}" aria-pressed="${st.emp === e.sigla}">${esc(e.nome)}</button>`).join("")}</div>
       ${painel()}
-      <div class="est-th"><h4>Receita × lucro em ${esc(rotAno(st.ano))}</h4><span>${doGrupo().filter(e => val(e, st.ano)).length} empresas · clique numa linha para ver o histórico</span></div>
+      <div class="est-th"><h4>Quanto cada estatal faturou e quanto lucrou em ${esc(rotAno(st.ano))}</h4><span>${{ todas: "", lucro: "só as que lucraram · ", prej: "só as que tiveram prejuízo · " }[st.mostrar]}clique numa linha para ver o histórico</span></div>
       ${tabela()}
       <p class="est-fonte">Fonte: ${esc(D.fonte)}, demonstrações validadas pelo contador de cada empresa. Lucro líquido do exercício; receita bruta de vendas e serviços e, nos bancos, receitas da intermediação financeira e de tarifas. Até 2024, dados anuais; desde 2025, trimestrais acumulados no ano. Atualizado em ${new Date(D.atualizado + "T12:00").toLocaleDateString("pt-BR")}.</p>`;
   }
@@ -141,6 +148,7 @@
     if (t.dataset.g){ st.grupo = t.dataset.g; st.emp = null; st.barra = null; }
     else if (t.dataset.ord) st.ordem = t.dataset.ord;
     else if (t.dataset.met) st.met = t.dataset.met;
+    else if (t.dataset.mos){ st.mostrar = t.dataset.mos; st.todas = false; }
     else if ("todas" in t.dataset) st.todas = true;
     else if (t.dataset.a) st.barra = t.dataset.a;
     else if ("emp" in t.dataset){
@@ -153,7 +161,8 @@
   el.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches(".tr[data-emp],.b")){ e.preventDefault(); e.target.click(); } });
   el.addEventListener("change", e => {
     if (e.target.id === "estAno"){ st.ano = e.target.value; st.barra = null; }
-    if (e.target.id === "estBC") st.semBC = e.target.checked;
+    if (e.target.id === "estPetro") st.semPetro = e.target.checked;
+    if (e.target.id === "estBancos") st.semBancos = e.target.checked;
     render();
   });
 
