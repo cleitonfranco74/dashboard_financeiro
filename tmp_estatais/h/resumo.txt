@@ -1,0 +1,16 @@
+encoding latin-1
+linhas 413094
+Counter({'Balanço': 209567, 'DRE': 81264, 'DVA': 51113, 'Fluxo de Caixa': 49990, 'Fluxo Cx': 21159})
+('2016', 'Anual') 49737
+('2017', 'Anual') 49186
+('2018', 'Anual') 47054
+('2019', 'Anual') 41688
+('2020', 'Anual') 37454
+('2021', 'Anual') 37301
+('2022', 'Anual') 15203
+('2023', 'Anual') 16044
+('2024', 'Anual') 15876
+('2025', '1º Trimestre') 25931
+('2025', '2º Trimestre') 25910
+('2025', '3º Trimestre') 26270
+('2025', '4º Trimestre') 25439
