@@ -18,6 +18,14 @@ for f in $(grep -iE '\.(pdf|xlsx|xls|csv)' links.txt | grep -iE 'agregado|raeef|
   case $f in http*) u=$f;; /*) u="https://www.gov.br$f";; *) continue;; esac
   n=$(basename "$u" | cut -c1-80); curl -sSL -A "$UA" -m 180 "$u" -o "dl_$n"; echo "$u -> dl_$n $(wc -c < "dl_$n")" >> baixados.txt
 done
-for f in *.pdf dl_*.pdf; do [ -f "$f" ] && pdftotext -layout "$f" "${f%.pdf}.txt"; done
+python - <<'PY'
+import glob, pdfplumber
+for f in glob.glob("*.pdf"):
+    try:
+        with pdfplumber.open(f) as pdf:
+            open(f[:-4]+".txt","w").write("\n\f".join((p.extract_text(layout=True) or "") for p in pdf.pages))
+    except Exception as e: print(f, e)
+PY
 file * > tipos.txt
+grep -oiE 'https?://[^" ]+|/[^" ]+' page*.html | grep -iE 'relat|agregad|raeef|estatais.*\\.(pdf|xlsx)' | sort -u > links_todos.txt
 rm -f *.pdf page*.html
