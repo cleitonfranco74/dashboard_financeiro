@@ -348,6 +348,26 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
   .dv-tb .tr > :nth-child(4){grid-area:t} .dv-tb .tr > :nth-child(5){grid-area:f} .dv-tb .tr > :nth-child(6){display:none}
   .dv-tb .th > :nth-child(6){display:none} .dv-tb .br{display:none}
 }
+
+/* investimentos (reaproveita o visual da seção de estatais) */
+.est-sub{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin-top:16px}
+.est-sub a{text-decoration:none;font-size:13px;font-weight:700;color:var(--ink-2);border:1px solid var(--line);border-radius:999px;padding:6px 13px}
+.est-sub a:hover{color:var(--ink);border-color:var(--ink-2)}
+.est-k .iv{border-color:rgba(79,209,197,.45)} .est-k .iv b{color:#4fd1c5}
+.iv-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:8px 28px}
+.iv-bars{display:flex;flex-direction:column;gap:9px}
+.iv-b{display:grid;grid-template-columns:minmax(0,1fr) 70px;gap:5px 10px;align-items:end;font-size:13px}
+.iv-b > span{color:var(--ink-2);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.iv-b .br{grid-column:1/-1;grid-row:2}
+.iv-b .br{display:block;height:9px;border-radius:999px;overflow:hidden;background:var(--surface-2)} .iv-b .br i{display:block;height:100%;border-radius:999px}
+.iv-b b{text-align:right;font-size:12.5px} .iv-b small{grid-column:1/-1;margin-top:-2px;font-size:11px;color:var(--muted);font-family:var(--mono)}
+.iv-tb .tr{grid-template-columns:28px minmax(0,1.6fr) minmax(0,1.2fr) 80px 80px 80px}
+.iv-tb .c-l{grid-template-columns:minmax(0,1fr) 72px}
+@media (max-width:760px){
+  .iv-tb .tr{grid-template-columns:18px repeat(3,minmax(0,1fr));grid-template-areas:"rk nm nm nm" "rk l t f"}
+  .iv-tb .tr > :nth-child(4){grid-area:t} .iv-tb .tr > :nth-child(5){grid-area:f} .iv-tb .tr > :nth-child(6){display:none}
+  .iv-tb .br{display:none}
+}
 </style>
 <!-- Contagem de visitas: GoatCounter (sem cookies; painel em dashboardfinan.goatcounter.com) -->
 <script>
@@ -369,7 +389,6 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
       <a href="calculadoras.html">Calculadoras</a>
       <a href="carteira.html">Carteira</a>
       <a href="#estatais">Estatais</a>
-      <a href="#dividendos">Dividendos</a>
       <a href="#equacoes">Metodologia</a>
       <a href="https://github.com/cleitonfranco74/dashboard_financeiro">Código</a>
     </nav>
@@ -523,6 +542,7 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
         <h2 class="sec" id="hEst">Quanto cada estatal faturou e quanto lucrou</h2>
         <p>Receita e lucro (ou prejuízo) das empresas controladas diretamente pela União, ano a ano desde 2016. Navegue pelos grupos e pelas estatais nas abas ou clique numa linha da tabela.</p>
         <p class="est-res" id="estResumo"></p>
+        <nav class="est-sub" aria-label="Seções das estatais"><a href="#estatais">Receita e lucro</a><a href="#dividendos">Dividendos à União</a><a href="#investimentos">Investimentos</a></nav>
       </div>
       <div class="est" id="est"><p class="est-fonte">Carregando os dados das estatais…</p></div>
       <div data-fb-util="Estatais federais"></div>
@@ -533,9 +553,21 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
         <span class="eyebrow">Dividendos</span>
         <h2 class="sec" id="hDiv">Quanto as estatais pagaram de dividendos à União</h2>
         <p>Dividendos e juros sobre capital próprio pagos pelas estatais federais ao Tesouro Nacional, ano a ano desde 2020, e quanto foi para os demais acionistas.</p>
+        <nav class="est-sub" aria-label="Seções das estatais"><a href="#estatais">Receita e lucro</a><a href="#dividendos">Dividendos à União</a><a href="#investimentos">Investimentos</a></nav>
       </div>
       <div class="est" id="div"><p class="est-fonte">Carregando os dividendos…</p></div>
       <div data-fb-util="Dividendos das estatais"></div>
+    </section>
+
+    <section class="blk" id="investimentos" aria-labelledby="hInv">
+      <div class="shead">
+        <span class="eyebrow">Investimentos</span>
+        <h2 class="sec" id="hInv">Quanto as estatais investiram</h2>
+        <p>Investimentos do Orçamento de Investimento das estatais federais, com as subsidiárias: quanto foi aprovado, quanto foi realizado, onde e em quais projetos, ano a ano desde 2016.</p>
+        <nav class="est-sub" aria-label="Seções das estatais"><a href="#estatais">Receita e lucro</a><a href="#dividendos">Dividendos à União</a><a href="#investimentos">Investimentos</a></nav>
+      </div>
+      <div class="est" id="inv"><p class="est-fonte">Carregando os investimentos…</p></div>
+      <div data-fb-util="Investimentos das estatais"></div>
     </section>
 
     <section class="blk" id="ferramentas" aria-labelledby="ferr">
@@ -689,6 +721,7 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="assets/mercado.js"></script>
 <script src="assets/estatais.js" defer></script>
+<script src="assets/investimentos.js" defer></script>
 <script>
 (() => {
 const $ = s => document.querySelector(s);

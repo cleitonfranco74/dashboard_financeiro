@@ -44,12 +44,16 @@ jobs:
         run: python scripts/atualizar_estatais.py
         continue-on-error: true
 
+      - name: Investimentos das estatais (Orçamento de Investimento, SEST/MGI)
+        run: python scripts/atualizar_investimentos.py
+        continue-on-error: true
+
       - name: Commit se houve mudança
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/mercado.json
-          for f in data/acoes.json data/combustiveis.json data/cripto.json data/estatais.json; do if [ -f "$f" ]; then git add "$f"; fi; done
+          for f in data/acoes.json data/combustiveis.json data/cripto.json data/estatais.json data/investimentos.json; do if [ -f "$f" ]; then git add "$f"; fi; done
           if git diff --cached --quiet; then
             echo "Sem mudanças."
           else
