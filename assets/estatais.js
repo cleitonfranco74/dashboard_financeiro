@@ -25,6 +25,7 @@
 
   let D, st = { ano: null, grupo: "todos", emp: null, semPetro: false, semBancos: false, mostrar: "todas", ordem: "lucro", barra: null, todas: false, met: "lucro" };
   const LINHAS = 12;
+  window.EstHelpers = { esc, nf, curto, rs, pct, selo, LINHAS };   // usados por assets/investimentos.js
   /* margem acima de 100% em módulo aparece em empresas com pouca receita própria (as dependentes do Tesouro) */
   const margemTxt = v => { const m = margem(v); return m.startsWith(">") ? "margem acima de 100%" : m.startsWith("<") ? "margem abaixo de −100%" : `margem de ${m}`; };
   const margem = v => !(v[0] > 0) ? "—" : Math.abs(v[1] / v[0]) > 1 ? (v[1] > 0 ? "> 100%" : "< −100%") : pct(v[1] / v[0]);
