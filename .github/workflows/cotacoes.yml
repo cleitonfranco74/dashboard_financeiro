@@ -1,0 +1,50 @@
+name: Cotações durante o pregão
+
+on:
+  schedule:
+    - cron: "20 13-21 * * 1-5"   # de hora em hora, das 10h20 às 18h20 de Brasília, dias úteis
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cotacoes
+  cancel-in-progress: false
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
+
+      - run: pip install yfinance
+
+      # Os dados ficam no branch "dados", para não gerar commits na main a cada hora.
+      - name: Branch de dados
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin dados:dados
+          git worktree add ../dados dados
+
+      - run: python scripts/cotacoes_intradia.py ../dados/cotacoes.json
+
+      - name: Commit no branch de dados
+        working-directory: ../dados
+        run: |
+          git add cotacoes.json
+          if git diff --cached --quiet; then
+            echo "Sem mudanças."
+            exit 0
+          fi
+          git commit -m "Cotações $(date -u +%Y-%m-%dT%H:%MZ)"
+          # o di.yml também grava neste branch: tenta de novo se ele empurrou antes
+          for i in 1 2 3; do git pull --rebase origin dados && git push origin dados && exit 0; sleep 5; done
+          exit 1

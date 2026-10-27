@@ -25,6 +25,8 @@
   const sinal = (x, d = 1) => x == null || !isFinite(x) ? "—" : `${x > 0 ? "+" : ""}${pct(x, d)}`;
   const cor = x => x == null ? CINZA : x >= 0 ? POS : NEG;
   const bi = v => v == null ? "—" : v >= 1e12 ? `R$ ${nf(v / 1e12, 2)} tri` : v >= 1e9 ? `R$ ${nf(v / 1e9, v >= 1e11 ? 0 : 1)} bi` : `R$ ${nf(v / 1e6, 0)} mi`;
+  const hora = t => new Date(t).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+  const hoje = () => new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
   const dia = a => a.ant ? a.preco / a.ant - 1 : null;
   const ret = (a, m) => a.c && a.c.length > m && a.c[a.c.length - 1 - m] > 0 ? a.c[a.c.length - 1] / a.c[a.c.length - 1 - m] - 1 : null;
   const mesRot = (ini, i) => { const [y, m] = ini.split("-").map(Number), t = y * 12 + m - 1 + i; return `${["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"][t % 12]}/${String(Math.floor(t / 12)).slice(2)}`; };
@@ -67,7 +69,7 @@
           ${x.c && x.c.length > 13 ? mini(x.c) : ""}
           <small class="ae-r">12 meses: <b style="color:${cor(r)}">${esc(sinal(r, 0))}</b>${obs ? ` · ${esc(obs)}` : ""}</small></button>`; }).join("")}</div>
       <div class="est-det">
-        <div class="est-dh">${H.selo({ logo: meta[1], nome: a.nome, sigla: st.sel }, true)}<div><h3>${esc(a.nome)} <small class="num">${esc(st.sel)}</small></h3><p>Controle: ${esc(meta[2])}${meta[3] ? ` · ação ${esc(meta[3])}` : ""}${a.data ? ` · fechamento de ${esc(new Date(a.data + "T12:00").toLocaleDateString("pt-BR"))}` : ""}</p></div></div>
+        <div class="est-dh">${H.selo({ logo: meta[1], nome: a.nome, sigla: st.sel }, true)}<div><h3>${esc(a.nome)} <small class="num">${esc(st.sel)}</small></h3><p>Controle: ${esc(meta[2])}${meta[3] ? ` · ação ${esc(meta[3])}` : ""}${a.data ? ` · ${A.__intradia && a.data === hoje() ? `cotação de ${esc(hora(A.__atualizado))}` : `fechamento de ${esc(new Date(a.data + "T12:00").toLocaleDateString("pt-BR"))}`}` : ""}</p></div></div>
         <div class="est-k">
           <div class="${d == null ? "" : d >= 0 ? "pos" : "neg"}"><span>Cotação</span><b>${esc(brl(a.preco))}</b><small>${d == null ? "variação do dia indisponível" : `${esc(sinal(d, 2))} no dia (anterior ${esc(brl(a.ant))})`}</small></div>
           <div class="${r12 == null ? "" : r12 >= 0 ? "pos" : "neg"}"><span>Retorno em 12 meses</span><b>${esc(sinal(r12, 1))}</b><small>com dividendos reinvestidos</small></div>
@@ -76,15 +78,16 @@
         </div>
         <div class="est-gh"><h4>Cinco anos, base 100</h4></div>${a.c && a.c.length > 2 ? grafico(a, st.sel) : `<p class="est-fonte">Sem histórico mensal.</p>`}
       </div>
-      <p class="est-fonte">Fonte: Yahoo Finance, fechamento do último pregão; atualizado todo dia útil depois do fechamento da B3 (${A.__atualizado ? `última atualização em ${esc(new Date(A.__atualizado).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }))}` : "data indisponível"}). O retorno usa os preços ajustados por proventos. Só as estatais com ações negociadas na bolsa aparecem aqui; a BB Seguridade e a Caixa Seguridade são controladas pelo Banco do Brasil e pela Caixa. A Eletrobras (hoje Axia Energia) foi privatizada em 2022. Não é recomendação de investimento.</p>`;
+      <p class="est-fonte">Fonte: Yahoo Finance. Durante o pregão as cotações são atualizadas de hora em hora, com cerca de 15 minutos de atraso; depois do fechamento da B3 valem as de fechamento (${A.__atualizado ? `${A.__intradia ? "cotações de" : "última atualização em"} ${esc(hora(A.__atualizado))}` : "data indisponível"}). O retorno usa os preços ajustados por proventos. Só as estatais com ações negociadas na bolsa aparecem aqui; a BB Seguridade e a Caixa Seguridade são controladas pelo Banco do Brasil e pela Caixa. A Eletrobras (hoje Axia Energia) foi privatizada em 2022. Não é recomendação de investimento.</p>`;
   }
 
   el.addEventListener("click", e => { const b = e.target.closest("[data-ae]"); if (!b) return; st.sel = b.dataset.ae; render(); if (innerWidth < 760) el.querySelector(".est-det")?.scrollIntoView({ behavior: "smooth", block: "start" }); });
   let rt, larg = 0;
   window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (A && el.clientWidth !== larg){ larg = el.clientWidth; render(); } }, 150); });
 
-  fetch("data/acoes.json?h=" + Math.floor(Date.now() / 36e5), { cache: "no-cache" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(d => {
-    A = { ...(d.categorias?.acoes || {}), __atualizado: d.atualizado };
+  fetch("data/acoes.json?h=" + Math.floor(Date.now() / 36e5), { cache: "no-cache" }).then(r => r.ok ? r.json() : Promise.reject(r.status))
+    .then(d => window.Cotacoes ? Cotacoes.aplicar(d) : d).then(d => {
+    A = { ...(d.categorias?.acoes || {}), __atualizado: d.atualizado, __intradia: !!d.intradia };
     IBOV = A.BOVA11;
     render();
   }).catch(() => { el.innerHTML = `<p class="est-fonte">Não foi possível carregar as cotações agora. Tente recarregar a página.</p>`; });
