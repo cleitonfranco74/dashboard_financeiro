@@ -84,6 +84,18 @@ def num(v, nd=4):
     return round(f, nd) if math.isfinite(f) else None
 
 
+def ifr(fech, n: int = 14):
+    """Índice de força relativa de Wilder sobre os fechamentos diários (acima de 70: sobrecompra)."""
+    if fech is None or len(fech) < n + 1:
+        return None
+    dif = fech.diff().dropna()
+    alta, baixa = dif.clip(lower=0), -dif.clip(upper=0)
+    ma, mb = alta.iloc[:n].mean(), baixa.iloc[:n].mean()
+    for x, y in zip(alta.iloc[n:], baixa.iloc[n:]):
+        ma, mb = (ma * (n - 1) + x) / n, (mb * (n - 1) + y) / n
+    return 100.0 if mb == 0 else round(100 - 100 / (1 + ma / mb), 1)
+
+
 def ativo(yf, ticker: str) -> dict:
     t = yf.Ticker(ticker)
     h = t.history(period="5y", interval="1mo", auto_adjust=True)
@@ -93,7 +105,7 @@ def ativo(yf, ticker: str) -> dict:
     fech.index = fech.index.strftime("%Y-%m")
     fech = fech[~fech.index.duplicated(keep="last")].tail(MESES)
 
-    d = t.history(period="10d", interval="1d", auto_adjust=False)
+    d = t.history(period="3mo", interval="1d", auto_adjust=False)
     dia = d["Close"].dropna() if not d.empty else None
     preco = num(dia.iloc[-1], 2) if dia is not None and len(dia) else None
     if preco is None:
@@ -130,6 +142,7 @@ def ativo(yf, ticker: str) -> dict:
         "vm": num(info.get("marketCap") or info.get("totalAssets"), 0),
         "beta": num(info.get("beta") or info.get("beta3Year"), 2),
         "max52": num(info.get("fiftyTwoWeekHigh"), 2),
+        "ifr": ifr(dia),
         "min52": num(info.get("fiftyTwoWeekLow"), 2),
         # consenso das corretoras que cobrem o ativo (escala do Yahoo: 1 compra forte … 5 venda)
         "rec": num(info.get("recommendationMean"), 2),

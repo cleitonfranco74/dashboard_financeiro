@@ -36,10 +36,16 @@ jobs:
 
       - run: python scripts/cotacoes_intradia.py ../dados/cotacoes.json
 
+      # avisos de topo (máxima de 52 semanas e preço-alvo das corretoras) no tópico público do ntfy
+      - name: Alertas de topo (ntfy)
+        run: python scripts/alertas_topo.py data/acoes.json ../dados/cotacoes.json ../dados/alertas.json
+        continue-on-error: true
+
       - name: Commit no branch de dados
         working-directory: ../dados
         run: |
           git add cotacoes.json
+          if [ -f alertas.json ]; then git add alertas.json; fi
           if git diff --cached --quiet; then
             echo "Sem mudanças."
             exit 0

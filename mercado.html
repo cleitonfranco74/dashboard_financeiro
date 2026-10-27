@@ -397,6 +397,33 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
 .rd-crit,.rd-dicas{margin-top:22px;border:1px solid var(--line);border-radius:16px;padding:14px 18px;background:var(--bg)}
 .rd-crit h4,.rd-dicas h4{margin:0 0 8px} .rd-crit ol,.rd-dicas ul{margin:0;padding-left:20px;font-size:13.5px;color:var(--ink-2);line-height:1.55} .rd-crit p{font-size:13px;color:var(--muted);margin:10px 0 0}
 .rd-dicas li{margin-bottom:6px}
+/* corretoras, topos e alertas */
+.cr-rg{position:relative;display:block;width:110px;height:8px;border-radius:999px;background:linear-gradient(90deg,#34d399,#a3d977 25%,#f5b83d 50%,#ff9f6b 75%,#ff6b6b)}
+.cr-rg i{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;border:2px solid var(--bg);transform:translate(-50%,-50%)}
+.rd-tb td.neg{color:#ff6b6b;font-weight:700}
+.tp-s{display:inline-block;font:600 10.5px var(--mono);border-radius:999px;padding:2px 8px;margin:1px 2px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.tp-s.nv{color:var(--good);border-color:color-mix(in srgb,var(--good) 50%,transparent)} .tp-s.pt{color:#a3d977;border-color:rgba(163,217,119,.4)}
+.tp-s.sb{color:#ff6b6b;border-color:rgba(255,107,107,.45)} .tp-s.av{color:#5aa2ff;border-color:rgba(90,162,255,.45)}
+.tp-tb td:last-child,.tp-tb th:last-child{text-align:left}
+.al-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:16px;margin-top:22px}
+.al-box{border:1px solid var(--line);border-radius:16px;padding:16px 18px;background:var(--bg);min-width:0}
+.al-box h4{margin:0 0 6px} .al-box h5{margin:16px 0 6px;font-size:13px}
+.al-sub{margin:0 0 12px;font-size:13px;color:var(--ink-2);line-height:1.5}
+.al-form{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.al-form .f{display:flex;flex-direction:column;gap:6px;flex:1 1 160px;min-width:0}
+.al-form .f > span{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.al-form select,.al-form input{width:100%;height:42px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:0 12px;font:600 14px var(--sans);min-width:0}
+.al-form .al-bt{height:42px}
+.al-bt{border:0;border-radius:999px;background:var(--accent);color:var(--accent-ink);font:700 13.5px var(--sans);padding:10px 16px;cursor:pointer}
+.al-list{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.al-list li{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-width:0}
+.al-list li.ok{border-color:color-mix(in srgb,var(--good) 55%,transparent);background:color-mix(in srgb,var(--good) 8%,transparent)}
+.al-list li > span:nth-child(2){flex:1;min-width:0} .al-list b{display:block;font-size:13px} .al-list small{display:block;font-size:11.5px;color:var(--muted)}
+.al-st{font:700 10.5px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);flex:none} .al-list li.ok .al-st{color:var(--good)}
+.al-list button{flex:none;border:1px solid var(--line);background:none;color:var(--ink-2);border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:16px}
+.ntfy ol{margin:0;padding-left:20px;font-size:13.5px;color:var(--ink-2);line-height:1.6} .ntfy code{font-family:var(--mono);color:var(--accent)}
+.al-hist{list-style:none;margin:0;padding:0;font-size:12.5px;color:var(--ink-2)} .al-hist li{padding:5px 0;border-bottom:1px solid var(--line)} .al-hist time{font-family:var(--mono);color:var(--muted);margin-right:6px}
+
 .iv-tb .c-l{grid-template-columns:minmax(0,1fr) 72px}
 @media (max-width:760px){
   .iv-tb .tr{grid-template-columns:18px repeat(3,minmax(0,1fr));grid-template-areas:"rk nm nm nm" "rk l t f"}
@@ -471,7 +498,7 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
       <span class="eyebrow">Mercado</span>
       <h1 class="sec" id="tpg">O mercado hoje</h1>
       <p>Juros e inflação, Ibovespa e dólar, juros futuros, diesel e petróleo, criptomoedas e o radar de ações em queda, com dados públicos atualizados todo dia útil.</p>
-      <nav class="est-sub" aria-label="Nesta página"><a href="#juros">Juros e inflação</a><a href="#bolsa">Ibovespa e dólar</a><a href="#juros-futuros">Juros futuros</a><a href="#diesel">Diesel e petróleo</a><a href="#cripto">Criptomoedas</a><a href="#radar-acoes">Ações em queda</a></nav>
+      <nav class="est-sub" aria-label="Nesta página"><a href="#juros">Juros e inflação</a><a href="#bolsa">Ibovespa e dólar</a><a href="#juros-futuros">Juros futuros</a><a href="#diesel">Diesel e petróleo</a><a href="#cripto">Criptomoedas</a><a href="#radar-acoes">Ações em queda</a><a href="#corretoras">Corretoras</a><a href="#topos">Topos e alertas</a></nav>
     </section>
     <div class="mkt">
       <aside class="mcard" id="juros" aria-label="Indicadores de hoje">
@@ -595,6 +622,26 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
       <div data-fb-util="Radar de ações"></div>
     </section>
 
+    <section class="blk" id="corretoras" aria-labelledby="hCorr">
+      <div class="shead">
+        <span class="eyebrow">Corretoras</span>
+        <h2 class="sec" id="hCorr">O que dizem as corretoras</h2>
+        <p>Consenso das recomendações das corretoras que cobrem cada ação da B3 (compra, neutro ou venda) e o preço-alvo médio para 12 meses, com o potencial até lá.</p>
+      </div>
+      <div class="est" id="corr"><p class="est-fonte">Carregando as recomendações…</p></div>
+      <div data-fb-util="Corretoras"></div>
+    </section>
+
+    <section class="blk" id="topos" aria-labelledby="hTopos">
+      <div class="shead">
+        <span class="eyebrow">Topos e alertas</span>
+        <h2 class="sec" id="hTopos">Ações no topo e alertas</h2>
+        <p>As ações na máxima de 52 semanas ou perto dela, sobrecompradas ou acima do preço-alvo das corretoras. Crie alertas no navegador e receba os avisos de topo no celular.</p>
+      </div>
+      <div class="est" id="topo"><p class="est-fonte">Carregando o radar de topos…</p></div>
+      <div data-fb-util="Topos e alertas"></div>
+    </section>
+
   </main>
 
   <footer class="autor">
@@ -652,7 +699,10 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="assets/mercado.js"></script>
 <script src="assets/cotacoes.js" defer></script>
+<script src="assets/acoes-comum.js" defer></script>
 <script src="assets/radar-acoes.js" defer></script>
+<script src="assets/corretoras.js" defer></script>
+<script src="assets/topos.js" defer></script>
 <script>
 (() => {
 const $ = s => document.querySelector(s);
