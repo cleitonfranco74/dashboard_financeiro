@@ -10,7 +10,7 @@
   const pct = (x, d = 0) => x == null || !isFinite(x) ? "—" : `${x > 0 ? "+" : x < 0 ? "−" : ""}${nf(Math.abs(x) * 100, d)}%`;
   const pctS = (x, d = 0) => x == null || !isFinite(x) ? "—" : `${nf(x * 100, d)}%`;
   const POS = "#34d399", NEG = "#ff6b6b";
-  const BANCOS = ["ITUB4", "ITUB3", "BBDC4", "BBDC3", "BBAS3", "SANB11", "BPAC11", "BNBR3", "BAZA3", "BRSR6", "ABCB4", "BPAN4", "BMGB4", "BEES3", "ROXO34", "INBR32"];
+  const BANCOS = ["ITUB4", "ITUB3", "BBDC4", "BBDC3", "BBAS3", "SANB11", "BPAC11", "BNBR3", "BAZA3", "BRSR6", "ABCB4", "BMGB4", "BEES3", "ROXO34", "INBR32"];
   const ESTATAIS = ["PETR4", "PETR3", "BBAS3", "BBSE3", "CXSE3", "BNBR3", "BAZA3", "TELB4"];
   const FORA = ["BOVA11", "IVVB11"];   // ETFs
   /* critérios da nota: [rótulo curto, explicação, teste] */
