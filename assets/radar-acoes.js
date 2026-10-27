@@ -4,15 +4,13 @@
  * É uma triagem educativa, não uma recomendação de investimento. */
 (() => {
   const el = document.getElementById("radar");
-  if (!el) return;
+  if (!el || !window.AcoesComum) return;
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   const nf = (x, d) => x.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
   const pct = (x, d = 0) => x == null || !isFinite(x) ? "—" : `${x > 0 ? "+" : x < 0 ? "−" : ""}${nf(Math.abs(x) * 100, d)}%`;
   const pctS = (x, d = 0) => x == null || !isFinite(x) ? "—" : `${nf(x * 100, d)}%`;
   const POS = "#34d399", NEG = "#ff6b6b";
-  const BANCOS = ["ITUB4", "ITUB3", "BBDC4", "BBDC3", "BBAS3", "SANB11", "BPAC11", "BNBR3", "BAZA3", "BRSR6", "ABCB4", "BMGB4", "BEES3", "ROXO34", "INBR32"];
-  const ESTATAIS = ["PETR4", "PETR3", "BBAS3", "BBSE3", "CXSE3", "BNBR3", "BAZA3", "TELB4"];
-  const FORA = ["BOVA11", "IVVB11"];   // ETFs
+  const { ETFS: FORA, consenso, corCons } = window.AcoesComum;
   /* critérios da nota: [rótulo curto, explicação, teste] */
   const CRIT = [
     ["P/L ≤ 12", "lucrativa e com preço baixo em relação ao lucro", a => a.pl > 0 && a.pl <= 12],
@@ -22,8 +20,6 @@
     ["Consenso de compra", "média das corretoras em compra, com 3 ou mais analistas", a => a.rec != null && a.rec <= 2.5 && a.nanal >= 3],
     ["Potencial ≥ 20%", "preço-alvo médio 20% ou mais acima da cotação", a => a.alvo > 0 && a.alvo / a.preco - 1 >= .2],
   ];
-  const consenso = r => r == null ? null : r <= 1.5 ? "Compra forte" : r <= 2.5 ? "Compra" : r <= 3.5 ? "Neutro" : r <= 4.5 ? "Venda" : "Venda forte";
-  const corCons = r => r == null ? "var(--muted)" : r <= 2.5 ? POS : r <= 3.5 ? "#f5b83d" : NEG;
   const st = { grupo: "todas", queda: "15", ordem: "nota" };
   let A, MAIS = false;
 
@@ -35,7 +31,7 @@
       return { c, a, q, r: r12(a), dia: a.ant ? a.preco / a.ant - 1 : null, pot: a.alvo > 0 ? a.alvo / a.preco - 1 : null, crit, nota: crit.filter(Boolean).length };
     });
   }
-  const doGrupo = (x, g = st.grupo) => g === "todas" || (g === "bancos" ? BANCOS.includes(x.c) : g === "estatais" ? ESTATAIS.includes(x.c) : !BANCOS.includes(x.c) && !ESTATAIS.includes(x.c));
+  const doGrupo = (x, g = st.grupo) => AcoesComum.doGrupo(x.c, g);
   const emQueda = x => st.queda === "0" || (x.q != null && x.q <= -st.queda / 100);
   const ORD = { nota: (x, y) => y.nota - x.nota || x.q - y.q, queda: (x, y) => x.q - y.q, potencial: (x, y) => (y.pot ?? -9) - (x.pot ?? -9), dy: (x, y) => (y.a.dy ?? -1) - (x.a.dy ?? -1) };
 
@@ -92,11 +88,10 @@
   });
   el.addEventListener("change", e => { if (e.target.id === "rdOrd"){ st.ordem = e.target.value; render(); } });
 
-  fetch("data/acoes.json?h=" + Math.floor(Date.now() / 36e5), { cache: "no-cache" }).then(r => r.ok ? r.json() : Promise.reject(r.status))
-    .then(d => window.Cotacoes ? Cotacoes.aplicar(d) : d).then(d => {
-      A = { ...(d.categorias?.acoes || {}) };
-      Object.defineProperty(A, "__atualizado", { value: d.atualizado, enumerable: false });
-      Object.defineProperty(A, "__intradia", { value: !!d.intradia, enumerable: false });
-      render();
-    }).catch(() => { el.innerHTML = `<p class="est-fonte">Não foi possível carregar as cotações agora. Tente recarregar a página.</p>`; });
+  AcoesComum.carregar().then(d => {
+    A = { ...d.acoes };
+    Object.defineProperty(A, "__atualizado", { value: d.atualizado, enumerable: false });
+    Object.defineProperty(A, "__intradia", { value: d.intradia, enumerable: false });
+    render();
+  }).catch(() => { el.innerHTML = `<p class="est-fonte">Não foi possível carregar as cotações agora. Tente recarregar a página.</p>`; });
 })();
