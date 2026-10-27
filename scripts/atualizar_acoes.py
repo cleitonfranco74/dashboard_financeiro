@@ -20,7 +20,7 @@ SAIDA = RAIZ / "data" / "acoes.json"
 # categoria -> {código exibido: (ticker no Yahoo, nome)}
 ATIVOS = {
     "acoes": {
-        "PETR4": ("PETR4.SA", "Petrobras"), "VALE3": ("VALE3.SA", "Vale"), "ITUB4": ("ITUB4.SA", "Itaú Unibanco"),
+        "PETR4": ("PETR4.SA", "Petrobras"), "PETR3": ("PETR3.SA", "Petrobras ON"), "VALE3": ("VALE3.SA", "Vale"), "ITUB4": ("ITUB4.SA", "Itaú Unibanco"),
         "BBDC4": ("BBDC4.SA", "Bradesco"), "BBAS3": ("BBAS3.SA", "Banco do Brasil"), "ITSA4": ("ITSA4.SA", "Itaúsa"),
         "BPAC11": ("BPAC11.SA", "BTG Pactual"), "SANB11": ("SANB11.SA", "Santander Brasil"), "B3SA3": ("B3SA3.SA", "B3"),
         "BBSE3": ("BBSE3.SA", "BB Seguridade"), "CXSE3": ("CXSE3.SA", "Caixa Seguridade"), "PSSA3": ("PSSA3.SA", "Porto Seguro"),
@@ -35,6 +35,7 @@ ATIVOS = {
         "ASAI3": ("ASAI3.SA", "Assaí"), "RAIL3": ("RAIL3.SA", "Rumo"), "UGPA3": ("UGPA3.SA", "Ultrapar"),
         "VBBR3": ("VBBR3.SA", "Vibra"), "CSAN3": ("CSAN3.SA", "Cosan"), "TOTS3": ("TOTS3.SA", "Totvs"),
         "CYRE3": ("CYRE3.SA", "Cyrela"), "MULT3": ("MULT3.SA", "Multiplan"), "SMTO3": ("SMTO3.SA", "São Martinho"),
+        "BNBR3": ("BNBR3.SA", "Banco do Nordeste"), "BAZA3": ("BAZA3.SA", "Banco da Amazônia"), "TELB4": ("TELB4.SA", "Telebras"),
         "BOVA11": ("BOVA11.SA", "ETF Ibovespa"), "IVVB11": ("IVVB11.SA", "ETF S&P 500 em reais"),
     },
     "stocks": {
@@ -90,9 +91,11 @@ def ativo(yf, ticker: str) -> dict:
     fech = fech[~fech.index.duplicated(keep="last")].tail(MESES)
 
     d = t.history(period="10d", interval="1d", auto_adjust=False)
-    preco = num(d["Close"].dropna().iloc[-1], 2) if not d.empty else None
+    dia = d["Close"].dropna() if not d.empty else None
+    preco = num(dia.iloc[-1], 2) if dia is not None and len(dia) else None
     if preco is None:
         raise ValueError("sem cotação")
+    ant = num(dia.iloc[-2], 2) if len(dia) > 1 else None   # fechamento do pregão anterior, para a variação do dia
 
     # dividend yield pelos proventos pagos nos últimos 12 meses (não depende do formato do Yahoo)
     dy = None
@@ -111,6 +114,8 @@ def ativo(yf, ticker: str) -> dict:
     dpl = num(info.get("debtToEquity"))
     return {
         "preco": preco,
+        "ant": ant,
+        "data": dia.index[-1].strftime("%Y-%m-%d"),
         "moeda": info.get("currency") or ("BRL" if ticker.endswith(".SA") else "USD"),
         "setor": info.get("sector") or info.get("category") or None,
         "pl": num(info.get("trailingPE"), 2),
