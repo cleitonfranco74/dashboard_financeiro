@@ -35,6 +35,9 @@ ATIVOS = {
         "ASAI3": ("ASAI3.SA", "Assaí"), "RAIL3": ("RAIL3.SA", "Rumo"), "UGPA3": ("UGPA3.SA", "Ultrapar"),
         "VBBR3": ("VBBR3.SA", "Vibra"), "CSAN3": ("CSAN3.SA", "Cosan"), "TOTS3": ("TOTS3.SA", "Totvs"),
         "CYRE3": ("CYRE3.SA", "Cyrela"), "MULT3": ("MULT3.SA", "Multiplan"), "SMTO3": ("SMTO3.SA", "São Martinho"),
+        "BBDC3": ("BBDC3.SA", "Bradesco ON"), "ITUB3": ("ITUB3.SA", "Itaú Unibanco ON"), "BRSR6": ("BRSR6.SA", "Banrisul"),
+        "ABCB4": ("ABCB4.SA", "Banco ABC Brasil"), "BPAN4": ("BPAN4.SA", "Banco Pan"), "BMGB4": ("BMGB4.SA", "Banco BMG"),
+        "BEES3": ("BEES3.SA", "Banestes"), "ROXO34": ("ROXO34.SA", "Nubank (BDR)"), "INBR32": ("INBR32.SA", "Inter&Co (BDR)"),
         "BNBR3": ("BNBR3.SA", "Banco do Nordeste"), "BAZA3": ("BAZA3.SA", "Banco da Amazônia"), "TELB4": ("TELB4.SA", "Telebras"),
         "BOVA11": ("BOVA11.SA", "ETF Ibovespa"), "IVVB11": ("IVVB11.SA", "ETF S&P 500 em reais"),
     },
@@ -126,6 +129,12 @@ def ativo(yf, ticker: str) -> dict:
         "divpl": num(dpl / 100) if dpl is not None else None,   # o Yahoo informa em %
         "vm": num(info.get("marketCap") or info.get("totalAssets"), 0),
         "beta": num(info.get("beta") or info.get("beta3Year"), 2),
+        "max52": num(info.get("fiftyTwoWeekHigh"), 2),
+        "min52": num(info.get("fiftyTwoWeekLow"), 2),
+        # consenso das corretoras que cobrem o ativo (escala do Yahoo: 1 compra forte … 5 venda)
+        "rec": num(info.get("recommendationMean"), 2),
+        "alvo": num(info.get("targetMeanPrice"), 2),
+        "nanal": info.get("numberOfAnalystOpinions") or None,
         "ini": fech.index[0],
         "c": [num(v, 4) for v in fech],
     }
