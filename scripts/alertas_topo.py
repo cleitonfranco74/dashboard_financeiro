@@ -9,7 +9,7 @@ Cada aviso sai uma vez por dia. O arquivo de estado (no branch "dados") guarda o
 e os últimos avisos, que a página Mercado mostra.
 
 Uso: python scripts/alertas_topo.py data/acoes.json ../dados/cotacoes.json ../dados/alertas.json
-Variáveis: NTFY_TOPICO (padrão livro-caixa-topos); NTFY_DESLIGADO=1 grava o estado sem enviar.
+Variáveis: NTFY_TOPICO (padrão livro-caixa-topos-z26hf9); NTFY_DESLIGADO=1 grava o estado sem enviar.
 """
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-TOPICO = os.environ.get("NTFY_TOPICO", "livro-caixa-topos")
+TOPICO = os.environ.get("NTFY_TOPICO", "livro-caixa-topos-z26hf9")
 SITE = "https://cleitonfranco74.github.io/dashboard_financeiro/mercado.html#topos"
 FORA = {"BOVA11", "IVVB11"}   # ETFs
 MAX_AVISOS = 8                # por execução; o excedente vai num resumo
