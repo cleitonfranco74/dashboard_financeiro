@@ -364,6 +364,19 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
 .iv-b .br{display:block;height:9px;border-radius:999px;overflow:hidden;background:var(--surface-2)} .iv-b .br i{display:block;height:100%;border-radius:999px}
 .iv-b b{text-align:right;font-size:12.5px} .iv-b small{grid-column:1/-1;margin-top:-2px;font-size:11px;color:var(--muted);font-family:var(--mono)}
 .iv-tb .tr{grid-template-columns:28px minmax(0,1.6fr) minmax(0,1.2fr) 80px 80px 80px}
+/* ações das estatais (reaproveita o visual da seção de estatais) */
+.ae-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:12px}
+@media (max-width:560px){.ae-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px} .ae-c{padding:10px;gap:6px} .est .ae-t .lg{display:none} .ae-p{flex-direction:column;gap:2px} .ae-p b{font-size:18px} .ae-r{font-size:11px}}
+.ae-c{display:flex;flex-direction:column;gap:8px;text-align:left;border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--bg);color:var(--ink);font:inherit;cursor:pointer;min-width:0}
+.ae-c:hover{border-color:var(--ink-2)} .ae-c.sel{border-color:#5aa2ff;background:var(--accent-soft)}
+.ae-t{display:flex;gap:10px;align-items:center;min-width:0} .ae-t > span:last-child{min-width:0}
+.ae-t b{display:block;font-family:var(--mono);font-size:14px} .ae-t small{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.est .ae-t .lg{--w:64px;--h:34px;border-radius:8px}
+.ae-p{display:flex;justify-content:space-between;align-items:baseline;gap:8px} .ae-p b{font-size:22px;letter-spacing:-.02em} .ae-p small{font-size:12.5px;font-family:var(--mono)}
+.ae-mini{width:100%;height:34px;display:block}
+.ae-r{font-size:12px;color:var(--muted)}
+.est-dh h3 small{font-size:.6em;color:var(--muted);font-family:var(--mono);margin-left:6px}
+.est-g .gd{stroke:var(--line);stroke-dasharray:2 4}
 .iv-tb .c-l{grid-template-columns:minmax(0,1fr) 72px}
 @media (max-width:760px){
   .iv-tb .tr{grid-template-columns:18px repeat(3,minmax(0,1fr));grid-template-areas:"rk nm nm nm" "rk l t f"}
@@ -545,7 +558,7 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
         <h2 class="sec" id="hEst">Quanto cada estatal faturou e quanto lucrou</h2>
         <p>Receita e lucro (ou prejuízo) das empresas controladas diretamente pela União, ano a ano desde 2016. Navegue pelos grupos e pelas estatais nas abas ou clique numa linha da tabela.</p>
         <p class="est-res" id="estResumo"></p>
-        <nav class="est-sub" aria-label="Seções das estatais"><a href="#estatais">Receita e lucro</a><a href="#dividendos">Dividendos à União</a><a href="#investimentos">Investimentos</a></nav>
+        <nav class="est-sub" aria-label="Seções das estatais"><a href="#estatais">Receita e lucro</a><a href="#dividendos">Dividendos à União</a><a href="#investimentos">Investimentos</a><a href="#acoes-estatais">Ações na bolsa</a></nav>
       </div>
       <div class="est" id="est"><p class="est-fonte">Carregando os dados das estatais…</p></div>
       <div data-fb-util="Estatais federais"></div>
@@ -556,7 +569,7 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
         <span class="eyebrow">Dividendos</span>
         <h2 class="sec" id="hDiv">Quanto as estatais pagaram de dividendos à União</h2>
         <p>Dividendos e juros sobre capital próprio pagos pelas estatais federais ao Tesouro Nacional, ano a ano desde 2020, e quanto foi para os demais acionistas.</p>
-        <nav class="est-sub" aria-label="Seções das estatais"><a href="#estatais">Receita e lucro</a><a href="#dividendos">Dividendos à União</a><a href="#investimentos">Investimentos</a></nav>
+        <nav class="est-sub" aria-label="Seções das estatais"><a href="#estatais">Receita e lucro</a><a href="#dividendos">Dividendos à União</a><a href="#investimentos">Investimentos</a><a href="#acoes-estatais">Ações na bolsa</a></nav>
       </div>
       <div class="est" id="div"><p class="est-fonte">Carregando os dividendos…</p></div>
       <div data-fb-util="Dividendos das estatais"></div>
@@ -567,10 +580,21 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
         <span class="eyebrow">Investimentos</span>
         <h2 class="sec" id="hInv">Quanto as estatais investiram</h2>
         <p>Investimentos do Orçamento de Investimento das estatais federais, com as subsidiárias: quanto foi aprovado, quanto foi realizado, onde e em quais projetos, ano a ano desde 2016.</p>
-        <nav class="est-sub" aria-label="Seções das estatais"><a href="#estatais">Receita e lucro</a><a href="#dividendos">Dividendos à União</a><a href="#investimentos">Investimentos</a></nav>
+        <nav class="est-sub" aria-label="Seções das estatais"><a href="#estatais">Receita e lucro</a><a href="#dividendos">Dividendos à União</a><a href="#investimentos">Investimentos</a><a href="#acoes-estatais">Ações na bolsa</a></nav>
       </div>
       <div class="est" id="inv"><p class="est-fonte">Carregando os investimentos…</p></div>
       <div data-fb-util="Investimentos das estatais"></div>
+    </section>
+
+    <section class="blk" id="acoes-estatais" aria-labelledby="hAcEst">
+      <div class="shead">
+        <span class="eyebrow">Ações das estatais</span>
+        <h2 class="sec" id="hAcEst">Quanto valem as ações das estatais na bolsa</h2>
+        <p>Cotação de fechamento, variação do dia, retorno em 12 meses e indicadores das estatais com ações na B3, atualizados todo dia útil. Clique num cartão para ver o histórico de cinco anos comparado ao Ibovespa.</p>
+        <nav class="est-sub" aria-label="Seções das estatais"><a href="#estatais">Receita e lucro</a><a href="#dividendos">Dividendos à União</a><a href="#investimentos">Investimentos</a><a href="#acoes-estatais">Ações na bolsa</a></nav>
+      </div>
+      <div class="est" id="acEst"><p class="est-fonte">Carregando as cotações…</p></div>
+      <div data-fb-util="Ações das estatais"></div>
     </section>
 
     <section class="blk" id="ferramentas" aria-labelledby="ferr">
@@ -725,6 +749,7 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
 <script src="assets/mercado.js"></script>
 <script src="assets/estatais.js" defer></script>
 <script src="assets/investimentos.js" defer></script>
+<script src="assets/acoes-estatais.js" defer></script>
 <script>
 (() => {
 const $ = s => document.querySelector(s);
