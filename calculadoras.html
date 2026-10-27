@@ -46,7 +46,13 @@ button{cursor:pointer}
 .bar nav a[aria-current="page"]{color:var(--accent-ink);background:var(--accent)}
 .bar .cta-mini{display:inline-flex;align-items:center;height:38px;padding:0 16px;border-radius:999px;border:1px solid var(--line);color:var(--ink);font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap}
 .bar .cta-mini:hover{border-color:var(--ink-2)}
-@media (max-width:860px){.bar nav{display:none}}
+@media (max-width:1080px){.bar nav{display:none}}
+.bar nav a,.brand{white-space:nowrap}
+.bar .wrap nav a{padding:8px 9px;font-size:13.5px}
+.mnav{display:none}
+@media (max-width:1080px){.mnav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:0 16px 10px;max-width:100%}
+  .mnav a{flex:none;text-decoration:none;color:var(--ink-2);font-weight:600;font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--line)}
+  .mnav a[aria-current="page"]{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}}
 
 /* cabeçalho */
 .top{position:relative;padding:clamp(36px,6vw,64px) 0 clamp(20px,3vw,28px);isolation:isolate}
@@ -58,6 +64,7 @@ h1 em{font-style:normal;color:var(--accent)}
 
 /* abas */
 .navcalc{position:sticky;top:64px;z-index:20;background:var(--bg);padding-block:10px 12px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--line)}
+@media (max-width:1080px){.navcalc{top:108px}}   /* abaixo do menu de atalhos do celular */
 nav.grupos{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
 nav.grupos button{flex:none;border:1px solid var(--line);background:transparent;color:var(--ink-2);padding:7px 14px;border-radius:999px;font-weight:700;font-size:13.5px;white-space:nowrap}
 nav.grupos button small{font-weight:600;color:var(--muted);margin-left:6px}
@@ -131,11 +138,12 @@ addEventListener("hashchange", () => { if (window.goatcounter.count) window.goat
       <a href="livro-caixa.html">Livro-Caixa</a>
       <a href="simuladores.html">Simuladores</a>
       <a href="calculadoras.html" aria-current="page">Calculadoras</a>
-      <a href="carteira.html">Carteira</a><a href="mercado.html">Mercado</a><a href="estatais.html">Estatais</a>
+      <a href="carteira.html">Carteira</a><a href="mercado.html">Mercado</a><a href="acoes.html">Ações</a><a href="estatais.html">Estatais</a>
       <a href="https://cleitonfranco74.github.io/financas_municipais/">Municípios</a>
     </nav>
     <a class="cta-mini" href="index.html">← Início</a>
   </div>
+  <div class="mnav" aria-label="Menu"><a href="livro-caixa.html">Livro-Caixa</a><a href="simuladores.html">Simuladores</a><a href="calculadoras.html" aria-current="page">Calculadoras</a><a href="carteira.html">Carteira</a><a href="mercado.html">Mercado</a><a href="acoes.html">Ações</a><a href="estatais.html">Estatais</a><a href="https://cleitonfranco74.github.io/financas_municipais/">Municípios</a></div>
 </header>
 
 <div class="wrap">

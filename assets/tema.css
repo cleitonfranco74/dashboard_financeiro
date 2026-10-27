@@ -1,7 +1,7 @@
 /* Tema compartilhado: visual escuro com destaque verde-limão, igual à página inicial e às calculadoras.
  * Carregado depois do <style> de cada página, sobrepõe a tipografia, o cabeçalho e os componentes comuns. */
 html{--tbh:64px}
-@media (max-width:860px){html{--tbh:106px}}
+@media (max-width:1080px){html{--tbh:106px}}
 body{font-family:var(--sans);-webkit-font-smoothing:antialiased;padding-top:0!important;overflow-x:hidden}
 
 /* barra de navegação fixa */
@@ -15,9 +15,9 @@ body{font-family:var(--sans);-webkit-font-smoothing:antialiased;padding-top:0!im
 .topbar nav a[aria-current="page"]{color:var(--accent-ink);background:var(--accent)}
 .topbar .tb-cta{display:inline-flex;align-items:center;height:38px;padding:0 16px;border-radius:999px;border:1px solid var(--line);color:var(--ink);font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap}
 .topbar .tb-cta:hover{border-color:var(--ink-2)}
-@media (max-width:860px){.topbar nav{display:none}}
+@media (max-width:1080px){.topbar nav{display:none}}
 .topbar .tb-menu{display:none}
-@media (max-width:860px){.topbar .tb-menu{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:0 16px 10px;max-width:100%}
+@media (max-width:1080px){.topbar .tb-menu{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:0 16px 10px;max-width:100%}
   .topbar .tb-menu a{flex:none;text-decoration:none;color:var(--ink-2);font-weight:600;font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--line)}
   .topbar .tb-menu a[aria-current="page"]{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}}
 
