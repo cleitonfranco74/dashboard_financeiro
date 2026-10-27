@@ -1,0 +1,38 @@
+name: Versão dos arquivos do site
+
+# A cada mudança em assets/ ou nas páginas, grava ?v=<hash> nas referências das páginas,
+# para os navegadores (inclusive o do Instagram) buscarem os arquivos novos.
+on:
+  push:
+    branches: [main]
+    paths: ["assets/**", "*.html"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: versao
+  cancel-in-progress: false
+
+jobs:
+  versionar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/versionar_assets.py
+      - name: Commit se houve mudança
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- *.html
+          if git diff --cached --quiet; then
+            echo "Versões já em dia."
+          else
+            git commit -m "Atualiza a versão dos arquivos do site"
+            for i in 1 2 3; do git pull --rebase && git push && exit 0; sleep 5; done
+            exit 1
+          fi

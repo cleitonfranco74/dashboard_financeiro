@@ -111,6 +111,10 @@ Para atualizar à mão: aba **Actions** → *Atualizar dados de mercado* → *Ru
 
 Para editar a lista de ações, altere `ACOES` em `scripts/atualizar_mercado.py` e `ATIVOS` em `carteira.html`.
 
+## Versão dos arquivos
+
+As páginas carregam os scripts e estilos de `assets/` com `?v=<hash>` (começo do SHA-256 do conteúdo), para que os navegadores, inclusive o navegador embutido do Instagram, busquem a versão nova a cada atualização em vez de usar a cópia guardada. A Action `.github/workflows/versao.yml` roda `scripts/versionar_assets.py` a cada mudança em `assets/` ou nas páginas da `main` e grava as versões; o script também pode rodar à mão.
+
 ## Visitas
 Todas as páginas contam visitas pelo [GoatCounter](https://www.goatcounter.com) (sem cookies e sem dados pessoais), no painel `https://dashboardfinan.goatcounter.com`. Em Calculadoras e Simuladores, cada ferramenta (`#id`) conta como uma página. O rodapé da página inicial mostra o total de visitas (`/counter/TOTAL.json`) e as chegadas pelo Instagram: quem abre um link com `utm_source=instagram` é contado no caminho `/instagram` (`/counter/%2Finstagram.json`). Se o navegador bloquear o GoatCounter, o rodapé usa a cópia `visitas.json` que a Action `di.yml` grava no branch `dados`. Os contadores públicos exigem ativar *Allow adding visitor counts on your website* nas configurações do GoatCounter. Para saber quantas visitas vêm do Instagram, divulgue o link com a origem marcada, por exemplo `https://cleitonfranco74.github.io/dashboard_financeiro/?utm_source=instagram&utm_medium=bio`.
 

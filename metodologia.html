@@ -564,11 +564,11 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-<script src="assets/mercado.js"></script>
+<script src="assets/mercado.js?v=36494bdb"></script>
 <script>
 document.querySelectorAll("[data-tex]").forEach(el => { try { if (window.katex) katex.render(el.dataset.tex, el, {displayMode:true, throwOnError:false}); } catch {} });
 Mercado.carregar().then(m => { if (m.atualizado) document.getElementById("atual").textContent = `Indicadores lidos ${m.aoVivo ? "ao vivo" : "do arquivo diário"}. Preços e taxas do Tesouro atualizados em ${Mercado.dataBR(m.atualizado)}.`; }).catch(() => {});
 </script>
-<script src="assets/feedback.js" data-site="Livro-Caixa" data-cor="#c8f250" defer></script>
+<script src="assets/feedback.js?v=150e3030" data-site="Livro-Caixa" data-cor="#c8f250" defer></script>
 </body>
 </html>
