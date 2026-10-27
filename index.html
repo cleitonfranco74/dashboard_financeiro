@@ -7,7 +7,6 @@
 <meta name="description" content="Livro-Caixa: painel de finanças pessoais, 22 simuladores financeiros e otimizador de carteira com dados do Banco Central. Por Prof. Dr. Cleiton Franco (UNEMAT).">
 <meta name="theme-color" content="#08090b">
 <title>Livro-Caixa · Finanças com método</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap">
@@ -45,9 +44,9 @@ a{color:inherit}
 .bar nav a:hover{color:var(--ink)}
 .bar .cta-mini{display:inline-flex;align-items:center;height:40px;padding:0 18px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap}
 .bar .cta-mini:hover{filter:brightness(1.06)}
-@media (max-width:900px){.bar nav{display:none}}
-@media (max-width:1180px){.bar nav a{padding:8px 9px;font-size:13.5px}}
-@media (max-width:1100px){.bar nav a.op{display:none}}
+@media (max-width:1080px){.bar nav{display:none}}
+.bar nav a{padding:8px 9px;font-size:13.5px}
+@media (max-width:1300px){.bar nav a.op{display:none}}
 @media (max-width:380px){.bar .cta-mini{padding:0 14px;font-size:13px}}
 
 /* capa */
@@ -403,6 +402,36 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
   .iv-tb .tr > :nth-child(4){grid-area:t} .iv-tb .tr > :nth-child(5){grid-area:f} .iv-tb .tr > :nth-child(6){display:none}
   .iv-tb .br{display:none}
 }
+
+.bar nav a,.bar .brand{white-space:nowrap}
+.mnav{display:none}
+@media (max-width:1080px){.mnav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:0 16px 10px;max-width:100%}
+  .mnav a{flex:none;text-decoration:none;color:var(--ink-2);font-weight:600;font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--line)}
+  .mnav a[aria-current="page"]{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}}
+/* páginas internas (Mercado, Estatais, Metodologia) e capa enxuta */
+h1.sec{font-size:clamp(34px,5vw,58px);letter-spacing:-.035em;line-height:1.05;margin:10px 0 14px;font-weight:800;text-wrap:balance}
+.pg{text-align:center;max-width:760px;margin:0 auto;padding:clamp(40px,7vw,84px) 0 0}
+.pg p{margin:0 auto;color:var(--ink-2);max-width:60ch;font-size:16px}
+.pg .est-sub{margin-top:20px}
+.pg + section.blk,.pg + .mkt{margin-top:clamp(28px,4vw,44px)}
+.mkt .mcard{margin-top:0} .mkt > [id]{scroll-margin-top:84px} section.blk[id],.serie[id]{scroll-margin-top:84px}
+.hoje{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:clamp(32px,5vw,48px) auto 0;max-width:980px;text-align:left}
+.hoje a{display:block;text-decoration:none;color:var(--ink);border:1px solid var(--ring);border-radius:18px;padding:14px 16px;background:linear-gradient(180deg,var(--surface),var(--bg-2));min-width:0}
+.hoje a:hover{border-color:var(--ink-2)}
+.hoje span{display:block;font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.hoje b{display:block;font-size:clamp(18px,2.2vw,24px);letter-spacing:-.02em;margin:6px 0 2px;white-space:nowrap}
+.hoje small{display:block;font:12px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hoje .up{color:var(--good)} .hoje .dn{color:#ff6b6b}
+@media (max-width:760px){.hoje{grid-template-columns:repeat(2,minmax(0,1fr))} .hoje a:last-child{grid-column:1/-1}}
+.areas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:16px}
+.area{display:flex;flex-direction:column;gap:10px;text-decoration:none;color:var(--ink);border:1px solid var(--ring);border-radius:24px;padding:22px;background:linear-gradient(180deg,var(--surface),var(--bg-2));box-shadow:var(--shadow);min-width:0}
+.area:hover{border-color:var(--accent)}
+.area .tk{font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.area h3{margin:0;font-size:22px;letter-spacing:-.02em}
+.area p{margin:0;color:var(--ink-2);font-size:14.5px;line-height:1.5}
+.area .dest{margin-top:auto;padding-top:10px;border-top:1px solid var(--line);font:13px var(--mono);color:var(--muted)}
+.area .dest b{color:var(--ink);font-size:15px}
+.area .go{font-weight:700;font-size:14px;color:var(--accent)}
 </style>
 <!-- Contagem de visitas: GoatCounter (sem cookies; painel em dashboardfinan.goatcounter.com) -->
 <script>
@@ -410,6 +439,11 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
 window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(location.search) ? "/instagram" : p};
 </script>
 <script data-goatcounter="https://dashboardfinan.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+<script>
+/* Links antigos da capa: as seções foram para páginas próprias. */
+(() => { const R = {estatais:"estatais.html", dividendos:"estatais.html", investimentos:"estatais.html", "acoes-estatais":"estatais.html", "radar-acoes":"mercado.html", equacoes:"metodologia.html", dados:"metodologia.html"};
+  const h = location.hash.slice(1); if (R[h]) location.replace(R[h] + location.search + "#" + h); })();
+</script>
 </head>
 <body>
 <header class="bar">
@@ -423,13 +457,15 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
       <a href="simuladores.html">Simuladores</a>
       <a href="calculadoras.html">Calculadoras</a>
       <a href="carteira.html">Carteira</a>
-      <a href="#estatais">Estatais</a>
+      <a href="mercado.html">Mercado</a>
+      <a href="estatais.html">Estatais</a>
       <a href="https://cleitonfranco74.github.io/financas_municipais/">Municípios</a>
-      <a class="op" href="#equacoes">Metodologia</a>
+      <a class="op" href="metodologia.html">Metodologia</a>
       <a class="op" href="https://github.com/cleitonfranco74/dashboard_financeiro">Código</a>
     </nav>
     <a class="cta-mini" href="livro-caixa.html">Começar agora</a>
   </div>
+  <div class="mnav" aria-label="Menu"><a href="livro-caixa.html">Livro-Caixa</a><a href="simuladores.html">Simuladores</a><a href="calculadoras.html">Calculadoras</a><a href="carteira.html">Carteira</a><a href="mercado.html">Mercado</a><a href="estatais.html">Estatais</a><a href="https://cleitonfranco74.github.io/financas_municipais/">Municípios</a><a href="metodologia.html">Metodologia</a></div>
 </header>
 
 <div class="wrap">
@@ -454,115 +490,13 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
       </div>
       <div class="byline"><span class="mono" aria-hidden="true">CF</span><span>Criado por <b>Prof. Dr. Cleiton Franco</b>, Doutor em Economia</span></div>
 
-      <aside class="mcard" aria-label="Indicadores de hoje">
-        <div>
-          <div class="top"><h2>Juros e inflação hoje</h2><span class="status" id="st"><i></i>carregando…</span></div>
-          <div class="ind">
-            <div><span>Selic</span><b id="iSelic">—</b></div>
-            <div><span>CDI</span><b id="iCdi">—</b></div>
-            <div><span>IPCA 12m</span><b id="iIpca">—</b></div>
-          </div>
-          <p class="fisher">Juro real hoje, pela equação de Fisher: <span id="fisher" class="math">r = (1 + CDI)/(1 + IPCA) − 1</span></p>
-        </div>
-        <div>
-          <div class="legend" style="margin-bottom:8px"><span><i style="background:var(--accent)"></i>Selic esperada</span><span><i style="background:var(--s2)"></i>IPCA esperado</span></div>
-          <div class="chart" id="focus" role="img" aria-label="Trajetória esperada da Selic e do IPCA pelo Boletim Focus"></div>
-          <p class="fonte" id="fonte">Mediana das expectativas do Boletim Focus, do Banco Central.</p>
-        </div>
-      </aside>
-
-      <div class="bc">
-        <section class="serie" aria-labelledby="hIbov">
-          <div class="top"><h2 id="hIbov">Ibovespa</h2><span class="dt" id="dIbov">carregando…</span></div>
-          <div class="val"><b id="vIbov">—</b><span class="var" id="xIbov"></span></div>
-          <div class="chart" id="cIbov" role="img" aria-label="Ibovespa nos últimos 12 meses"></div>
-          <p class="fonte">Fechamento diário dos últimos 12 meses, em pontos. Fonte: B3, via Yahoo Finance; atualizado todo dia útil após o pregão.</p>
-        </section>
-        <section class="serie" aria-labelledby="hDolar">
-          <div class="top"><h2 id="hDolar">Dólar (PTAX)</h2><span class="dt" id="dDolar">carregando…</span></div>
-          <div class="val"><b id="vDolar">—</b><span class="var" id="xDolar"></span></div>
-          <div class="chart" id="cDolar" role="img" aria-label="Dólar PTAX nos últimos 12 meses"></div>
-          <p class="fonte">Cotação oficial de venda do Banco Central (PTAX), em reais. Último valor lido ao vivo; histórico dos últimos 12 meses.</p>
-        </section>
-      </div>
-
-      <div class="bc dis">
-        <section class="serie di" data-c="DI1F27" data-i="0" aria-labelledby="hF27">
-          <div class="top"><h2 id="hF27" class="dh">Juros futuros · DI1F27</h2><span class="dt dd">carregando…</span></div>
-          <p class="dt dnota" style="margin:4px 0 0">Taxa média de depósitos interfinanceiros de um dia, contrato com vencimento em janeiro de 2027.</p>
-          <div class="val"><b class="dv">—</b><span class="var dx"></span></div>
-          <div class="ctl">
-            <div class="seg sc" role="group" aria-label="Vencimento"></div>
-            <div class="seg sj" role="group" aria-label="Período">
-              <button type="button" data-j="dia">Hoje</button><button type="button" data-j="semana" aria-pressed="true">Semana</button><button type="button" data-j="curva">Curva</button>
-            </div>
-          </div>
-          <div class="chart dc" role="img" aria-label="Taxa do DI futuro ao longo do tempo"></div>
-          <div class="mini dm"></div>
-          <p class="fonte">Taxa em % ao ano. Fonte: B3, com atraso de cerca de 15 minutos; o painel se atualiza sozinho a cada 15 minutos durante o pregão.</p>
-        </section>
-        <section class="serie di" data-c="DI1F28" data-i="1" aria-labelledby="hF28">
-          <div class="top"><h2 id="hF28" class="dh">Juros futuros · DI1F28</h2><span class="dt dd">carregando…</span></div>
-          <p class="dt dnota" style="margin:4px 0 0">Taxa média de depósitos interfinanceiros de um dia, contrato com vencimento em janeiro de 2028.</p>
-          <div class="val"><b class="dv">—</b><span class="var dx"></span></div>
-          <div class="ctl">
-            <div class="seg sc" role="group" aria-label="Vencimento"></div>
-            <div class="seg sj" role="group" aria-label="Período">
-              <button type="button" data-j="dia">Hoje</button><button type="button" data-j="semana" aria-pressed="true">Semana</button><button type="button" data-j="curva">Curva</button>
-            </div>
-          </div>
-          <div class="chart dc" role="img" aria-label="Taxa do DI futuro ao longo do tempo"></div>
-          <div class="mini dm"></div>
-          <p class="fonte">Taxa em % ao ano. Fonte: B3, com atraso de cerca de 15 minutos; o painel se atualiza sozinho a cada 15 minutos durante o pregão.</p>
-        </section>
-      </div>
-      <section class="serie di inc" aria-labelledby="hInc">
-        <div class="top"><h2 id="hInc">Inclinação da curva · F28 − F27</h2><span class="dt id">carregando…</span></div>
-        <p class="dt" style="margin:4px 0 0">O que a diferença entre os dois vértices diz sobre a Selic esperada e o prêmio de risco.</p>
-        <div class="mini im"></div>
-        <p class="leitura il"></p>
-        <div class="ctl">
-          <span class="dt">Inclinação em pontos-base (vértice longo − curto)</span>
-          <div class="seg ij" role="group" aria-label="Período">
-            <button type="button" data-j="dia">Hoje</button><button type="button" data-j="semana" aria-pressed="true">Semana</button>
-          </div>
-        </div>
-        <div class="chart ic" role="img" aria-label="Inclinação entre DI1F28 e DI1F27 ao longo do tempo"></div>
-        <div class="termo">
-          <p class="dt" style="margin:0 0 6px">Taxa a termo implícita (CDI médio esperado entre os dois vencimentos), com <i>du</i> = dias úteis até cada vencimento:</p>
-          <div class="it"></div>
-        </div>
-        <p class="fonte">Negativa: o mercado espera juros menores à frente (curva invertida). Positiva: espera juros maiores ou cobra mais prêmio pelo prazo. Dias úteis contados pelo calendário de feriados nacionais; cálculo aproximado, sem valor de recomendação.</p>
-      </section>
-      <section class="serie di comb" aria-labelledby="hComb">
-        <div class="top"><h2 id="hComb">Diesel e petróleo</h2><span class="dt" id="dComb">carregando…</span></div>
-        <p class="dt" style="margin:4px 0 0">Preço médio do diesel S10 na bomba em Mato Grosso e no Brasil, petróleo Brent convertido em reais por litro e, para comparar, o diesel nos EUA.</p>
-        <div class="val"><b id="vComb">—</b><span class="var" id="xComb"></span></div>
-        <div class="ctl">
-          <div class="seg" id="sComb" role="group" aria-label="Séries do gráfico"></div>
-          <div class="seg" id="pComb" role="group" aria-label="Período">
-            <button type="button" data-p="1">1 ano</button><button type="button" data-p="3">3 anos</button><button type="button" data-p="0" aria-pressed="true">Desde 2019</button>
-          </div>
-        </div>
-        <div class="chart" id="cComb" role="img" aria-label="Preço semanal do diesel e do petróleo em reais por litro"></div>
-        <div class="mini" id="mComb"></div>
-        <p class="leitura" id="lComb"></p>
-        <p class="fonte">Em R$ por litro. Diesel: ANP, levantamento semanal de preços (média de revenda). Brent: contrato futuro em US$ por barril (159 litros) convertido pelo dólar da semana. EUA: EIA, preço médio de varejo em US$ por galão (3,785 litros) convertido pelo dólar; os impostos e o tipo de diesel diferem entre os países. Atualizado todo dia útil; a ANP publica uma vez por semana.</p>
-      </section>
-      <section class="serie di cripto" aria-labelledby="hCr">
-        <div class="top"><h2 id="hCr">Criptomoedas · Bitcoin</h2><span class="dt" id="dCr">carregando…</span></div>
-        <div class="val"><b id="vCr">—</b><span class="var" id="xCr"></span></div>
-        <div class="ctl">
-          <div class="seg" id="mCrSel" role="group" aria-label="Moeda"></div>
-          <div class="seg" id="pCr" role="group" aria-label="Período">
-            <button type="button" data-p="30">1 mês</button><button type="button" data-p="182">6 meses</button><button type="button" data-p="365" aria-pressed="true">1 ano</button><button type="button" data-p="ibov" aria-pressed="false">× Ibovespa</button>
-          </div>
-        </div>
-        <div class="chart" id="cCr" role="img" aria-label="Preço da criptomoeda em reais"></div>
-        <div class="mini" id="kCr"></div>
-        <p class="leitura" id="lCr"></p>
-        <p class="fonte">Preço do momento ao vivo pela CoinGecko; histórico diário de 12 meses em reais (cotação em dólar do Yahoo Finance × dólar do dia), atualizado todo dia útil. Índice de medo e ganância: alternative.me. Criptomoedas são investimentos de alto risco; isto não é recomendação. <a href="simuladores.html#cripto" style="color:var(--accent)">Simule um investimento em cripto →</a></p>
-      </section>
+      <nav class="hoje" aria-label="Hoje no mercado">
+        <a href="mercado.html#juros"><span>Selic</span><b id="hSelic">—</b><small>meta ao ano</small></a>
+        <a href="mercado.html#juros"><span>CDI</span><b id="hCdi">—</b><small>ao ano</small></a>
+        <a href="mercado.html#juros"><span>IPCA 12 meses</span><b id="hIpca">—</b><small id="hReal">inflação acumulada</small></a>
+        <a href="mercado.html#bolsa"><span>Ibovespa</span><b id="hIbov">—</b><small id="xIbov">pontos</small></a>
+        <a href="mercado.html#bolsa"><span>Dólar</span><b id="hDolar">—</b><small id="xDolar">PTAX</small></a>
+      </nav>
     </section>
 
     <div class="stats" role="list">
@@ -572,59 +506,18 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
       <div role="listitem"><b>100<em>%</em></b><span>no seu navegador</span></div>
     </div>
 
-    <section class="blk" id="estatais" aria-labelledby="hEst">
+    <section class="blk" id="areas" aria-labelledby="hAreas">
       <div class="shead">
-        <span class="eyebrow">Estatais federais</span>
-        <h2 class="sec" id="hEst">Quanto cada estatal faturou e quanto lucrou</h2>
-        <p>Receita e lucro (ou prejuízo) das empresas controladas diretamente pela União, ano a ano desde 2016. Navegue pelos grupos e pelas estatais nas abas ou clique numa linha da tabela.</p>
-        <p class="est-res" id="estResumo"></p>
-        <nav class="est-sub" aria-label="Seções das estatais"><a href="#estatais">Receita e lucro</a><a href="#dividendos">Dividendos à União</a><a href="#investimentos">Investimentos</a><a href="#acoes-estatais">Ações na bolsa</a></nav>
+        <span class="eyebrow">Painéis</span>
+        <h2 class="sec" id="hAreas">Dados para acompanhar a economia</h2>
+        <p>Cada painel tem a sua página, com os gráficos completos e as fontes.</p>
       </div>
-      <div class="est" id="est"><p class="est-fonte">Carregando os dados das estatais…</p></div>
-      <div data-fb-util="Estatais federais"></div>
-    </section>
-
-    <section class="blk" id="dividendos" aria-labelledby="hDiv">
-      <div class="shead">
-        <span class="eyebrow">Dividendos</span>
-        <h2 class="sec" id="hDiv">Quanto as estatais pagaram de dividendos à União</h2>
-        <p>Dividendos e juros sobre capital próprio pagos pelas estatais federais ao Tesouro Nacional, ano a ano desde 2020, e quanto foi para os demais acionistas.</p>
-        <nav class="est-sub" aria-label="Seções das estatais"><a href="#estatais">Receita e lucro</a><a href="#dividendos">Dividendos à União</a><a href="#investimentos">Investimentos</a><a href="#acoes-estatais">Ações na bolsa</a></nav>
+      <div class="areas">
+        <a class="area" href="mercado.html"><span class="tk">Mercado</span><h3>O mercado hoje</h3><p>Juros e inflação, Ibovespa e dólar, juros futuros, diesel e petróleo e criptomoedas.</p><span class="dest" id="aMerc">Ibovespa: <b>—</b></span><span class="go">Ver o mercado →</span></a>
+        <a class="area" href="mercado.html#radar-acoes"><span class="tk">Ações</span><h3>Radar de ações em queda</h3><p>Bancos, estatais e demais ações da B3 que caíram, com nota por fundamentos e consenso das corretoras.</p><span class="dest" id="aRadar">Ações em queda: <b>—</b></span><span class="go">Abrir o radar →</span></a>
+        <a class="area" href="estatais.html"><span class="tk">Estatais</span><h3>Estatais federais</h3><p>Receita, lucro, dividendos à União, investimentos e ações na bolsa das empresas da União.</p><span class="dest" id="aEst">Lucro somado: <b>—</b></span><span class="go">Ver as estatais →</span></a>
+        <a class="area" href="https://cleitonfranco74.github.io/financas_municipais/"><span class="tk">Municípios</span><h3>Finanças públicas municipais</h3><p>Receitas, despesas, saúde, educação, repasses e economia local dos municípios brasileiros.</p><span class="dest">Painel com todos os municípios</span><span class="go">Abrir o painel →</span></a>
       </div>
-      <div class="est" id="div"><p class="est-fonte">Carregando os dividendos…</p></div>
-      <div data-fb-util="Dividendos das estatais"></div>
-    </section>
-
-    <section class="blk" id="investimentos" aria-labelledby="hInv">
-      <div class="shead">
-        <span class="eyebrow">Investimentos</span>
-        <h2 class="sec" id="hInv">Quanto as estatais investiram</h2>
-        <p>Investimentos do Orçamento de Investimento das estatais federais, com as subsidiárias: quanto foi aprovado, quanto foi realizado, onde e em quais projetos, ano a ano desde 2016.</p>
-        <nav class="est-sub" aria-label="Seções das estatais"><a href="#estatais">Receita e lucro</a><a href="#dividendos">Dividendos à União</a><a href="#investimentos">Investimentos</a><a href="#acoes-estatais">Ações na bolsa</a></nav>
-      </div>
-      <div class="est" id="inv"><p class="est-fonte">Carregando os investimentos…</p></div>
-      <div data-fb-util="Investimentos das estatais"></div>
-    </section>
-
-    <section class="blk" id="acoes-estatais" aria-labelledby="hAcEst">
-      <div class="shead">
-        <span class="eyebrow">Ações das estatais</span>
-        <h2 class="sec" id="hAcEst">Quanto valem as ações das estatais na bolsa</h2>
-        <p>Cotação de fechamento, variação do dia, retorno em 12 meses e indicadores das estatais com ações na B3, atualizados todo dia útil. Clique num cartão para ver o histórico de cinco anos comparado ao Ibovespa.</p>
-        <nav class="est-sub" aria-label="Seções das estatais"><a href="#estatais">Receita e lucro</a><a href="#dividendos">Dividendos à União</a><a href="#investimentos">Investimentos</a><a href="#acoes-estatais">Ações na bolsa</a></nav>
-      </div>
-      <div class="est" id="acEst"><p class="est-fonte">Carregando as cotações…</p></div>
-      <div data-fb-util="Ações das estatais"></div>
-    </section>
-
-    <section class="blk" id="radar-acoes" aria-labelledby="hRadar">
-      <div class="shead">
-        <span class="eyebrow">Radar de ações</span>
-        <h2 class="sec" id="hRadar">Ações em queda: fundamentos e consenso das corretoras</h2>
-        <p>As ações da B3 que mais caíram desde a máxima de 52 semanas, com bancos e estatais em destaque, uma nota de 0 a 6 por critérios objetivos e a média das recomendações das corretoras. Uma triagem para estudar, não uma recomendação.</p>
-      </div>
-      <div class="est" id="radar"><p class="est-fonte">Carregando o radar…</p></div>
-      <div data-fb-util="Radar de ações"></div>
     </section>
 
     <section class="blk" id="ferramentas" aria-labelledby="ferr">
@@ -667,40 +560,6 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
       </div>
     </section>
 
-    <section class="blk" aria-labelledby="equacoes">
-      <div class="shead">
-        <span class="eyebrow">Metodologia</span>
-        <h2 class="sec" id="equacoes">As equações que fazem as contas</h2>
-        <p>Cada resultado das ferramentas sai de uma destas fórmulas clássicas de finanças, aplicadas com os dados de mercado do dia.</p>
-      </div>
-      <div class="eqs">
-        <article class="eq"><div class="f" data-tex="VF = VP\,(1+i)^{n}">VF = VP (1 + i)ⁿ</div><h3>Juros compostos</h3><p>Quanto um valor vira depois de n períodos rendendo a taxa i. A base de todas as projeções.</p><div class="uso"><a href="simuladores.html#aposentadoria">Aposentadoria</a><a href="simuladores.html#cdb">CDB</a><a href="simuladores.html#tesouro">Tesouro</a></div></article>
-        <article class="eq"><div class="f" data-tex="(1+i) = (1+r)\,(1+\pi)">(1 + i) = (1 + r)(1 + π)</div><h3>Equação de Fisher</h3><p>Separa o juro nominal i em juro real r e inflação π. Gera os valores em reais de hoje e a inflação implícita entre IPCA+ e Prefixado.</p><div class="uso"><a href="simuladores.html#tesouro">Tesouro</a><a href="simuladores.html#acoes">Ações</a></div></article>
-        <article class="eq"><div class="f" data-tex="VP = PMT \cdot \frac{1-(1+i)^{-n}}{i}">VP = PMT · [1 − (1 + i)⁻ⁿ] / i</div><h3>Valor presente de uma renda</h3><p>Quanto vale hoje uma sequência de pagamentos iguais. Define a parcela da tabela Price e o patrimônio necessário para a aposentadoria.</p><div class="uso"><a href="simuladores.html#aposentadoria">Aposentadoria</a><a href="simuladores.html#alugar">Alugar ou financiar</a></div></article>
-        <article class="eq"><div class="f" data-tex="VPL = \sum_{t=1}^{n} \frac{F_t}{(1+i)^{t}}">VPL = ∑ Fₜ / (1 + i)ᵗ</div><h3>Valor presente líquido</h3><p>Traz fluxos de datas diferentes para hoje, descontados pelo custo de oportunidade. Compara consórcio, financiamento e compra à vista.</p><div class="uso"><a href="simuladores.html#consorcio">Consórcio</a><a href="simuladores.html#dividas">Dívidas</a></div></article>
-        <article class="eq"><div class="f" data-tex="\%\text{CDI}_{\text{isento}} = \%\text{CDI}_{\text{CDB}}\,(1 - t)">%CDI isento = %CDI do CDB · (1 − t)</div><h3>Equivalência tributária</h3><p>A taxa que uma LCI ou LCA isenta precisa pagar para empatar com um CDB tributado, conforme a alíquota regressiva do prazo.</p><div class="uso"><a href="simuladores.html#cdb">CDB</a><a href="simuladores.html#previdencia">PGBL ou VGBL</a></div></article>
-        <article class="eq"><div class="f" data-tex="E[R_i] = r_f + \beta_i\,\big(E[R_m] - r_f\big)">E[Rᵢ] = r_f + βᵢ (E[Rₘ] − r_f)</div><h3>CAPM</h3><p>O retorno esperado de uma ação é o juro sem risco mais o prêmio de mercado proporcional ao seu beta. Só o risco que não se diversifica é remunerado.</p><div class="uso"><a href="carteira.html">Carteira</a></div></article>
-        <article class="eq wide"><div class="f" data-tex="\max_{w}\; w^{\top}\mu - \frac{\lambda}{2}\, w^{\top}\Sigma\, w \quad \text{s.a.}\quad \mathbf{1}^{\top}w = 1,\;\; 0 \le w_i \le \bar{w}_i">max w'μ − (λ/2) w'Σw  s.a. ∑wᵢ = 1, 0 ≤ wᵢ ≤ w̄ᵢ</div><h3>Otimização de Markowitz</h3><p>Escolhe os pesos w que dão o maior retorno esperado μ para cada nível de risco, medido pela matriz de covariâncias Σ. Variando λ, surge a fronteira eficiente.</p><div class="uso"><a href="carteira.html">Carteira</a></div></article>
-        <article class="eq"><div class="f" data-tex="S = \frac{E[R_p] - r_f}{\sigma_p}">S = (E[Rₚ] − r_f) / σₚ</div><h3>Índice de Sharpe</h3><p>Retorno acima do juro sem risco por unidade de volatilidade. A carteira tangente é a que maximiza S.</p><div class="uso"><a href="carteira.html">Carteira</a></div></article>
-        <article class="eq full"><div class="f" data-tex="\hat{\Sigma} = \delta\,F + (1-\delta)\,S, \qquad \delta^{*} = \min\!\left(1,\ \frac{\hat{b}^{2}}{\hat{d}^{2}}\right)">Σ̂ = δF + (1 − δ)S</div><h3>Encolhimento de Ledoit-Wolf</h3><p>Combina a covariância amostral S com um alvo estável F na intensidade δ que minimiza o erro de estimação. Evita carteiras extremas causadas por ruído nos dados.</p><div class="uso"><a href="carteira.html">Carteira</a></div></article>
-      </div>
-    </section>
-
-    <section class="blk" aria-labelledby="dados">
-      <div class="shead">
-        <span class="eyebrow">Transparência</span>
-        <h2 class="sec" id="dados">Dados públicos, atualizados todo dia útil</h2>
-        <p>Regras claras e fontes oficiais: nenhum número é inventado, todos vêm de bases públicas.</p>
-      </div>
-      <div class="fontes">
-        <div class="fonte-c"><b>Banco Central</b><span>Selic, CDI e IPCA pelo Sistema Gerenciador de Séries</span><br><code>SGS 432 · 4389 · 13522</code></div>
-        <div class="fonte-c"><b>Boletim Focus</b><span>Mediana das expectativas de Selic e IPCA para os próximos anos</span></div>
-        <div class="fonte-c"><b>Tesouro Transparente</b><span>Taxas e preços diários de todos os títulos do Tesouro Direto</span></div>
-        <div class="fonte-c"><b>B3</b><span>Preços mensais ajustados por proventos de ações e ETFs</span></div>
-      </div>
-      <p id="atual">Os indicadores são lidos ao vivo; preços e taxas do Tesouro são atualizados às 19h.</p>
-    </section>
-
     <section class="blk" aria-labelledby="autor">
       <div class="autor-blk">
         <span class="mono" aria-hidden="true">CF</span>
@@ -734,11 +593,11 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
       </div>
       <div>
         <h4>Ferramentas</h4>
-        <ul><li><a href="livro-caixa.html">Livro-Caixa</a></li><li><a href="simuladores.html">Simuladores</a></li><li><a href="calculadoras.html">Calculadoras</a></li><li><a href="carteira.html">Carteira</a></li></ul>
+        <ul><li><a href="livro-caixa.html">Livro-Caixa</a></li><li><a href="simuladores.html">Simuladores</a></li><li><a href="calculadoras.html">Calculadoras</a></li><li><a href="carteira.html">Carteira</a></li><li><a href="mercado.html">Mercado</a></li><li><a href="estatais.html">Estatais</a></li></ul>
       </div>
       <div>
         <h4>Projeto</h4>
-        <ul><li><a href="#equacoes">Metodologia</a></li><li><a href="#dados">Fontes de dados</a></li><li><a href="https://github.com/cleitonfranco74/dashboard_financeiro">Código no GitHub</a></li></ul>
+        <ul><li><a href="metodologia.html#equacoes">Metodologia</a></li><li><a href="metodologia.html#dados">Fontes de dados</a></li><li><a href="https://github.com/cleitonfranco74/dashboard_financeiro">Código no GitHub</a></li></ul>
       </div>
     </div>
     <div class="legal">
@@ -775,18 +634,12 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
   });
 })();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="assets/mercado.js"></script>
-<script src="assets/estatais.js" defer></script>
-<script src="assets/investimentos.js" defer></script>
-<script src="assets/cotacoes.js" defer></script>
-<script src="assets/acoes-estatais.js" defer></script>
-<script src="assets/radar-acoes.js" defer></script>
 <script>
+/* Capa: lista de simuladores, faixa "Hoje no mercado" e destaques dos painéis. */
 (() => {
 const $ = s => document.querySelector(s);
 const nf = (v,d=2) => v.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
-
 const GRUPOS = [
   ["Tesouro Direto", [["tesouro","Comparar títulos"],["selic","Tesouro Selic"],["ipca","Tesouro IPCA+"],["prefixado","Tesouro Prefixado"],["educa","Tesouro Educa+"]]],
   ["Investimentos", [["cdb","CDB e LCI/LCA"],["acoes","Ações"],["dividendos","Dividendos"],["fii","Fundos imobiliários"],["cripto","Criptomoedas"]]],
@@ -796,530 +649,27 @@ const GRUPOS = [
 ];
 $(".sims").innerHTML = GRUPOS.map(([g,itens])=>`<div class="simg"><span>${g}</span>${itens.map(([id,n])=>`<a href="simuladores.html#${id}">${n}</a>`).join("")}</div>`).join("");
 
-const tex = (el, t, display) => { try { if (window.katex) katex.render(t, el, {displayMode:display, throwOnError:false}); } catch {} };
-document.querySelectorAll("[data-tex]").forEach(el=>tex(el, el.dataset.tex, true));
-
-function drawFocus(m){
-  const el = $("#focus");
-  const anos = Object.keys(m.focus.selic).sort().slice(0,4);
-  const pts = [{x:"Hoje", s:m.indicadores.selic.valor, i:m.indicadores.ipca12.valor}, ...anos.map(a=>({x:a, s:m.focus.selic[a], i:m.focus.ipca[a]}))];
-  const W = Math.max(260, el.clientWidth||380), H = 170, pad = {t:18,r:16,b:24,l:34};
-  const max = Math.ceil(Math.max(...pts.map(p=>p.s))/2)*2+1, min = 0;
-  const X = k => pad.l + k*(W-pad.l-pad.r)/(pts.length-1);
-  const Y = v => pad.t + (max-v)/(max-min)*(H-pad.t-pad.b);
-  let g = "";
-  for (let v=0; v<=max; v+=4) g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(${v===0?"--axis":"--line"})"/><text class="tn" x="${pad.l-6}" y="${Y(v)+3.5}" text-anchor="end">${v}%</text>`;
-  pts.forEach((p,k)=>{ g += `<text x="${X(k)}" y="${H-6}" text-anchor="middle">${p.x}</text>`; });
-  const line = (key,color) => {
-    g += `<path d="${pts.map((p,k)=>(k?"L":"M")+X(k).toFixed(1)+","+Y(p[key]).toFixed(1)).join("")}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
-    pts.forEach((p,k)=>{ g += `<circle cx="${X(k)}" cy="${Y(p[key])}" r="${k===0?5:3.5}" fill="${color}" stroke="var(--bg)" stroke-width="2"/>`; });
-  };
-  g += `<path d="M${X(0)},${Y(0)} ${pts.map((p,k)=>`L${X(k).toFixed(1)},${Y(p.s).toFixed(1)}`).join(" ")} L${X(pts.length-1)},${Y(0)}Z" fill="var(--accent)" opacity=".08"/>`;
-  line("i","var(--s2)"); line("s","var(--accent)");
-  g += `<text class="vl" x="${X(0)+8}" y="${Y(pts[0].s)-8}">${nf(pts[0].s)}%</text>`;
-  const L = pts[pts.length-1];
-  g += `<text class="vl" x="${X(pts.length-1)}" y="${Y(L.s)-10}" text-anchor="end">${nf(L.s)}%</text>`;
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" aria-hidden="true">${g}</svg>`;
-}
-
-/* Série diária de 12 meses: área + linha, eixo com meses e dica ao passar o mouse. */
-function drawSerie(el, datas, vals, color, fmt){
-  if (!vals || vals.length<2){ el.innerHTML = `<p class="fonte">Série ainda não disponível.</p>`; return; }
-  const W = Math.max(260, el.clientWidth||420), H = 160, pad = {t:10,r:12,b:22,l:12};
-  let lo = Math.min(...vals), hi = Math.max(...vals); const folga = (hi-lo)*0.08 || 1; lo -= folga; hi += folga;
-  const X = k => pad.l + k*(W-pad.l-pad.r)/(vals.length-1), Y = v => pad.t + (hi-v)/(hi-lo)*(H-pad.t-pad.b);
-  const mes = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
-  let g = "", ult = "";
-  datas.forEach((d,k)=>{ const m = d.slice(0,7); if (m!==ult){ ult = m; const n = +d.slice(5,7)-1;
-    if (k>0 && n%3===0) g += `<line x1="${X(k)}" x2="${X(k)}" y1="${pad.t}" y2="${H-pad.b}" stroke="var(--line)"/><text x="${X(k)}" y="${H-6}" text-anchor="middle">${mes[n]}${n===0?"/"+d.slice(2,4):""}</text>`; } });
-  const linha = vals.map((v,k)=>(k?"L":"M")+X(k).toFixed(1)+","+Y(v).toFixed(1)).join("");
-  g += `<path d="${linha}L${X(vals.length-1)},${H-pad.b}L${X(0)},${H-pad.b}Z" fill="${color}" opacity=".10"/>`;
-  g += `<path d="${linha}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>`;
-  const L = vals.length-1;
-  g += `<circle cx="${X(L)}" cy="${Y(vals[L])}" r="4" fill="${color}" stroke="var(--surface)" stroke-width="2"/>`;
-  g += `<g class="hov" style="display:none"><line y1="${pad.t}" y2="${H-pad.b}" stroke="var(--axis)"/><circle r="4" fill="${color}" stroke="var(--surface)" stroke-width="2"/></g>`;
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" aria-hidden="true">${g}</svg><div class="tipb" hidden></div>`;
-  const svg = el.querySelector("svg"), hov = el.querySelector(".hov"), tip = el.querySelector(".tipb");
-  const move = e => { const b = svg.getBoundingClientRect(), px = (e.clientX-b.left)*(W/b.width);
-    const k = Math.max(0, Math.min(L, Math.round((px-pad.l)/(W-pad.l-pad.r)*L)));
-    hov.style.display = ""; hov.querySelector("line").setAttribute("x1",X(k)); hov.querySelector("line").setAttribute("x2",X(k));
-    hov.querySelector("circle").setAttribute("cx",X(k)); hov.querySelector("circle").setAttribute("cy",Y(vals[k]));
-    tip.hidden = false; tip.innerHTML = `${Mercado.dataBR(datas[k])} · <b>${fmt(vals[k])}</b>`;
-    const x = X(k)/W*b.width; tip.style.left = Math.max(0, Math.min(b.width-tip.offsetWidth, x-tip.offsetWidth/2))+"px"; };
-  svg.addEventListener("mousemove", move);
-  svg.addEventListener("touchstart", e=>move(e.touches[0]), {passive:true});
-  svg.addEventListener("touchmove", e=>move(e.touches[0]), {passive:true});
-  svg.addEventListener("mouseleave", ()=>{ hov.style.display="none"; tip.hidden = true; });
-}
-function painelSerie(id, s, color, fmt, quando){
-  if (!s || !s.valores || s.valores.length<2){ $("#d"+id).textContent = "indisponível"; drawSerie($("#c"+id)); return; }
-  const v = s.valores, L = v.length-1, tag = (x, txt) => `<span class="${x>=0?"up":"dn"}">${x>=0?"+":"−"}${nf(Math.abs(x)*100)}% ${txt}</span>`;
-  $("#v"+id).textContent = fmt(v[L]);
-  $("#d"+id).textContent = quando + Mercado.dataBR(s.datas[L]);
-  const umAno = String(+s.datas[L].slice(0,4)-1) + s.datas[L].slice(4), k0 = Math.max(0, s.datas.findIndex(d=>d>=umAno));
-  $("#x"+id).innerHTML = tag(v[L]/v[L-1]-1, "no dia") + tag(v[L]/v[k0]-1, "em 12 meses");
-  drawSerie($("#c"+id), s.datas, v, color, fmt);
-}
-
-Mercado.carregar().then(m=>{
-  $("#iSelic").textContent = nf(m.indicadores.selic.valor)+"%";
-  $("#iCdi").textContent = nf(m.indicadores.cdi.valor)+"%";
-  $("#iIpca").textContent = nf(m.indicadores.ipca12.valor)+"%";
-  const st = $("#st");
-  st.className = "status" + (m.aoVivo ? " on" : "");
-  st.lastChild.textContent = m.aoVivo ? "ao vivo" : m.referencia ? "valores de referência" : "dados do dia";
-  $("#fonte").textContent = `Mediana das expectativas do Boletim Focus de ${Mercado.dataBR(m.focus.data)}. A Selic parte de ${nf(m.indicadores.selic.valor)}% e o mercado espera ${nf(m.focus.selic[Object.keys(m.focus.selic).sort()[Math.min(3,Object.keys(m.focus.selic).length-1)]])}% em ${Object.keys(m.focus.selic).sort()[Math.min(3,Object.keys(m.focus.selic).length-1)]}.`;
-  if (m.atualizado) $("#atual").textContent = `Indicadores lidos ${m.aoVivo?"ao vivo":"do arquivo diário"}. Preços e taxas do Tesouro atualizados em ${Mercado.dataBR(m.atualizado)}.`;
-  const cdi = m.indicadores.cdi.valor/100, ip = m.indicadores.ipca12.valor/100, real = (1+cdi)/(1+ip)-1;
-  const dec = (v,d) => v.toFixed(d).replace(".","{,}");
-  const fe = $("#fisher");
-  fe.textContent = `r = (1 + ${nf(cdi*100)}%) / (1 + ${nf(ip*100)}%) − 1 = ${nf(real*100)}%`;
-  tex(fe, `r = \\frac{${dec(1+cdi,4)}}{${dec(1+ip,4)}} - 1 = \\mathbf{${dec(real*100,2)}\\%}`, false);
-  drawFocus(m);
-  const bc = () => {
-    painelSerie("Ibov", m.bolsa?.ibov, "var(--accent)", v=>Math.round(v).toLocaleString("pt-BR")+" pts", "fechamento de ");
-    painelSerie("Dolar", m.bolsa?.dolar, "var(--s2)", v=>"R$ "+nf(v,4), m.dolarAoVivo ? "ao vivo · " : "");
-  };
-  bc();
-  let t; new ResizeObserver(()=>{ clearTimeout(t); t=setTimeout(()=>{ drawFocus(m); bc(); },80); }).observe($("#focus"));
-});
-})();
-</script>
-<script>
-/* Juros futuros (DI1): lê o arquivo gravado pela Action di.yml no branch "dados" e se atualiza sozinho.
-   Cada painel .serie.di começa no contrato de data-c e tem seus próprios seletores. */
-(() => {
-const nf = (v,d=2) => v.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
-const RAW = "https://raw.githubusercontent.com/cleitonfranco74/dashboard_financeiro/dados/di.json";
-const NOMES = {F:"janeiro",G:"fevereiro",H:"março",J:"abril",K:"maio",M:"junho",N:"julho",Q:"agosto",U:"setembro",V:"outubro",X:"novembro",Z:"dezembro"};
-const MES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
-const SEM = ["dom","seg","ter","qua","qui","sex","sáb"];
-const ano = c => 2000 + +c.slice(-2);
-const diaBR = d => `${SEM[new Date(d+"T12:00:00").getDay()]} ${d.slice(8,10)}/${d.slice(5,7)}`;
-let dados = null, tentou = false;
-
-async function carregar(){
-  const t = Math.floor(Date.now()/60000);
-  for (const u of [`${RAW}?t=${t}`, `data/di.json?t=${t}`]) {
-    try { const r = await fetch(u, {cache:"no-store"}); if (r.ok) { const d = await r.json(); if (d && d.contratos) return d; } } catch {}
-  }
-  return null;
-}
-
-/* Gráfico de linha com área, referência tracejada (ajuste anterior) e dica ao passar o mouse. */
-function grafico(el, pts, o){
-  if (!pts || pts.length < 2){ el.innerHTML = `<p class="fonte">${o.vazio || "Sem dados para este período ainda."}</p>`; return; }
-  const W = Math.max(260, el.clientWidth||600), H = 220, pad = {t:14,r:50,b:24,l:8};
-  const vs = pts.map(p=>p.v).concat(o.ref!=null ? [o.ref] : []);
-  if (o.zero) vs.push(0);
-  let lo = Math.min(...vs), hi = Math.max(...vs); const f = (hi-lo)*0.12 || 0.05; lo -= f; hi += f;
-  const L = pts.length-1, X = k => pad.l + k*(W-pad.l-pad.r)/L, Y = v => pad.t + (hi-v)/(hi-lo)*(H-pad.t-pad.b);
-  let g = "";
-  const passo = [0.01,0.02,0.05,0.1,0.2,0.25,0.5,1,2,5,10,25,50].find(p => (hi-lo)/p <= 5) || 100;
-  const cor = o.cor || "var(--accent)", tick = o.tick || (v => nf(v, passo<1?2:1)), dica = o.dica || (v => nf(v,3)+"%");
-  for (let v = Math.ceil(lo/passo)*passo; v <= hi; v += passo)
-    g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text class="tn" x="${W-pad.r+6}" y="${Y(v)+3.5}">${tick(v)}</text>`;
-  let ultX = -1e9;
-  (o.marcas||[]).forEach(([k,txt,sep]) => {
-    if (sep && k>0) g += `<line x1="${X(k)}" x2="${X(k)}" y1="${pad.t}" y2="${H-pad.b}" stroke="var(--line)" stroke-dasharray="2 3"/>`;
-    if (X(k) - ultX < 8*txt.length + 6) return;
-    ultX = X(k);
-    g += `<text x="${X(k)}" y="${H-6}" text-anchor="${k===0?"start":"middle"}">${txt}</text>`;
-  });
-  if (o.ref!=null) g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(o.ref)}" y2="${Y(o.ref)}" stroke="var(--ink-2)" stroke-dasharray="4 4" opacity=".7"/><text class="ref" x="${pad.l+4}" y="${Y(o.ref)-5}">${o.refRot || "ajuste anterior "+nf(o.ref,3)}</text>`;
-  const linha = pts.map((p,k)=>(k?"L":"M")+X(k).toFixed(1)+","+Y(p.v).toFixed(1)).join("");
-  if (o.zero) g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--axis)"/>`;
-  const base = o.zero ? Y(0) : H-pad.b;
-  g += `<path d="${linha}L${X(L)},${base}L${X(0)},${base}Z" fill="${cor}" opacity=".08"/>`;
-  g += `<path d="${linha}" fill="none" stroke="${cor}" stroke-width="2" stroke-linejoin="round"/>`;
-  (o.pontos||[]).forEach(k => { g += `<circle cx="${X(k)}" cy="${Y(pts[k].v)}" r="${k===o.destaque?6:3.5}" fill="${k===o.destaque?"var(--accent)":"var(--surface)"}" stroke="var(--accent)" stroke-width="2"/>`; });
-  if (o.destaque!=null) g += `<text class="vl" x="${X(o.destaque)}" y="${Y(pts[o.destaque].v)-12}" text-anchor="middle">${pts[o.destaque].rot}</text>`;
-  else g += `<circle cx="${X(L)}" cy="${Y(pts[L].v)}" r="4.5" fill="${cor}" stroke="var(--surface)" stroke-width="2"/>`;
-  g += `<g class="hov" style="display:none"><line y1="${pad.t}" y2="${H-pad.b}" stroke="var(--axis)"/><circle r="4" fill="${cor}" stroke="var(--surface)" stroke-width="2"/></g>`;
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" aria-hidden="true">${g}</svg><div class="tipb" hidden></div>`;
-  const svg = el.querySelector("svg"), hov = el.querySelector(".hov"), tip = el.querySelector(".tipb");
-  const move = e => { const b = svg.getBoundingClientRect(), px = (e.clientX-b.left)*(W/b.width);
-    const k = Math.max(0, Math.min(L, Math.round((px-pad.l)/(W-pad.l-pad.r)*L)));
-    hov.style.display = ""; hov.querySelector("line").setAttribute("x1",X(k)); hov.querySelector("line").setAttribute("x2",X(k));
-    hov.querySelector("circle").setAttribute("cx",X(k)); hov.querySelector("circle").setAttribute("cy",Y(pts[k].v));
-    tip.hidden = false; tip.innerHTML = `${pts[k].dica} · <b>${dica(pts[k].v)}</b>`;
-    const x = X(k)/W*b.width; tip.style.left = Math.max(0, Math.min(b.width-tip.offsetWidth, x-tip.offsetWidth/2))+"px"; };
-  svg.addEventListener("mousemove", move);
-  svg.addEventListener("touchstart", e=>move(e.touches[0]), {passive:true});
-  svg.addEventListener("touchmove", e=>move(e.touches[0]), {passive:true});
-  svg.addEventListener("mouseleave", ()=>{ hov.style.display="none"; tip.hidden = true; });
-}
-
-function painel(root){
-  const q = s => root.querySelector(s), st = {c:root.dataset.c, j:"semana"}, pos = +root.dataset.i;
-
-  function desenhar(){
-    const d = dados, el = q(".dc");
-    if (!d){ if (!tentou) return; el.innerHTML = `<p class="fonte">Os dados do DI futuro ainda não foram coletados. A primeira coleta acontece no próximo pregão (dias úteis, das 9h às 18h).</p>`; q(".dd").textContent = "aguardando dados"; return; }
-    const r = d.contratos[st.c] || {}, u = r.ultimo || {}, intra = r.intradia || {}, dias = Object.keys(intra).sort();
-    q(".dh").textContent = `Juros futuros · ${st.c}`;
-    q(".dnota").textContent = `Taxa média de depósitos interfinanceiros de um dia, contrato com vencimento em ${NOMES[st.c[3]]||""} de ${ano(st.c)}.`;
-    const taxa = u.taxa ?? (dias.length ? intra[dias.at(-1)].at(-1)[1] : null), aj = u.ajusteAnterior;
-    q(".dv").textContent = taxa!=null ? nf(taxa,3)+"%" : "—";
-    q(".dx").innerHTML = taxa!=null && aj ? (x => `<span class="${x<=0?"up":"dn"}">${x>=0?"+":"−"}${nf(Math.abs(x),1)} bps no dia</span><span>${x>=0?"+":"−"}${nf(Math.abs(u.var ?? (taxa/aj-1)*100))}%</span>`)((taxa-aj)*100) : "";
-    q(".dd").textContent = u.hora ? `${diaBR(u.hora.slice(0,10))}, ${u.hora.slice(11,16)} (Brasília)` : dias.length ? diaBR(dias.at(-1)) : "";
-    const fmt = v => v!=null ? nf(v,3)+"%" : "—";
-    q(".dm").innerHTML = [["Abertura",fmt(u.abertura)],["Mínima",fmt(u.min)],["Máxima",fmt(u.max)],["Ajuste anterior",fmt(aj)],["Negócios",u.negocios!=null?u.negocios.toLocaleString("pt-BR"):"—"]]
-      .map(([a,b])=>`<div><span>${a}</span><b>${b}</b></div>`).join("");
-    el.setAttribute("aria-label", st.j==="curva" ? "Curva de juros futuros por vencimento" : `Taxa do ${st.c} ${st.j==="dia"?"hoje":"nos últimos pregões"}`);
-
-    if (st.j === "curva"){
-      const cv = (d.curva||[]).filter(x => x.venc && x.venc.slice(0,4) <= String(new Date().getFullYear()+10));
-      const pts = cv.map(x => ({v:x.taxa, dica:`${x.c} · ${MES[+x.venc.slice(5,7)-1]}/${x.venc.slice(0,4)}`, rot:nf(x.taxa,2)+"%"}));
-      const marcas = [], vistos = new Set();
-      cv.forEach((x,k)=>{ const a = x.venc.slice(0,4); if (!vistos.has(a)){ vistos.add(a); if (+a%2===0 || cv.length<14) marcas.push([k, a, true]); } });
-      const k = cv.findIndex(x => x.c === st.c);
-      grafico(el, pts, {marcas, destaque:k>=0?k:null, pontos:cv.map((x,i)=>i).filter(i=>/F\d\d$/.test(cv[i].c)), vazio:"Curva ainda não disponível."});
-      return;
-    }
-    const usar = st.j === "dia" ? dias.slice(-1) : dias, pts = [], marcas = [];
-    usar.forEach(dia => { const a = intra[dia]||[]; if (!a.length) return;
-      marcas.push([pts.length, st.j==="dia" ? a[0][0] : diaBR(dia), true]);
-      a.forEach(([h,v]) => pts.push({v, dica:`${diaBR(dia)} ${h}`}));
-      if (st.j==="dia"){ for (const hh of ["11:00","13:00","15:00","17:00"]){ const k = a.findIndex(p=>p[0]>=hh); if (k>0) marcas.push([k, hh]); } }
-    });
-    grafico(el, pts, {marcas, ref:aj, vazio:"A série intradiária começa a ser montada no próximo pregão."});
-  }
-  function botoes(){
-    if (dados && !dados.contratos[st.c]) st.c = Object.keys(dados.contratos).sort((x,y)=>ano(x)-ano(y))[pos] || Object.keys(dados.contratos)[0];
-    const cs = dados ? Object.keys(dados.contratos).sort() : [st.c];
-    q(".sc").innerHTML = cs.map(c=>`<button type="button" data-c="${c}" aria-pressed="${c===st.c}" title="Vencimento em janeiro de ${ano(c)}">${c.slice(3)}</button>`).join("");
-    root.querySelectorAll(".sj button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.j===st.j));
-  }
-  q(".sc").addEventListener("click", e=>{ const b = e.target.closest("button"); if (!b) return; st.c = b.dataset.c; botoes(); desenhar(); });
-  q(".sj").addEventListener("click", e=>{ const b = e.target.closest("button"); if (!b) return; st.j = b.dataset.j; botoes(); desenhar(); });
-  let t; new ResizeObserver(()=>{ clearTimeout(t); t = setTimeout(desenhar, 80); }).observe(q(".dc"));
-  return () => { botoes(); desenhar(); };
-}
-
-/* Dias úteis (calendário nacional: fixos, Carnaval, Sexta-feira Santa e Corpus Christi). */
-const pascoa = y => { const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mes=Math.floor((h+l-7*m+114)/31),dia=((h+l-7*m+114)%31)+1; return Date.UTC(y,mes-1,dia); };
-const FER = {};
-function feriados(y){
-  if (FER[y]) return FER[y];
-  const iso = t => new Date(t).toISOString().slice(0,10), P = pascoa(y), D = 864e5;
-  return FER[y] = new Set(["01-01","04-21","05-01","09-07","10-12","11-02","11-15","11-20","12-25"].map(x=>`${y}-${x}`)
-    .concat([P-48*D, P-47*D, P-2*D, P+60*D].map(iso)));
-}
-const util = t => { const dt = new Date(t), w = dt.getUTCDay(), s = dt.toISOString().slice(0,10); return w!==0 && w!==6 && !feriados(dt.getUTCFullYear()).has(s); };
-function vencimento(c){ let t = Date.UTC(ano(c), 0, 1); while (!util(t)) t += 864e5; return t; }   // 1º dia útil de janeiro
-function du(de, ate){ let n = 0; for (let t = de; t < ate; t += 864e5) if (util(t)) n++; return n; }
-const termo = (i1, i2, d1, d2) => (Math.pow(Math.pow(1+i2/100, d2/252) / Math.pow(1+i1/100, d1/252), 252/(d2-d1)) - 1) * 100;
-
-function painelInc(root){
-  const q = s => root.querySelector(s), st = {j:"semana"};
-  let A, B;
-  const bps = (v,d=1) => `${v>0?"+":v<0?"−":""}${nf(Math.abs(v),d)}`;
-  function leitura(d1, d2){
-    const m = Math.max(Math.abs(d1), Math.abs(d2)), dir = x => x>0 ? "alta" : "queda";
-    if (m < 3) return "Curva praticamente parada hoje: nenhum dos dois vértices andou mais de 3 bps.";
-    const lado = (d2-d1) > 0 ? "a curva <b>inclinou</b> (o longo subiu mais ou caiu menos que o curto)" : "a curva <b>desinclinou</b> (o curto subiu mais ou caiu menos que o longo)";
-    if (Math.sign(d1) !== Math.sign(d2) && Math.min(Math.abs(d1),Math.abs(d2)) >= 3)
-      return `Os vértices andaram em direções opostas (${A.slice(3)} ${bps(d1)} bps, ${B.slice(3)} ${bps(d2)} bps): ${lado}. Costuma indicar troca entre juro curto e prêmio de prazo, por exemplo um Banco Central mais duro hoje com menos inflação adiante.`;
-    if (Math.abs(d2) >= Math.abs(d1) + 3)
-      return `Movimento concentrado no <b>vértice longo</b>: ${dir(d2)} de ${bps(d2)} bps no ${B.slice(3)} contra ${bps(d1)} bps no ${A.slice(3)}. O mercado mexeu no <b>prêmio de risco</b> (fiscal, inflação mais longa ou cenário externo), não na expectativa para as próximas reuniões do Copom.`;
-    if (Math.abs(d1) >= Math.abs(d2) + 3)
-      return `Movimento concentrado no <b>vértice curto</b>: ${dir(d1)} de ${bps(d1)} bps no ${A.slice(3)} contra ${bps(d2)} bps no ${B.slice(3)}. O mercado está <b>reprecificando as próximas decisões do Copom</b> (dados de atividade, inflação corrente ou comunicação do Banco Central).`;
-    return `Movimento <b>paralelo</b>: ${dir(d2)} parecida nos dois vértices (${A.slice(3)} ${bps(d1)} bps, ${B.slice(3)} ${bps(d2)} bps). A curva subiu ou desceu como um todo, sem mudar muito a inclinação.`;
-  }
-  function desenhar(){
-    const el = q(".ic");
-    if (dados) [A, B] = Object.keys(dados.contratos).sort((x,y)=>ano(x)-ano(y));
-    if (!dados || !A || !B){ if (tentou) el.innerHTML = `<p class="fonte">Aguardando os dados do DI1F27 e do DI1F28.</p>`; return; }
-    const ra = dados.contratos[A], rb = dados.contratos[B], ua = ra.ultimo||{}, ub = rb.ultimo||{};
-    const ultimo = r => { const ds = Object.keys(r.intradia||{}).sort(); return ds.length ? r.intradia[ds.at(-1)].at(-1)[1] : null; };
-    const ia = ua.taxa ?? ultimo(ra), ib = ub.taxa ?? ultimo(rb), aa = ua.ajusteAnterior, ab = ub.ajusteAnterior;
-    const hoje = (ub.hora || ua.hora || dados.atualizado || "").slice(0,10) || new Date().toISOString().slice(0,10);
-    const t0 = Date.UTC(+hoje.slice(0,4), +hoje.slice(5,7)-1, +hoje.slice(8,10));
-    const d1 = du(t0, vencimento(A)), d2 = du(t0, vencimento(B));
-    let tAnt = t0 - 864e5; while (!util(tAnt)) tAnt -= 864e5;
-    const d1a = du(tAnt, vencimento(A)), d2a = du(tAnt, vencimento(B));
-    const inc = (ib-ia)*100, incA = aa && ab ? (ab-aa)*100 : null;
-    const f = d1 > 0 && d2 > d1 ? termo(ia, ib, d1, d2) : null, fA = aa && ab && d2a > d1a ? termo(aa, ab, d1a, d2a) : null;
-    root.querySelector("h2").textContent = `Inclinação da curva · ${B.slice(3)} − ${A.slice(3)}`;
-    q(".ic").setAttribute("aria-label", `Inclinação entre ${B} e ${A} ao longo do tempo`);
-    q(".id").textContent = ub.hora ? `${diaBR(hoje)}, ${ub.hora.slice(11,16)} (Brasília)` : diaBR(hoje);
-    q(".im").innerHTML = [
-      ["Inclinação agora", `${bps(inc)} bps`],
-      ["Inclinação no ajuste anterior", incA!=null ? `${bps(incA)} bps` : "—"],
-      ["Mudança no dia", incA!=null ? `${bps(inc-incA)} bps` : "—"],
-      [`Termo ${ano(A)}→${ano(B)}`, f!=null ? `${nf(f,2)}%` : "—"],
-      ["Termo no ajuste anterior", fA!=null ? `${nf(fA,2)}%` : "—"],
-    ].map(([a,b])=>`<div><span>${a}</span><b>${b}</b></div>`).join("");
-    q(".il").innerHTML = (aa && ab ? leitura((ia-aa)*100, (ib-ab)*100) + " " : "") +
-      (f!=null ? `Pela taxa a termo, o mercado espera um CDI médio de <b>${nf(f,2)}% a.a.</b> entre ${MES[0]}/${ano(A)} e ${MES[0]}/${ano(B)}, ${f < ia ? `abaixo dos ${nf(ia,2)}% do ${A.slice(3)}: aposta em <b>cortes</b> da Selic` : `acima dos ${nf(ia,2)}% do ${A.slice(3)}: aposta em <b>altas</b> da Selic ou prêmio de prazo elevado`}.` : "");
-    const it = q(".it");
-    if (f!=null){
-      const dec = (v,dd) => v.toFixed(dd).replace(".","{,}");
-      const tx = `f = \\left[\\frac{(1+i_{${B.slice(3)}})^{du_{${B.slice(3)}}/252}}{(1+i_{${A.slice(3)}})^{du_{${A.slice(3)}}/252}}\\right]^{\\frac{252}{du_{${B.slice(3)}}-du_{${A.slice(3)}}}} - 1 = \\left[\\frac{${dec(1+ib/100,5)}^{${d2}/252}}{${dec(1+ia/100,5)}^{${d1}/252}}\\right]^{\\frac{252}{${d2-d1}}} - 1 = \\mathbf{${dec(f,2)}\\%}`;
-      it.textContent = `f = [(1+${nf(ib,3)}%)^(${d2}/252) / (1+${nf(ia,3)}%)^(${d1}/252)]^(252/${d2-d1}) − 1 = ${nf(f,2)}%`;
-      try { if (window.katex) katex.render(tx, it, {displayMode:true, throwOnError:false}); } catch {}
-    }
-    // série da inclinação: cada horário do F28 contra o último valor do F27 até aquele horário
-    const dias = Object.keys(rb.intradia||{}).filter(x => (ra.intradia||{})[x]).sort();
-    const usar = st.j === "dia" ? dias.slice(-1) : dias, pts = [], marcas = [];
-    usar.forEach(dia => {
-      const a = ra.intradia[dia], b = rb.intradia[dia]; let k = 0, va = null, ini = pts.length;
-      b.forEach(([h,v]) => { while (k < a.length && a[k][0] <= h){ va = a[k][1]; k++; } if (va!=null) pts.push({v:(v-va)*100, dica:`${diaBR(dia)} ${h}`}); });
-      if (pts.length > ini){
-        marcas.push([ini, st.j==="dia" ? b[0][0] : diaBR(dia), true]);
-        if (st.j==="dia") for (const hh of ["11:00","13:00","15:00","17:00"]){ const j = b.findIndex(p=>p[0]>=hh); if (j>0 && ini+j < pts.length) marcas.push([ini+j, hh]); }
-      }
-    });
-    grafico(el, pts, {marcas, cor:"var(--s1)", ref:incA, refRot: incA!=null ? `ajuste anterior ${bps(incA)} bps` : "",
-      tick: v => nf(v,0), dica: v => `${bps(v)} bps`, vazio:"A série da inclinação começa a ser montada no próximo pregão."});
-  }
-  q(".ij").addEventListener("click", e=>{ const b = e.target.closest("button"); if (!b) return; st.j = b.dataset.j;
-    root.querySelectorAll(".ij button").forEach(x=>x.setAttribute("aria-pressed", x.dataset.j===st.j)); desenhar(); });
-  let t; new ResizeObserver(()=>{ clearTimeout(t); t = setTimeout(desenhar, 80); }).observe(q(".ic"));
-  return desenhar;
-}
-
-const paineis = [...document.querySelectorAll(".serie.di[data-c]")].map(painel).concat([...document.querySelectorAll(".serie.inc")].map(painelInc));
-async function atualizar(){
-  const d = await carregar(); tentou = true;
-  if (d) dados = d;
-  paineis.forEach(f => f());
-}
-atualizar();
-setInterval(()=>{ if (!document.hidden) atualizar(); }, 5*60*1000);
-document.addEventListener("visibilitychange", ()=>{ if (!document.hidden && dados && Date.now()-Date.parse(dados.atualizado) > 20*60*1000) atualizar(); });
-})();
-</script>
-<script>
-/* Diesel e petróleo: data/combustiveis.json (ANP, Brent e EIA), gravado pela Action mercado.yml. */
-(() => {
-const $ = s => document.querySelector(s);
-const nf = (v,d=2) => v.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
-const MES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
-const dBR = d => `${d.slice(8,10)}/${d.slice(5,7)}/${d.slice(0,4)}`;
-/* Marcos com data confirmada; para acrescentar um evento, inclua [data, rótulo]. */
-const MARCOS = [["2022-02-24","Invasão da Ucrânia"],["2023-05-16","Petrobras deixa o PPI"]];
-const SERIES = [
-  {k:"mt", nome:"Diesel S10 MT", cor:"var(--accent)", on:true},
-  {k:"br", nome:"Diesel S10 Brasil", cor:"var(--s1)", on:true},
-  {k:"brentLitro", nome:"Brent em R$/litro", cor:"var(--s2)", on:true},
-  {k:"euaLitro", nome:"Diesel EUA", cor:"var(--s4)", on:false},
-];
-let D = null, per = 0;
-
-function grafico(el, xs, series){
-  const W = Math.max(260, el.clientWidth||640), H = 240, pad = {t:14,r:46,b:24,l:8};
-  const vs = series.flatMap(s=>s.v.filter(v=>v!=null));
-  if (xs.length < 2 || !vs.length){ el.innerHTML = `<p class="fonte">Sem dados para este período.</p>`; return; }
-  let lo = Math.min(...vs), hi = Math.max(...vs); const f = (hi-lo)*.08 || .5; lo = Math.max(0, lo-f); hi += f;
-  const L = xs.length-1, X = k => pad.l + k*(W-pad.l-pad.r)/L, Y = v => pad.t + (hi-v)/(hi-lo)*(H-pad.t-pad.b);
-  const passo = [.25,.5,1,2,5].find(p => (hi-lo)/p <= 6) || 5;
-  let g = "";
-  for (let v = Math.ceil(lo/passo)*passo; v <= hi; v += passo)
-    g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text class="tn" x="${W-pad.r+6}" y="${Y(v)+3.5}">${nf(v, passo<1?2:0)}</text>`;
-  // eixo x: anos (ou trimestres quando o período é curto)
-  let ult = "", ultX = -1e9;
-  xs.forEach((d,k)=>{ const tri = per===1, m = +d.slice(5,7)-1, chave = tri ? d.slice(0,4)+Math.floor(m/3) : d.slice(0,4);
-    if (chave!==ult){ ult = chave; if (k>0 && X(k)-ultX > 42){ ultX = X(k);
-      g += `<line x1="${X(k)}" x2="${X(k)}" y1="${pad.t}" y2="${H-pad.b}" stroke="var(--line)" stroke-dasharray="2 3"/><text x="${X(k)}" y="${H-6}" text-anchor="middle">${tri ? MES[m]+"/"+d.slice(2,4) : d.slice(0,4)}</text>`; } } });
-  // marcos de eventos
-  MARCOS.forEach(([d,rot],i)=>{ const k = xs.findIndex(x=>x>=d); if (k<=0) return; const x = X(k), w = rot.length*6.2+12, lx = Math.min(Math.max(x-w/2,pad.l), W-pad.r-w);
-    g += `<line x1="${x}" x2="${x}" y1="${pad.t}" y2="${H-pad.b}" stroke="var(--ink-2)" stroke-dasharray="4 4" opacity=".7"/><rect x="${lx}" y="${pad.t+i*20}" width="${w}" height="17" rx="8.5" fill="var(--surface)" stroke="var(--line)"/><text x="${lx+w/2}" y="${pad.t+i*20+12}" text-anchor="middle" style="fill:var(--ink-2);font-size:10.5px;font-weight:600">${rot}</text>`; });
-  series.forEach(s=>{ let d = "", pen = false;
-    s.v.forEach((v,k)=>{ if (v==null){ pen=false; return; } d += (pen?"L":"M")+X(k).toFixed(1)+","+Y(v).toFixed(1); pen = true; });
-    g += `<path d="${d}" fill="none" stroke="${s.cor}" stroke-width="2" stroke-linejoin="round"/>`;
-    let k = s.v.length-1; while (k>=0 && s.v[k]==null) k--;
-    if (k>=0) g += `<circle cx="${X(k)}" cy="${Y(s.v[k])}" r="4" fill="${s.cor}" stroke="var(--surface)" stroke-width="2"/>`; });
-  g += `<g class="hov" style="display:none"><line y1="${pad.t}" y2="${H-pad.b}" stroke="var(--axis)"/>${series.map(s=>`<circle r="4" fill="${s.cor}" stroke="var(--surface)" stroke-width="2"/>`).join("")}</g>`;
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" aria-hidden="true">${g}</svg><div class="tipb" hidden></div>`;
-  const svg = el.querySelector("svg"), hov = el.querySelector(".hov"), tip = el.querySelector(".tipb"), dots = hov.querySelectorAll("circle");
-  const move = e => { const b = svg.getBoundingClientRect(), px = (e.clientX-b.left)*(W/b.width);
-    const k = Math.max(0, Math.min(L, Math.round((px-pad.l)/(W-pad.l-pad.r)*L)));
-    hov.style.display = ""; hov.querySelector("line").setAttribute("x1",X(k)); hov.querySelector("line").setAttribute("x2",X(k));
-    series.forEach((s,i)=>{ const v = s.v[k]; dots[i].style.display = v==null ? "none" : ""; if (v!=null){ dots[i].setAttribute("cx",X(k)); dots[i].setAttribute("cy",Y(v)); } });
-    tip.hidden = false;
-    tip.innerHTML = `<div>semana até ${dBR(xs[k])}</div>` + series.map(s=>`<div><i style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${s.cor};margin-right:6px"></i>${s.nome} <b>${s.v[k]==null?"—":"R$ "+nf(s.v[k])}</b></div>`).join("");
-    const x = X(k)/W*b.width; tip.style.left = Math.max(0, Math.min(b.width-tip.offsetWidth, x+12 > b.width-tip.offsetWidth ? x-tip.offsetWidth-12 : x+12))+"px"; };
-  svg.addEventListener("mousemove", move);
-  svg.addEventListener("touchstart", e=>move(e.touches[0]), {passive:true});
-  svg.addEventListener("touchmove", e=>move(e.touches[0]), {passive:true});
-  svg.addEventListener("mouseleave", ()=>{ hov.style.display="none"; tip.hidden = true; });
-}
-
-const ultimo = a => { for (let k=a.length-1;k>=0;k--) if (a[k]!=null) return k; return -1; };
-function var12(a){ const k = ultimo(a); if (k<0) return null; const alvo = D.semanas[k].replace(/^\d{4}/, y=>String(+y-1)); const j = D.semanas.findIndex(d=>d>=alvo); return j>=0 && a[j] ? a[k]/a[j]-1 : null; }
-const pc = x => x==null ? "—" : `${x>=0?"+":"−"}${nf(Math.abs(x)*100,1)}%`;
-
-function desenhar(){
-  const el = $("#cComb");
-  if (!D){ return; }
-  const ini = per ? D.semanas.findIndex(d => d >= D.semanas.at(-1).replace(/^\d{4}/, y=>String(+y-per))) : 0;
-  const xs = D.semanas.slice(Math.max(0,ini));
-  grafico(el, xs, SERIES.filter(s=>s.on && D[s.k]?.some(v=>v!=null)).map(s=>({nome:s.nome, cor:s.cor, v:D[s.k].slice(Math.max(0,ini))})));
-}
-function botoes(){
-  $("#sComb").innerHTML = SERIES.map((s,i)=>`<button type="button" data-i="${i}" aria-pressed="${s.on}"><i style="background:${s.cor}"></i>${s.k==="euaLitro"?"Comparar com EUA":s.nome}</button>`).join("");
-  document.querySelectorAll("#pComb button").forEach(b=>b.setAttribute("aria-pressed", +b.dataset.p===per));
-}
-$("#sComb").addEventListener("click", e=>{ const b = e.target.closest("button"); if (!b) return; const s = SERIES[+b.dataset.i];
-  if (s.on && SERIES.filter(x=>x.on).length===1) return; s.on = !s.on; botoes(); desenhar(); });
-$("#pComb").addEventListener("click", e=>{ const b = e.target.closest("button"); if (!b) return; per = +b.dataset.p; botoes(); desenhar(); });
-
-function painel(){
-  const k = ultimo(D.mt.some(v=>v!=null) ? D.mt : D.br), sem = D.semanas[k];
-  const mt = D.mt[k], br = D.br[k], bl = D.brentLitro[ultimo(D.brentLitro)], bu = D.brentUsd[ultimo(D.brentUsd)], eua = D.euaLitro[ultimo(D.euaLitro)];
-  const vMt = var12(D.mt), vBr = var12(D.br), vBl = var12(D.brentLitro);
-  $("#dComb").textContent = `semana até ${dBR(sem)}`;
-  $("#vComb").textContent = mt!=null ? `R$ ${nf(mt)}/l` : br!=null ? `R$ ${nf(br)}/l` : "—";
-  const sem1 = k>0 && D.mt[k-1] ? mt/D.mt[k-1]-1 : null;
-  $("#xComb").innerHTML = [sem1!=null ? `<span class="${sem1<=0?"up":"dn"}">${pc(sem1)} na semana</span>` : "", vMt!=null ? `<span class="${vMt<=0?"up":"dn"}">${pc(vMt)} em 12 meses</span>` : "", "<span>diesel S10 · Mato Grosso</span>"].join("");
-  const fmt = v => v==null ? "—" : "R$ "+nf(v);
-  $("#mComb").innerHTML = [["Diesel S10 MT", fmt(mt)+"/l"], ["Diesel S10 Brasil", fmt(br)+"/l"], ["Brent", bu==null?"—":"US$ "+nf(bu)], ["Brent em reais", fmt(bl)+"/l"], ["Diesel EUA", fmt(eua)+"/l"]]
-    .map(([a,b])=>`<div><span>${a}</span><b>${b}</b></div>`).join("");
-  const frases = [];
-  if (mt!=null && br!=null) frases.push(`O diesel S10 em Mato Grosso custa <b>R$ ${nf(mt)}/l</b>, ${Math.abs(mt-br)<0.005 ? "igual à" : `R$ ${nf(Math.abs(mt-br))} ${mt>br?"acima":"abaixo"} da`} média nacional (R$ ${nf(br)}).`);
-  if (vMt!=null && vBl!=null) frases.push(`Em 12 meses, o diesel subiu ${pc(vMt)} em MT e ${pc(vBr)} no Brasil, enquanto o Brent em reais variou <b>${pc(vBl)}</b>. ` +
-    (vBl - vMt > 0.03 ? "O petróleo subiu mais que a bomba: parte da alta ainda pode chegar ao consumidor, a depender da política de preços da Petrobras." :
-     vMt - vBl > 0.03 ? "A bomba subiu mais que o petróleo: impostos, margens de distribuição e revenda ou o biodiesel misturado pesaram mais que o custo do óleo." :
-     "Bomba e petróleo andaram juntos no período."));
-  if (bl!=null && mt!=null) frases.push(`Um litro de petróleo bruto custa o equivalente a <b>${nf(bl/mt*100,0)}%</b> do litro na bomba; o resto vem de refino, frete, impostos, biodiesel e margens.`);
-  if (eua!=null && br!=null) frases.push(`Nos EUA, o diesel sai por R$ ${nf(eua)}/l convertido pelo dólar, ${eua>br?"acima":"abaixo"} da média brasileira.`);
-  $("#lComb").innerHTML = frases.join(" ");
-}
-
-fetch("data/combustiveis.json?t=" + Math.floor(Date.now()/3600000)).then(r => r.ok ? r.json() : Promise.reject()).then(d => {
-  if (!d.semanas?.length) throw 0;
-  D = d; botoes(); painel(); desenhar();
-}).catch(() => { $("#dComb").textContent = "indisponível"; $("#cComb").innerHTML = `<p class="fonte">Os dados de diesel e petróleo ainda não foram coletados. Eles chegam na próxima atualização diária.</p>`; botoes(); });
-let t; new ResizeObserver(()=>{ clearTimeout(t); t = setTimeout(desenhar, 80); }).observe($("#cComb"));
-})();
-</script>
-<script>
-/* Criptomoedas: histórico diário em data/cripto.json (Action mercado.yml) e preço ao vivo da CoinGecko. */
-(() => {
-const $ = s => document.querySelector(s);
-const nf = (v,d=2) => v.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
-const brl = v => "R$ " + (v >= 1000 ? Math.round(v).toLocaleString("pt-BR") : nf(v, v < 10 ? 4 : 2));
-const usd = v => "US$ " + (v >= 1000 ? Math.round(v).toLocaleString("pt-BR") : nf(v, v < 10 ? 4 : 2));
-const pc = x => x==null || !isFinite(x) ? "—" : `${x>=0?"+":"−"}${nf(Math.abs(x)*100,1)}%`;
-const dBR = d => `${d.slice(8,10)}/${d.slice(5,7)}/${d.slice(0,4)}`;
-const MES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
-const FNG = {"Extreme Fear":["Medo extremo","var(--s2)"], "Fear":["Medo","var(--s4)"], "Neutral":["Neutro","var(--ink-2)"], "Greed":["Ganância","var(--s3)"], "Extreme Greed":["Ganância extrema","var(--accent)"]};
-let D = null, IB = null, VIVO = {}, GLOBAL = null, FG = null, moeda = "BTC", per = 365, cmp = false;
-
-function grafico(el, xs, series, o){
-  const W = Math.max(260, el.clientWidth||640), H = 230, pad = {t:12,r:58,b:24,l:8};
-  const vs = series.flatMap(s=>s.v.filter(v=>v!=null));
-  if (xs.length < 2 || !vs.length){ el.innerHTML = `<p class="fonte">Sem dados para este período.</p>`; return; }
-  let lo = Math.min(...vs), hi = Math.max(...vs); const f = (hi-lo)*.08 || hi*.02 || 1; lo -= f; hi += f;
-  const L = xs.length-1, X = k => pad.l + k*(W-pad.l-pad.r)/L, Y = v => pad.t + (hi-v)/(hi-lo)*(H-pad.t-pad.b);
-  const bruto = (hi-lo)/5, mag = Math.pow(10, Math.floor(Math.log10(bruto))), passo = [1,2,2.5,5,10].map(m=>m*mag).find(p=>p>=bruto);
-  let g = "";
-  for (let v = Math.ceil(lo/passo)*passo; v <= hi; v += passo)
-    g += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(${o.base && Math.abs(v-100)<1e-9 ? "--axis" : "--line"})"/><text class="tn" x="${W-pad.r+6}" y="${Y(v)+3.5}">${o.tick(v)}</text>`;
-  let ult = "", ultX = -1e9;
-  xs.forEach((d,k)=>{ const chave = xs.length > 70 ? d.slice(0,7) : d.slice(0,10); const novo = xs.length > 70 ? d.slice(8,10)==="01" : (k % Math.ceil(xs.length/6) === 0);
-    if (k>0 && novo && chave!==ult && X(k)-ultX > 44){ ult = chave; ultX = X(k);
-      g += `<text x="${X(k)}" y="${H-6}" text-anchor="middle">${xs.length > 70 ? MES[+d.slice(5,7)-1] + (d.slice(5,7)==="01" ? "/"+d.slice(2,4) : "") : d.slice(8,10)+"/"+d.slice(5,7)}</text>`; } });
-  series.forEach((s,i)=>{ let d = "", pen = false, k0 = -1, k1 = -1;
-    s.v.forEach((v,k)=>{ if (v==null){ pen=false; return; } if (k0<0) k0 = k; k1 = k; d += (pen?"L":"M")+X(k).toFixed(1)+","+Y(v).toFixed(1); pen = true; });
-    if (i===0 && !o.base && k0>=0) g += `<path d="${d}L${X(k1)},${H-pad.b}L${X(k0)},${H-pad.b}Z" fill="${s.cor}" opacity=".08"/>`;
-    g += `<path d="${d}" fill="none" stroke="${s.cor}" stroke-width="2" stroke-linejoin="round"/>`;
-    if (k1>=0) g += `<circle cx="${X(k1)}" cy="${Y(s.v[k1])}" r="4" fill="${s.cor}" stroke="var(--surface)" stroke-width="2"/>`; });
-  g += `<g class="hov" style="display:none"><line y1="${pad.t}" y2="${H-pad.b}" stroke="var(--axis)"/>${series.map(s=>`<circle r="4" fill="${s.cor}" stroke="var(--surface)" stroke-width="2"/>`).join("")}</g>`;
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" aria-hidden="true">${g}</svg><div class="tipb" hidden></div>`;
-  const svg = el.querySelector("svg"), hov = el.querySelector(".hov"), tip = el.querySelector(".tipb"), dots = hov.querySelectorAll("circle");
-  const move = e => { const b = svg.getBoundingClientRect(), px = (e.clientX-b.left)*(W/b.width);
-    const k = Math.max(0, Math.min(L, Math.round((px-pad.l)/(W-pad.l-pad.r)*L)));
-    hov.style.display = ""; hov.querySelector("line").setAttribute("x1",X(k)); hov.querySelector("line").setAttribute("x2",X(k));
-    series.forEach((s,i)=>{ const v = s.v[k]; dots[i].style.display = v==null ? "none" : ""; if (v!=null){ dots[i].setAttribute("cx",X(k)); dots[i].setAttribute("cy",Y(v)); } });
-    tip.hidden = false;
-    tip.innerHTML = `<div>${dBR(xs[k])}</div>` + series.map(s=>`<div><i style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${s.cor};margin-right:6px"></i>${s.nome} <b>${s.v[k]==null ? "—" : o.dica(s.v[k])}</b></div>`).join("");
-    const x = X(k)/W*b.width; tip.style.left = Math.max(0, Math.min(b.width-tip.offsetWidth, x+12 > b.width-tip.offsetWidth ? x-tip.offsetWidth-12 : x+12))+"px"; };
-  svg.addEventListener("mousemove", move);
-  svg.addEventListener("touchstart", e=>move(e.touches[0]), {passive:true});
-  svg.addEventListener("touchmove", e=>move(e.touches[0]), {passive:true});
-  svg.addEventListener("mouseleave", ()=>{ hov.style.display="none"; tip.hidden = true; });
-}
-
-/* estatísticas da série diária (dias com preço) */
-function stats(v){
-  const x = v.filter(a=>a!=null && a>0); if (x.length < 30) return {};
-  const r = []; for (let i=1;i<x.length;i++) r.push(Math.log(x[i]/x[i-1]));
-  const m = r.reduce((a,b)=>a+b,0)/r.length, sd = Math.sqrt(r.reduce((a,b)=>a+(b-m)**2,0)/(r.length-1));
-  let pico = x[0], dd = 0; for (const a of x){ pico = Math.max(pico,a); dd = Math.min(dd, a/pico-1); }
-  return {ret: x[x.length-1]/x[0]-1, vol: sd, dd};
-}
-const ibovNas = datas => { if (!IB) return null; const m = new Map(IB.datas.map((d,i)=>[d, IB.valores[i]])); let u = null; return datas.map(d => { if (m.has(d)) u = m.get(d); return u; }); };
-
-function desenhar(){
-  if (!D) return;
-  const M = D.moedas[moeda], n = D.datas.length, ini = Math.max(0, n - (cmp ? 365 : per));
-  const xs = D.datas.slice(ini), v = M.brl.slice(ini);
-  $("#cCr").setAttribute("aria-label", cmp ? `${M.nome} e Ibovespa em base 100` : `Preço do ${M.nome} em reais`);
-  if (cmp){
-    const ib = ibovNas(xs) || [], b0 = v.find(a=>a!=null), i0 = ib.find(a=>a!=null);
-    grafico($("#cCr"), xs, [{nome:M.nome, cor:"var(--accent)", v:v.map(a=>a==null?null:a/b0*100)}, ...(i0 ? [{nome:"Ibovespa", cor:"var(--s1)", v:ib.map(a=>a==null?null:a/i0*100)}] : [])],
-      {base:true, tick:t=>nf(t,0), dica:a=>nf(a,1)});
-  } else grafico($("#cCr"), xs, [{nome:M.nome, cor:"var(--accent)", v}], {tick:t => t>=1e6 ? nf(t/1e6,2)+" mi" : t>=1e3 ? nf(t/1e3,0)+" mil" : nf(t, t<10?2:0), dica:brl});
-}
-
-function painel(){
-  if (!D) return;
-  const M = D.moedas[moeda], k = M.brl.length-1, vivo = VIVO[M.coingecko];
-  const preco = vivo?.brl ?? M.brl[k], var24 = vivo?.brl_24h_change != null ? vivo.brl_24h_change/100 : (M.brl[k-1] ? M.brl[k]/M.brl[k-1]-1 : null);
-  const st = stats(M.brl), sIb = IB ? stats(IB.valores.slice(-250)) : {};
-  const volA = st.vol!=null ? st.vol*Math.sqrt(365) : null, volIb = sIb.vol!=null ? sIb.vol*Math.sqrt(252) : null;
-  $("#hCr").textContent = `Criptomoedas · ${M.nome}`;
-  $("#dCr").textContent = vivo ? "ao vivo · CoinGecko" : `fechamento de ${dBR(D.datas[k])}`;
-  $("#vCr").textContent = brl(preco);
-  $("#xCr").innerHTML = [var24!=null ? `<span class="${var24>=0?"up":"dn"}">${pc(var24)} em 24 h</span>` : "", st.ret!=null ? `<span class="${st.ret>=0?"up":"dn"}">${pc(st.ret)} em 12 meses</span>` : ""].join("");
-  const fg = FG ? (FNG[FG.value_classification] || [FG.value_classification, "var(--ink-2)"]) : null;
-  $("#kCr").innerHTML = [
-    ["Preço em dólar", usd(vivo?.usd ?? M.usd[k])],
-    ["Volatilidade anual", volA!=null ? nf(volA*100,0)+"%" : "—"],
-    ["Maior queda em 12 meses", st.dd!=null ? pc(st.dd) : "—"],
-    ["Dominância do Bitcoin", GLOBAL ? nf(GLOBAL.market_cap_percentage.btc,1)+"%" : "—"],
-    ["Medo e ganância", fg ? `<i class="fng" style="background:${fg[1]}"></i>${FG.value} · ${fg[0]}` : "—"],
-  ].map(([a,b])=>`<div><span>${a}</span><b>${b}</b></div>`).join("");
-  const fr = [];
-  if (st.ret!=null) fr.push(`Em 12 meses, o ${M.nome} ${st.ret>=0?"subiu":"caiu"} <b>${pc(Math.abs(st.ret)).slice(1)}</b> em reais${sIb.ret!=null ? `, contra ${pc(sIb.ret)} do Ibovespa` : ""}.`);
-  if (volA!=null) fr.push(`A volatilidade foi de <b>${nf(volA*100,0)}% ao ano</b>${volIb ? `, cerca de ${nf(volA/volIb,1)} vezes a do Ibovespa (${nf(volIb*100,0)}%)` : ""}, e a maior queda a partir de um pico chegou a ${pc(st.dd)}.`);
-  if (fg) fr.push(`O índice de medo e ganância está em <b>${FG.value} (${fg[0].toLowerCase()})</b>: ${+FG.value <= 25 ? "pânico costuma coincidir com preços deprimidos, mas não marca o fundo" : +FG.value < 46 ? "os investidores estão receosos e preferem reduzir risco" : +FG.value <= 55 ? "o humor do mercado está equilibrado" : +FG.value < 75 ? "os investidores estão otimistas" : "euforia costuma anteceder correções"}.`);
-  fr.push("Se for investir, limite a uma fatia pequena da carteira, que você aceite ver cair pela metade.");
-  $("#lCr").innerHTML = fr.join(" ");
-}
-function botoes(){
-  if (D) $("#mCrSel").innerHTML = Object.entries(D.moedas).map(([s,m])=>`<button type="button" data-m="${s}" aria-pressed="${s===moeda}">${m.nome}</button>`).join("");
-  document.querySelectorAll("#pCr button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.p==="ibov" ? cmp : (!cmp && +b.dataset.p===per)));
-}
-$("#mCrSel").addEventListener("click", e=>{ const b = e.target.closest("button"); if (!b) return; moeda = b.dataset.m; botoes(); painel(); desenhar(); });
-$("#pCr").addEventListener("click", e=>{ const b = e.target.closest("button"); if (!b) return; if (b.dataset.p==="ibov") cmp = !cmp; else { cmp = false; per = +b.dataset.p; } botoes(); desenhar(); });
-
-async function aoVivo(){
-  if (!D) return;
-  const ids = Object.values(D.moedas).map(m=>m.coingecko).join(",");
-  const j = u => fetch(u).then(r => r.ok ? r.json() : Promise.reject());
-  const [p, g, f] = await Promise.allSettled([
-    j(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=brl,usd&include_24hr_change=true`),
-    j("https://api.coingecko.com/api/v3/global"),
-    j("https://api.alternative.me/fng/?limit=1")]);
-  if (p.status==="fulfilled") VIVO = p.value;
-  if (g.status==="fulfilled") GLOBAL = g.value.data;
-  if (f.status==="fulfilled") FG = f.value.data?.[0] || null;
-  painel();
-}
-Promise.all([
-  fetch("data/cripto.json?t=" + Math.floor(Date.now()/3600000)).then(r => r.ok ? r.json() : Promise.reject()),
-  (window.Mercado ? Mercado.carregar().then(m => m.bolsa?.ibov).catch(() => null) : Promise.resolve(null)),
-]).then(([d, ib]) => {
-  if (!d.datas?.length) throw 0;
-  D = d; IB = ib?.datas?.length ? ib : null; if (!D.moedas[moeda]) moeda = Object.keys(D.moedas)[0];
-  botoes(); painel(); desenhar(); aoVivo();
-  setInterval(()=>{ if (!document.hidden) aoVivo(); }, 120000);
-}).catch(() => { $("#dCr").textContent = "indisponível"; $("#cCr").innerHTML = `<p class="fonte">Os dados de criptomoedas ainda não foram coletados. Eles chegam na próxima atualização diária.</p>`; });
-let t; new ResizeObserver(()=>{ clearTimeout(t); t = setTimeout(desenhar, 80); }).observe($("#cCr"));
+const varia = s => { const v = s?.valores; if (!v || v.length < 2) return null; return v[v.length-1]/v[v.length-2]-1; };
+const tag = x => x == null ? "" : `<span class="${x>=0?"up":"dn"}">${x>=0?"+":"−"}${nf(Math.abs(x)*100)}%</span> no dia`;
+Mercado.carregar().then(m => {
+  const I = m.indicadores;
+  $("#hSelic").textContent = nf(I.selic.valor)+"%"; $("#hCdi").textContent = nf(I.cdi.valor)+"%"; $("#hIpca").textContent = nf(I.ipca12.valor)+"%";
+  const real = (1+I.cdi.valor/100)/(1+I.ipca12.valor/100)-1;
+  $("#hReal").textContent = `juro real ${nf(real*100)}%`;
+  const ib = m.bolsa?.ibov?.valores, dl = m.bolsa?.dolar?.valores;
+  if (ib?.length){ const v = Math.round(ib[ib.length-1]).toLocaleString("pt-BR"); $("#hIbov").textContent = v; $("#xIbov").innerHTML = tag(varia(m.bolsa.ibov)) || "pontos";
+    $("#aMerc").innerHTML = `Ibovespa: <b>${v} pts</b> ${tag(varia(m.bolsa.ibov))}`; }
+  if (dl?.length){ $("#hDolar").textContent = "R$ "+nf(dl[dl.length-1],2); $("#xDolar").innerHTML = tag(varia(m.bolsa.dolar)) || "PTAX"; }
+}).catch(() => {});
+fetch("data/estatais.json").then(r => r.ok ? r.json() : Promise.reject()).then(d => {
+  const a = String(d.anos.filter(x => !d.parcial[x]).slice(-1)[0]);
+  const t = d.empresas.reduce((s, e) => s + (e.serie[a]?.[1] || 0), 0);
+  $("#aEst").innerHTML = `Lucro somado em ${a}: <b>R$ ${nf(t/1e3, 1)} bi</b>`;
+}).catch(() => {});
+fetch("data/acoes.json?h=" + Math.floor(Date.now()/36e5)).then(r => r.ok ? r.json() : Promise.reject()).then(d => {
+  const n = Object.entries(d.categorias?.acoes || {}).filter(([c, a]) => !/^(BOVA11|IVVB11)$/.test(c) && a.max52 > 0 && a.preco / Math.max(a.max52, a.preco) - 1 <= -.15).length;
+  $("#aRadar").innerHTML = `Caíram 15% ou mais da máxima: <b>${n} ações</b>`;
+}).catch(() => {});
 })();
 </script>
 <script src="assets/feedback.js" data-site="Livro-Caixa" data-cor="#c8f250" defer></script>
