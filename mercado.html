@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="author" content="Prof. Dr. Cleiton Franco">
-<meta name="description" content="Selic, CDI, IPCA, Ibovespa, dólar, juros futuros, diesel, criptomoedas e radar de ações em queda, com dados públicos atualizados todo dia útil.">
+<meta name="description" content="Selic, CDI, IPCA, Ibovespa, dólar, juros futuros, diesel e criptomoedas, com dados públicos atualizados todo dia útil.">
 <meta name="theme-color" content="#08090b">
 <title>Mercado hoje · Livro-Caixa</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
@@ -45,9 +45,9 @@ a{color:inherit}
 .bar nav a:hover{color:var(--ink)}
 .bar .cta-mini{display:inline-flex;align-items:center;height:40px;padding:0 18px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap}
 .bar .cta-mini:hover{filter:brightness(1.06)}
-@media (max-width:1080px){.bar nav{display:none}}
+@media (max-width:1160px){.bar nav{display:none}}
 .bar nav a{padding:8px 9px;font-size:13.5px}
-@media (max-width:1300px){.bar nav a.op{display:none}}
+@media (max-width:1400px){.bar nav a.op{display:none}}
 @media (max-width:380px){.bar .cta-mini{padding:0 14px;font-size:13px}}
 
 /* capa */
@@ -433,12 +433,13 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
 
 .bar nav a,.bar .brand{white-space:nowrap}
 .mnav{display:none}
-@media (max-width:1080px){.mnav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:0 16px 10px;max-width:100%}
+@media (max-width:1160px){.mnav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:0 16px 10px;max-width:100%}
   .mnav a{flex:none;text-decoration:none;color:var(--ink-2);font-weight:600;font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--line)}
   .mnav a[aria-current="page"]{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}}
 /* páginas internas (Mercado, Estatais, Metodologia) e capa enxuta */
 h1.sec{font-size:clamp(34px,5vw,58px);letter-spacing:-.035em;line-height:1.05;margin:10px 0 14px;font-weight:800;text-wrap:balance}
 .pg{text-align:center;max-width:760px;margin:0 auto;padding:clamp(40px,7vw,84px) 0 0}
+.pg h1.sec{margin-inline:auto}
 .pg p{margin:0 auto;color:var(--ink-2);max-width:60ch;font-size:16px}
 .pg .est-sub{margin-top:20px}
 .pg + section.blk,.pg + .mkt{margin-top:clamp(28px,4vw,44px)}
@@ -467,6 +468,10 @@ h1.sec{font-size:clamp(34px,5vw,58px);letter-spacing:-.035em;line-height:1.05;ma
 window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(location.search) ? "/instagram" : p};
 </script>
 <script data-goatcounter="https://dashboardfinan.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+<script>
+/* As seções de ações foram para a página Ações. */
+(() => { const h = location.hash.slice(1); if (["radar-acoes", "corretoras", "topos"].includes(h)) location.replace("acoes.html#" + h); })();
+</script>
 </head>
 <body>
 <header class="bar">
@@ -481,6 +486,7 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
       <a href="calculadoras.html">Calculadoras</a>
       <a href="carteira.html">Carteira</a>
       <a href="mercado.html" aria-current="page">Mercado</a>
+      <a href="acoes.html">Ações</a>
       <a href="estatais.html">Estatais</a>
       <a href="https://cleitonfranco74.github.io/financas_municipais/">Municípios</a>
       <a class="op" href="metodologia.html">Metodologia</a>
@@ -488,7 +494,7 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
     </nav>
     <a class="cta-mini" href="livro-caixa.html">Começar agora</a>
   </div>
-  <div class="mnav" aria-label="Menu"><a href="livro-caixa.html">Livro-Caixa</a><a href="simuladores.html">Simuladores</a><a href="calculadoras.html">Calculadoras</a><a href="carteira.html">Carteira</a><a href="mercado.html" aria-current="page">Mercado</a><a href="estatais.html">Estatais</a><a href="https://cleitonfranco74.github.io/financas_municipais/">Municípios</a><a href="metodologia.html">Metodologia</a></div>
+  <div class="mnav" aria-label="Menu"><a href="livro-caixa.html">Livro-Caixa</a><a href="simuladores.html">Simuladores</a><a href="calculadoras.html">Calculadoras</a><a href="carteira.html">Carteira</a><a href="mercado.html" aria-current="page">Mercado</a><a href="acoes.html">Ações</a><a href="estatais.html">Estatais</a><a href="https://cleitonfranco74.github.io/financas_municipais/">Municípios</a><a href="metodologia.html">Metodologia</a></div>
 </header>
 
 <div class="wrap">
@@ -497,8 +503,8 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
     <section class="pg" aria-labelledby="tpg">
       <span class="eyebrow">Mercado</span>
       <h1 class="sec" id="tpg">O mercado hoje</h1>
-      <p>Juros e inflação, Ibovespa e dólar, juros futuros, diesel e petróleo, criptomoedas e o radar de ações em queda, com dados públicos atualizados todo dia útil.</p>
-      <nav class="est-sub" aria-label="Nesta página"><a href="#juros">Juros e inflação</a><a href="#bolsa">Ibovespa e dólar</a><a href="#juros-futuros">Juros futuros</a><a href="#diesel">Diesel e petróleo</a><a href="#cripto">Criptomoedas</a><a href="#radar-acoes">Ações em queda</a><a href="#corretoras">Corretoras</a><a href="#topos">Topos e alertas</a></nav>
+      <p>Juros e inflação, Ibovespa e dólar, juros futuros, diesel e petróleo e criptomoedas, com dados públicos atualizados todo dia útil. As ações da B3 têm página própria.</p>
+      <nav class="est-sub" aria-label="Nesta página"><a href="#juros">Juros e inflação</a><a href="#bolsa">Ibovespa e dólar</a><a href="#juros-futuros">Juros futuros</a><a href="#diesel">Diesel e petróleo</a><a href="#cripto">Criptomoedas</a><a href="acoes.html">Ações da B3 →</a></nav>
     </section>
     <div class="mkt">
       <aside class="mcard" id="juros" aria-label="Indicadores de hoje">
@@ -612,36 +618,6 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
       </section>
     </div>
 
-    <section class="blk" id="radar-acoes" aria-labelledby="hRadar">
-      <div class="shead">
-        <span class="eyebrow">Radar de ações</span>
-        <h2 class="sec" id="hRadar">Ações em queda: fundamentos e consenso das corretoras</h2>
-        <p>As ações da B3 que mais caíram desde a máxima de 52 semanas, com bancos e estatais em destaque, uma nota de 0 a 6 por critérios objetivos e a média das recomendações das corretoras. Uma triagem para estudar, não uma recomendação.</p>
-      </div>
-      <div class="est" id="radar"><p class="est-fonte">Carregando o radar…</p></div>
-      <div data-fb-util="Radar de ações"></div>
-    </section>
-
-    <section class="blk" id="corretoras" aria-labelledby="hCorr">
-      <div class="shead">
-        <span class="eyebrow">Corretoras</span>
-        <h2 class="sec" id="hCorr">O que dizem as corretoras</h2>
-        <p>Consenso das recomendações das corretoras que cobrem cada ação da B3 (compra, neutro ou venda) e o preço-alvo médio para 12 meses, com o potencial até lá.</p>
-      </div>
-      <div class="est" id="corr"><p class="est-fonte">Carregando as recomendações…</p></div>
-      <div data-fb-util="Corretoras"></div>
-    </section>
-
-    <section class="blk" id="topos" aria-labelledby="hTopos">
-      <div class="shead">
-        <span class="eyebrow">Topos e alertas</span>
-        <h2 class="sec" id="hTopos">Ações no topo e alertas</h2>
-        <p>As ações na máxima de 52 semanas ou perto dela, sobrecompradas ou acima do preço-alvo das corretoras. Crie alertas no navegador e receba os avisos de topo no celular.</p>
-      </div>
-      <div class="est" id="topo"><p class="est-fonte">Carregando o radar de topos…</p></div>
-      <div data-fb-util="Topos e alertas"></div>
-    </section>
-
   </main>
 
   <footer class="autor">
@@ -655,7 +631,7 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
       </div>
       <div>
         <h4>Ferramentas</h4>
-        <ul><li><a href="livro-caixa.html">Livro-Caixa</a></li><li><a href="simuladores.html">Simuladores</a></li><li><a href="calculadoras.html">Calculadoras</a></li><li><a href="carteira.html">Carteira</a></li><li><a href="mercado.html">Mercado</a></li><li><a href="estatais.html">Estatais</a></li></ul>
+        <ul><li><a href="livro-caixa.html">Livro-Caixa</a></li><li><a href="simuladores.html">Simuladores</a></li><li><a href="calculadoras.html">Calculadoras</a></li><li><a href="carteira.html">Carteira</a></li><li><a href="mercado.html">Mercado</a><a href="acoes.html">Ações</a></li><li><a href="estatais.html">Estatais</a></li></ul>
       </div>
       <div>
         <h4>Projeto</h4>
@@ -698,11 +674,6 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
 </script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="assets/mercado.js"></script>
-<script src="assets/cotacoes.js" defer></script>
-<script src="assets/acoes-comum.js" defer></script>
-<script src="assets/radar-acoes.js" defer></script>
-<script src="assets/corretoras.js" defer></script>
-<script src="assets/topos.js" defer></script>
 <script>
 (() => {
 const $ = s => document.querySelector(s);

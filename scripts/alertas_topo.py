@@ -21,7 +21,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 TOPICO = os.environ.get("NTFY_TOPICO", "livro-caixa-topos-z26hf9")
-SITE = "https://cleitonfranco74.github.io/dashboard_financeiro/mercado.html#topos"
+SITE = "https://cleitonfranco74.github.io/dashboard_financeiro/acoes.html#topos"
 FORA = {"BOVA11", "IVVB11"}   # ETFs
 MAX_AVISOS = 8                # por execução; o excedente vai num resumo
 HISTORICO = 60
