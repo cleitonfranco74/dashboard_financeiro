@@ -419,10 +419,13 @@ h1.sec{font-size:clamp(34px,5vw,58px);letter-spacing:-.035em;line-height:1.05;ma
 .hoje{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:clamp(32px,5vw,48px) auto 0;max-width:980px;text-align:left}
 .hoje a{display:block;text-decoration:none;color:var(--ink);border:1px solid var(--ring);border-radius:18px;padding:14px 16px;background:linear-gradient(180deg,var(--surface),var(--bg-2));min-width:0}
 .hoje a:hover{border-color:var(--ink-2)}
-.hoje span{display:block;font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.hoje a > span{display:block;font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .hoje b{display:block;font-size:clamp(18px,2.2vw,24px);letter-spacing:-.02em;margin:6px 0 2px;white-space:nowrap}
 .hoje small{display:block;font:12px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hoje .up{color:var(--good)} .hoje .dn{color:#ff6b6b}
+.hoje svg{display:block;width:100%;height:36px;margin:8px 0 4px;overflow:visible}
+.hoje .vg{display:block;font:600 11.5px var(--sans);font-style:normal;color:var(--accent);letter-spacing:0;text-transform:none}
+.hoje a:hover .vg{text-decoration:underline}
 @media (max-width:760px){.hoje{grid-template-columns:repeat(2,minmax(0,1fr))} .hoje a:last-child{grid-column:1/-1}}
 .areas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 @media (max-width:980px){.areas{grid-template-columns:repeat(2,minmax(0,1fr))}} @media (max-width:600px){.areas{grid-template-columns:minmax(0,1fr)}}
@@ -496,11 +499,11 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
       <div class="byline"><span class="mono" aria-hidden="true">CF</span><span>Criado por <b>Prof. Dr. Cleiton Franco</b>, Doutor em Economia</span></div>
 
       <nav class="hoje" aria-label="Hoje no mercado">
-        <a href="mercado.html#juros"><span>Selic</span><b id="hSelic">—</b><small>meta ao ano</small></a>
-        <a href="mercado.html#juros"><span>CDI</span><b id="hCdi">—</b><small>ao ano</small></a>
-        <a href="mercado.html#juros"><span>IPCA 12 meses</span><b id="hIpca">—</b><small id="hReal">inflação acumulada</small></a>
-        <a href="mercado.html#bolsa"><span>Ibovespa</span><b id="hIbov">—</b><small id="xIbov">pontos</small></a>
-        <a href="mercado.html#bolsa"><span>Dólar</span><b id="hDolar">—</b><small id="xDolar">PTAX</small></a>
+        <a href="mercado.html#juros"><span>Selic</span><b id="hSelic">—</b><small id="sSelic">meta ao ano</small><svg id="gSelic" aria-hidden="true"></svg><em class="vg">ver gráfico →</em></a>
+        <a href="mercado.html#juros"><span>CDI</span><b id="hCdi">—</b><small>ao ano</small><svg id="gCdi" aria-hidden="true"></svg><em class="vg">ver gráfico →</em></a>
+        <a href="mercado.html#juros"><span>IPCA 12 meses</span><b id="hIpca">—</b><small id="hReal">inflação acumulada</small><svg id="gIpca" aria-hidden="true"></svg><em class="vg">ver gráfico →</em></a>
+        <a href="mercado.html#bolsa"><span>Ibovespa</span><b id="hIbov">—</b><small id="xIbov">pontos</small><svg id="gIbov" aria-hidden="true"></svg><em class="vg">ver gráfico →</em></a>
+        <a href="mercado.html#bolsa"><span>Dólar</span><b id="hDolar">—</b><small id="xDolar">PTAX</small><svg id="gDolar" aria-hidden="true"></svg><em class="vg">ver gráfico →</em></a>
       </nav>
       <a class="alerta-bn" id="alertaBn" href="acoes.html#topos" hidden></a>
     </section>
@@ -661,15 +664,33 @@ $(".sims").innerHTML = GRUPOS.map(([g,itens])=>`<div class="simg"><span>${g}</sp
 
 const varia = s => { const v = s?.valores; if (!v || v.length < 2) return null; return v[v.length-1]/v[v.length-2]-1; };
 const tag = x => x == null ? "" : `<span class="${x>=0?"up":"dn"}">${x>=0?"+":"−"}${nf(Math.abs(x)*100)}%</span> no dia`;
+/* minigráfico de linha (sem eixos) para a faixa Hoje no mercado; pontilhado quando é projeção do Focus */
+function mini(id, vals, cor, proj){
+  const el = $("#"+id), v = (vals || []).filter(x => x != null && isFinite(x)); if (!el || v.length < 2) return;
+  const W = 120, H = 36, lo = Math.min(...v), hi = Math.max(...v), sp = hi - lo || 1;
+  const pts = v.map((x, k) => [k*(W-4)/(v.length-1)+2, 3+(hi-x)/sp*(H-6)]);
+  el.setAttribute("viewBox", `0 0 ${W} ${H}`); el.setAttribute("preserveAspectRatio", "none");
+  el.innerHTML = `<polyline points="${pts.map(p=>p.map(n=>n.toFixed(1)).join(",")).join(" ")}" fill="none" stroke="${cor}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"${proj ? ' stroke-dasharray="4 3"' : ""}/>`
+    + `<circle cx="${pts[proj ? 0 : pts.length-1][0]}" cy="${pts[proj ? 0 : pts.length-1][1]}" r="3" fill="${cor}"/>`;
+}
 Mercado.carregar().then(m => {
   const I = m.indicadores;
   $("#hSelic").textContent = nf(I.selic.valor)+"%"; $("#hCdi").textContent = nf(I.cdi.valor)+"%"; $("#hIpca").textContent = nf(I.ipca12.valor)+"%";
   const real = (1+I.cdi.valor/100)/(1+I.ipca12.valor/100)-1;
   $("#hReal").textContent = `juro real ${nf(real*100)}%`;
+  // juros e inflação: hoje e a trajetória esperada pelo Focus nos próximos anos
+  const anosF = Object.keys(m.focus?.selic || {}).sort().slice(0, 4);
+  if (anosF.length){
+    const sel = [I.selic.valor, ...anosF.map(a => m.focus.selic[a])];
+    mini("gSelic", sel, "var(--accent)", true); mini("gCdi", sel.map((x, k) => k ? x - (I.selic.valor - I.cdi.valor) : I.cdi.valor), "var(--accent)", true);
+    mini("gIpca", [I.ipca12.valor, ...anosF.map(a => m.focus.ipca?.[a])], "var(--s2)", true);
+    const fim = anosF[anosF.length-1]; $("#sSelic").textContent = `Focus ${fim}: ${nf(m.focus.selic[fim])}%`;
+  }
   const ib = m.bolsa?.ibov?.valores, dl = m.bolsa?.dolar?.valores;
   if (ib?.length){ const v = Math.round(ib[ib.length-1]).toLocaleString("pt-BR"); $("#hIbov").textContent = v; $("#xIbov").innerHTML = tag(varia(m.bolsa.ibov)) || "pontos";
     $("#aMerc").innerHTML = `Ibovespa: <b>${v} pts</b> ${tag(varia(m.bolsa.ibov))}`; }
   if (dl?.length){ $("#hDolar").textContent = "R$ "+nf(dl[dl.length-1],2); $("#xDolar").innerHTML = tag(varia(m.bolsa.dolar)) || "PTAX"; }
+  mini("gIbov", ib, (varia(m.bolsa?.ibov) ?? 0) >= 0 ? "var(--good)" : "#ff6b6b"); mini("gDolar", dl, "var(--s2)");
 }).catch(() => {});
 fetch("data/estatais.json").then(r => r.ok ? r.json() : Promise.reject()).then(d => {
   const a = String(d.anos.filter(x => !d.parcial[x]).slice(-1)[0]);
