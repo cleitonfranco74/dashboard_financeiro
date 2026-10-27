@@ -1,20 +1,26 @@
 name: Cotações durante o pregão
 
+# Plantão contínuo: cada execução fica até ~5h40 de pé (scripts/plantao_cotacoes.sh), atualiza as cotações
+# e os alertas de topo de hora em hora durante o pregão e, ao terminar, dispara a execução seguinte.
+# O agendamento abaixo é só uma reserva para religar o plantão se a corrente parar: neste repositório o
+# GitHub descarta a maior parte das execuções programadas.
 on:
   schedule:
-    - cron: "20 13-21 * * 1-5"   # de hora em hora, das 10h20 às 18h20 de Brasília, dias úteis
+    - cron: "20 13,17 * * 1-5"
   workflow_dispatch:
 
 permissions:
   contents: write
+  actions: write   # para disparar a execução seguinte
 
 concurrency:
   group: cotacoes
   cancel-in-progress: false
 
 jobs:
-  atualizar:
+  plantao:
     runs-on: ubuntu-latest
+    timeout-minutes: 355
     steps:
       - uses: actions/checkout@v4
 
@@ -29,28 +35,16 @@ jobs:
       # Os dados ficam no branch "dados", para não gerar commits na main a cada hora.
       - name: Branch de dados
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin dados:dados
           git worktree add ../dados dados
 
-      - run: python scripts/cotacoes_intradia.py ../dados/cotacoes.json
+      - name: Plantão (cotações e alertas de topo de hora em hora)
+        run: bash scripts/plantao_cotacoes.sh
 
-      # avisos de topo (máxima de 52 semanas e preço-alvo das corretoras) no tópico público do ntfy
-      - name: Alertas de topo (ntfy)
-        run: python scripts/alertas_topo.py data/acoes.json ../dados/cotacoes.json ../dados/alertas.json
-        continue-on-error: true
-
-      - name: Commit no branch de dados
-        working-directory: ../dados
-        run: |
-          git add cotacoes.json
-          if [ -f alertas.json ]; then git add alertas.json; fi
-          if git diff --cached --quiet; then
-            echo "Sem mudanças."
-            exit 0
-          fi
-          git commit -m "Cotações $(date -u +%Y-%m-%dT%H:%MZ)"
-          # o di.yml também grava neste branch: tenta de novo se ele empurrou antes
-          for i in 1 2 3; do git pull --rebase origin dados && git push origin dados && exit 0; sleep 5; done
-          exit 1
+      - name: Dispara o próximo plantão
+        if: ${{ !cancelled() }}   # cancelar uma execução encerra a corrente
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run cotacoes.yml --ref main
