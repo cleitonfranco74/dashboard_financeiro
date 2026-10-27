@@ -95,6 +95,8 @@ Para atualizar à mão: aba **Actions** → *Atualizar dados de mercado* → *Ru
 ### Juros futuros (DI1)
 `di.json` fica no branch `dados` (fora da `main`, para não republicar o site a cada coleta). A GitHub Action `.github/workflows/di.yml` roda `scripts/atualizar_di.py` a cada 15 minutos nos dias úteis, das 9h às 18h45 (Brasília), e grava as cotações da B3 (cotacao.b3.com.br, atraso de ~15 min): taxa a cada 5 minutos dos últimos 7 pregões para os janeiros de 1, 2, 3, 5 e 7 anos à frente (em 2026: DI1F27, F28, F29, F31 e F33; a lista rola sozinha na virada do ano), fechamentos diários e a curva com todos os vencimentos. A capa lê o arquivo em `raw.githubusercontent.com/.../dados/di.json` e se recarrega a cada 5 minutos. Para coletar à mão: **Actions** → *Juros futuros (DI1)* → *Run workflow*.
 
+`cotacoes.json` também fica no branch `dados`. A Action `.github/workflows/cotacoes.yml` roda `scripts/cotacoes_intradia.py` de hora em hora nos dias úteis, das 10h20 às 18h20 (Brasília), e grava o preço do momento (Yahoo Finance, atraso de ~15 min), o fechamento anterior e a data de todos os ativos do comparador. `assets/cotacoes.js` lê esse arquivo e, quando ele é mais novo que `data/acoes.json`, troca as cotações no comparador de ações e na seção Ações das estatais; depois do fechamento, a coleta diária volta a valer.
+
 Para editar a lista de ações, altere `ACOES` em `scripts/atualizar_mercado.py` e `ATIVOS` em `carteira.html`.
 
 ## Visitas

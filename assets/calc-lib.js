@@ -827,7 +827,7 @@ const CORES5 = ["#3987e5","#d95926","#199e70","#c98500","#d55181"];
 let ACOES = null, acoesProm = null;
 function carregarAcoes(){
   if (acoesProm) return acoesProm;
-  acoesProm = fetch("data/acoes.json?h=" + Math.floor(Date.now()/36e5), {cache:"no-cache"}).then(r=>r.ok ? r.json() : null).catch(()=>null).then(d=>{
+  acoesProm = fetch("data/acoes.json?h=" + Math.floor(Date.now()/36e5), {cache:"no-cache"}).then(r=>r.ok ? r.json() : null).catch(()=>null).then(d=>window.Cotacoes ? Cotacoes.aplicar(d) : d).then(d=>{
     ACOES = d && d.categorias ? d : {categorias:{}};
     // sem o arquivo, monta Ações com as séries mensais do mercado.json (só desempenho)
     if (!Object.keys(ACOES.categorias.acoes||{}).length && M?.series){
@@ -933,7 +933,7 @@ def({
           linhasInd.map(ind=>{ const b = melhor(ind); return `<tr><td>${ind.l}${ind.sub?`<small>${ind.sub}</small>`:""}</td>${sel.map(([k,a],i)=>`<td class="n${i===b?" best":""}">${ind.f(a,S[i])}</td>`).join("")}</tr>`; }).join("")}</tbody></table></div></div>` +
         notas(["Em destaque, o melhor valor de cada linha entre os ativos escolhidos. P/L e P/VP baixos podem indicar ativo barato ou problemas; compare empresas do mesmo setor.",
           "Desempenho com cotações mensais ajustadas por proventos (fonte: Yahoo Finance). Stocks e ETFs internacionais em dólar, sem a variação cambial.",
-          `Dados atualizados ${ACOES.atualizado ? "em " + Mercado.dataBR(ACOES.atualizado) : "diariamente"}. Indicadores fundamentalistas podem ter atraso em relação ao último balanço. Não é recomendação de investimento.`]);
+          `${ACOES.intradia ? `Cotações de ${new Date(ACOES.atualizado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}, com cerca de 15 minutos de atraso (atualizadas de hora em hora durante o pregão).` : `Dados atualizados ${ACOES.atualizado ? "em " + Mercado.dataBR(ACOES.atualizado) : "diariamente"}.`} Indicadores fundamentalistas podem ter atraso em relação ao último balanço. Não é recomendação de investimento.`]);
       desenhar(sel);
     };
     const desenhar = sel => {
