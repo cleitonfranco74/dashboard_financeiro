@@ -377,6 +377,26 @@ footer .legal{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);
 .ae-r{font-size:12px;color:var(--muted)}
 .est-dh h3 small{font-size:.6em;color:var(--muted);font-family:var(--mono);margin-left:6px}
 .est-g .gd{stroke:var(--line);stroke-dasharray:2 4}
+/* radar de ações em queda */
+.rd-ctl{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end}
+.rd-dest{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px;margin-top:10px}
+.rd-d{border:1px solid var(--line);border-radius:16px;padding:14px 16px;background:var(--bg);min-width:0}
+.rd-dh{display:flex;justify-content:space-between;align-items:center} .rd-dh b{font-family:var(--mono);font-size:16px}
+.rd-d > small{display:block;color:var(--muted);font-size:12px} .rd-d p{margin:8px 0 6px} .rd-d p b{font-size:20px;margin-right:6px} .rd-d p span{font-size:12.5px}
+.rd-d ul{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-wrap:wrap;gap:4px} .rd-d li{font-size:11px;font-family:var(--mono);border:1px solid color-mix(in srgb,var(--good) 45%,transparent);color:var(--good);border-radius:999px;padding:2px 8px}
+.rd-nota{display:inline-block;min-width:26px;text-align:center;font:700 12px var(--mono);border-radius:999px;padding:3px 7px;background:var(--surface-2);color:var(--ink-2)}
+.rd-nota.n4,.rd-nota.n5,.rd-nota.n6,.rd-dh .rd-nota{background:color-mix(in srgb,var(--good) 22%,transparent);color:var(--good)} .rd-nota.n3{background:rgba(245,184,61,.18);color:#f5b83d}
+.rd-wrap{overflow-x:auto;margin-top:10px;-webkit-overflow-scrolling:touch}
+.rd-tb{width:100%;border-collapse:collapse;font-size:13px;min-width:860px}
+.rd-tb th{font:400 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:right;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+.rd-tb th:first-child,.rd-tb td:first-child,.rd-tb th:nth-child(10),.rd-tb td:nth-child(10){text-align:left}
+.rd-tb td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;color:var(--ink-2)}
+.rd-tb td:first-child b{display:block;font-family:var(--mono);color:var(--ink)} .rd-tb td small{color:var(--muted);font-size:11px}
+.rd-tb td:first-child small{display:block;max-width:170px;overflow:hidden;text-overflow:ellipsis}
+.rd-tb td.ok{color:var(--good);font-weight:700}
+.rd-crit,.rd-dicas{margin-top:22px;border:1px solid var(--line);border-radius:16px;padding:14px 18px;background:var(--bg)}
+.rd-crit h4,.rd-dicas h4{margin:0 0 8px} .rd-crit ol,.rd-dicas ul{margin:0;padding-left:20px;font-size:13.5px;color:var(--ink-2);line-height:1.55} .rd-crit p{font-size:13px;color:var(--muted);margin:10px 0 0}
+.rd-dicas li{margin-bottom:6px}
 .iv-tb .c-l{grid-template-columns:minmax(0,1fr) 72px}
 @media (max-width:760px){
   .iv-tb .tr{grid-template-columns:18px repeat(3,minmax(0,1fr));grid-template-areas:"rk nm nm nm" "rk l t f"}
@@ -597,6 +617,16 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
       <div data-fb-util="Ações das estatais"></div>
     </section>
 
+    <section class="blk" id="radar-acoes" aria-labelledby="hRadar">
+      <div class="shead">
+        <span class="eyebrow">Radar de ações</span>
+        <h2 class="sec" id="hRadar">Ações em queda: fundamentos e consenso das corretoras</h2>
+        <p>As ações da B3 que mais caíram desde a máxima de 52 semanas, com bancos e estatais em destaque, uma nota de 0 a 6 por critérios objetivos e a média das recomendações das corretoras. Uma triagem para estudar, não uma recomendação.</p>
+      </div>
+      <div class="est" id="radar"><p class="est-fonte">Carregando o radar…</p></div>
+      <div data-fb-util="Radar de ações"></div>
+    </section>
+
     <section class="blk" id="ferramentas" aria-labelledby="ferr">
       <div class="shead">
         <span class="eyebrow">Ferramentas</span>
@@ -751,6 +781,7 @@ window.goatcounter = {path: p => /[?&]utm_source=(instagram|ig)(&|$)/i.test(loca
 <script src="assets/investimentos.js" defer></script>
 <script src="assets/cotacoes.js" defer></script>
 <script src="assets/acoes-estatais.js" defer></script>
+<script src="assets/radar-acoes.js" defer></script>
 <script>
 (() => {
 const $ = s => document.querySelector(s);
